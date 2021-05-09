@@ -1,7 +1,7 @@
 /* The MIT License (MIT)
  *
  * Copyright (c) 2014 Microsoft
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -25,7 +25,7 @@
 
 /**
  * @file
- * 
+ *
  * @brief Implementation file for the ThroughputBenchmark class.
  */
 
@@ -62,6 +62,7 @@ ThroughputBenchmark::ThroughputBenchmark(
         iterations,
         num_worker_threads,
         mem_node,
+        0,
         cpu_node,
         pattern_mode,
         rw_mode,
@@ -79,9 +80,9 @@ bool ThroughputBenchmark::runCore() {
 
     //Set up kernel function pointers
     SequentialFunction kernel_fptr_seq = NULL;
-    SequentialFunction kernel_dummy_fptr_seq = NULL; 
+    SequentialFunction kernel_dummy_fptr_seq = NULL;
     RandomFunction kernel_fptr_ran = NULL;
-    RandomFunction kernel_dummy_fptr_ran = NULL; 
+    RandomFunction kernel_dummy_fptr_ran = NULL;
 
     if (pattern_mode_ == SEQUENTIAL) {
         if (!determine_sequential_kernel(rw_mode_, chunk_size_, stride_size_, &kernel_fptr_seq, &kernel_dummy_fptr_seq)) {
@@ -93,8 +94,8 @@ bool ThroughputBenchmark::runCore() {
             std::cerr << "ERROR: Failed to find appropriate benchmark kernel." << std::endl;
             return false;
         }
-            
-        //Build pointer indices. Note that the pointers for each thread must stay within its respective region, otherwise sharing may occur. 
+
+        //Build pointer indices. Note that the pointers for each thread must stay within its respective region, otherwise sharing may occur.
         for (uint32_t i = 0; i < num_worker_threads_; i++) {
             if (!build_random_pointer_permutation(reinterpret_cast<void*>(reinterpret_cast<uint8_t*>(mem_array_) + i*len_per_thread), //casts to silence compiler warnings
                                                reinterpret_cast<void*>(reinterpret_cast<uint8_t*>(mem_array_) + (i+1)*len_per_thread), //casts to silence compiler warnings
@@ -113,7 +114,7 @@ bool ThroughputBenchmark::runCore() {
     std::vector<Thread*> worker_threads;
 
     //Start power measurement
-    if (g_verbose) 
+    if (g_verbose)
         std::cout << "Starting power measurement threads...";
     if (!startPowerThreads()) {
         if (g_verbose)
@@ -178,7 +179,7 @@ bool ThroughputBenchmark::runCore() {
 
         if (iter_warning)
             warning_ = true;
-            
+
         if (g_verbose ) { //Report duration for this iteration
             std::cout << "Iter " << i+1 << " had " << total_passes << " passes in total across " << num_worker_threads_ << " threads, with " << bytes_per_pass << " bytes touched per pass:";
             if (iter_warning) std::cout << " -- WARNING";
@@ -187,7 +188,7 @@ bool ThroughputBenchmark::runCore() {
             std::cout << "...clock ticks in total across " << num_worker_threads_ << " threads == " << total_adjusted_ticks << " (adjusted by -" << total_elapsed_dummy_ticks << ")";
             if (iter_warning) std::cout << " -- WARNING";
             std::cout << std::endl;
-            
+
             std::cout << "...ns in total across " << num_worker_threads_ << " threads == " << total_adjusted_ticks * g_ns_per_tick << " (adjusted by -" << total_elapsed_dummy_ticks * g_ns_per_tick << ")";
             if (iter_warning) std::cout << " -- WARNING";
             std::cout << std::endl;
@@ -196,7 +197,7 @@ bool ThroughputBenchmark::runCore() {
             if (iter_warning) std::cout << " -- WARNING";
             std::cout << std::endl;
         }
-        
+
         //Compute metric for this iteration
         metric_on_iter_[i] = ((static_cast<double>(total_passes) * static_cast<double>(bytes_per_pass)) / static_cast<double>(MB))   /   ((static_cast<double>(avg_adjusted_ticks) * g_ns_per_tick) / 1e9);
 
@@ -210,7 +211,7 @@ bool ThroughputBenchmark::runCore() {
     }
 
     //Stopping power measurement
-    if (g_verbose) 
+    if (g_verbose)
         std::cout << "Stopping power measurement threads...";
     if (!stopPowerThreads()) {
         if (g_verbose)
@@ -218,7 +219,7 @@ bool ThroughputBenchmark::runCore() {
         std::cerr << "WARNING: Failed to stop power measurement threads." << std::endl;
     } else if (g_verbose)
         std::cout << "done" << std::endl;
-    
+
     //Run metadata
     has_run_ = true;
     computeMetrics();

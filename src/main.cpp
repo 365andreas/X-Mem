@@ -1,7 +1,7 @@
 /* The MIT License (MIT)
  *
  * Copyright (c) 2014 Microsoft
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -25,9 +25,9 @@
 
 /**
  * @file
- * 
+ *
  * @brief main entry point to the tool
- * 
+ *
  * This tool is designed to measure bandwidth and latency
  * of the memory system using several access patterns, strides,
  * and working set sizes. The primary goal is to measure DRAM performance,
@@ -109,17 +109,17 @@ int main(int argc, char* argv[]) {
     try {
         init_globals();
         print_welcome_message();
-        
+
         //Get info about the runtime system
         if (query_sys_info()) {
             std::cerr << "ERROR occurred while querying CPU information." << std::endl;
             return -1;
         }
-        
+
         //Configure runtime based on user inputs
         Configurator config;
         config_success = !config.configureFromInput(argc, argv);
-            
+
         if (config_success) {
             if (g_verbose) {
                 print_compile_time_options();
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
                 report_sys_info();
                 test_thread_affinities();
             }
-            
+
             setup_timer();
             if (g_verbose)
                 report_timer();
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) {
 #ifdef EXT_DELAY_INJECTED_LOADED_LATENCY_BENCHMARK
                 if (config.runExtDelayInjectedLoadedLatencyBenchmark()) {
                     std::cout << "EXTENSION " << EXT_NUM_DELAY_INJECTED_LOADED_LATENCY_BENCHMARK << ": Loaded latency benchmarks with delay injected kernels on load threads." << std::endl;
-                    benchmgr.runExtDelayInjectedLoadedLatencyBenchmark();   
+                    benchmgr.runExtDelayInjectedLoadedLatencyBenchmark();
                 }
 #endif
 

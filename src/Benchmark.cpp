@@ -1,7 +1,7 @@
 /* The MIT License (MIT)
  *
  * Copyright (c) 2014 Microsoft
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -25,7 +25,7 @@
 
 /**
  * @file
- * 
+ *
  * @brief Implementation file for the Benchmark class.
  */
 
@@ -51,6 +51,7 @@ Benchmark::Benchmark(
         uint32_t iterations,
         uint32_t num_worker_threads,
         uint32_t mem_node,
+        uint32_t mem_region,
         uint32_t cpu_node,
         pattern_mode_t pattern_mode,
         rw_mode_t rw_mode,
@@ -65,6 +66,7 @@ Benchmark::Benchmark(
         iterations_(iterations),
         num_worker_threads_(num_worker_threads),
         mem_node_(mem_node),
+        mem_region_(mem_region),
         cpu_node_(cpu_node),
         pattern_mode_(pattern_mode),
         rw_mode_(rw_mode),
@@ -90,8 +92,8 @@ Benchmark::Benchmark(
         has_run_(false),
         warning_(false)
     {
-    
-    for (uint32_t i = 0; i < iterations_; i++) 
+
+    for (uint32_t i = 0; i < iterations_; i++)
         metric_on_iter_.push_back(-1);
 }
 
@@ -103,7 +105,7 @@ bool Benchmark::run() {
         return false;
 
     printBenchmarkHeader();
-    reportBenchmarkInfo(); 
+    reportBenchmarkInfo();
 
     //Write to all of the memory region of interest to make sure
     //pages are resident in physical memory and are not shared
@@ -129,6 +131,7 @@ void Benchmark::printBenchmarkHeader() const {
 void Benchmark::reportBenchmarkInfo() const {
     std::cout << "CPU NUMA Node: " << cpu_node_ << std::endl;
     std::cout << "Memory NUMA Node: " << mem_node_ << std::endl;
+    std::cout << "Region: " << mem_region_ << std::endl;
     std::cout << "Chunk Size: ";
     switch (chunk_size_) {
         case CHUNK_32b:
@@ -167,12 +170,12 @@ void Benchmark::reportBenchmarkInfo() const {
                 std::cout << "forward ";
             else if (stride_size_ < 0)
                 std::cout << "reverse ";
-            else 
+            else
                 std::cout << "UNKNOWN ";
 
             if (stride_size_ == 1 || stride_size_ == -1)
                 std::cout << "sequential";
-            else 
+            else
                 std::cout << "strides of " << stride_size_ << " chunks";
             break;
         case RANDOM:
@@ -214,7 +217,7 @@ void Benchmark::reportResults() const {
     std::cout << "*** RESULTS";
     std::cout << "***" << std::endl;
     std::cout << std::endl;
- 
+
     if (has_run_) {
         for (uint32_t i = 0; i < iterations_; i++) {
             std::printf("Iter #%4d:    %0.3f    %s", i, metric_on_iter_[i], metric_units_.c_str());
@@ -223,7 +226,7 @@ void Benchmark::reportResults() const {
                 std::cout << " (WARNING)";
             std::cout << std::endl;
         }
-        
+
         std::cout << std::endl;
         std::cout << std::endl;
 
@@ -236,45 +239,45 @@ void Benchmark::reportResults() const {
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
-        
+
         std::cout << "25th Percentile: " << percentile_25_metric_ << " " << metric_units_;
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
-        
+
         std::cout << "Median: " << median_metric_ << " " << metric_units_;
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
-        
+
         std::cout << "75th Percentile: " << percentile_75_metric_ << " " << metric_units_;
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
-        
+
         std::cout << "95th Percentile: " << percentile_95_metric_ << " " << metric_units_;
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
-        
+
         std::cout << "99th Percentile: " << percentile_99_metric_ << " " << metric_units_;
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
-        
+
         std::cout << "Max: " << max_metric_ << " " << metric_units_;
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
-         
+
         std::cout << "Mode: " << mode_metric_ << " " << metric_units_;
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
-       
+
         std::cout << std::endl;
         std::cout << std::endl;
-        
+
         for (uint32_t i = 0; i < dram_power_readers_.size(); i++) {
             if (dram_power_readers_[i] != NULL) {
                 std::cout << dram_power_readers_[i]->name() << " Power Statistics..." << std::endl;
@@ -364,7 +367,7 @@ double Benchmark::getModeMetric() const {
 std::string Benchmark::getMetricUnits() const {
     return metric_units_;
 }
-            
+
 double Benchmark::getMeanDRAMPower(uint32_t socket_id) const {
     if (mean_dram_power_socket_.size() > socket_id)
         return mean_dram_power_socket_[socket_id];
@@ -424,7 +427,7 @@ void Benchmark::computeMetrics() {
         //Compute mean
         mean_metric_ = 0;
         for (uint32_t i = 0; i < iterations_; i++)
-            mean_metric_ += metric_on_iter_[i]; 
+            mean_metric_ += metric_on_iter_[i];
         mean_metric_ /= iterations_;
 
         //Build sorted array of metrics from each iteration
@@ -495,7 +498,7 @@ bool Benchmark::stopPowerThreads() {
     //Wait for all worker threads to complete now that they were signaled to stop
     for (uint32_t i = 0; i < dram_power_threads_.size(); i++) {
         if (dram_power_threads_[i] != NULL) {
-            if (!dram_power_threads_[i]->join()) { 
+            if (!dram_power_threads_[i]->join()) {
                 std::cerr << "WARNING: A power measurement thread failed to join! Forcing the thread to stop." << std::endl;
                 if (!dram_power_threads_[i]->cancel())
                     std::cerr << "WARNING: Failed to force stop a power measurement thread. Its behavior may be unpredictable." << std::endl;

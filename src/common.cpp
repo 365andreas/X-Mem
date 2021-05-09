@@ -1,7 +1,7 @@
 /* The MIT License (MIT)
  *
  * Copyright (c) 2014 Microsoft
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -276,7 +276,7 @@ void xmem::report_timer() {
     std::cout << "Derived timer ns per tick: " << g_ns_per_tick << std::endl;
     std::cout << std::endl;
 }
-    
+
 void xmem::test_thread_affinities() {
     std::cout << std::endl << "Testing thread affinities..." << std::endl;
     bool success = false;
@@ -377,7 +377,7 @@ bool xmem::unlock_thread_to_cpu() {
 
     if (pthread_getaffinity_np(tid, sizeof(cpu_set_t), &cpus)) //failure
         return false;
-    
+
     int32_t total_num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
     for (int32_t c = 0; c < total_num_cpus; c++)
         CPU_SET(c, &cpus);
@@ -385,7 +385,7 @@ bool xmem::unlock_thread_to_cpu() {
     return (!pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpus));
 #endif
 }
-    
+
 int32_t xmem::cpu_id_in_numa_node(uint32_t numa_node, uint32_t cpu_in_node) {
 #ifndef HAS_NUMA
     if (numa_node != 0) {
@@ -439,14 +439,14 @@ int32_t xmem::cpu_id_in_numa_node(uint32_t numa_node, uint32_t cpu_in_node) {
             rank_in_node++;
         }
     }
-    
+
     if (bm_ptr)
         free(bm_ptr);
 #endif
     return cpu_id;
 #endif
 }
-    
+
 void xmem::init_globals() {
     //Initialize global variables to defaults.
     g_verbose = false;
@@ -459,7 +459,7 @@ void xmem::init_globals() {
     g_total_l3_caches = DEFAULT_NUM_L3_CACHES;
     g_total_l4_caches = DEFAULT_NUM_L4_CACHES;
     g_page_size = DEFAULT_PAGE_SIZE;
-    g_large_page_size = DEFAULT_LARGE_PAGE_SIZE; 
+    g_large_page_size = DEFAULT_LARGE_PAGE_SIZE;
 
     g_ticks_per_ms = 0;
     g_ns_per_tick = 0;
@@ -550,9 +550,9 @@ int32_t xmem::query_sys_info() {
             DWORD LSHIFT = sizeof(ULONG_PTR)*8 - 1;
             DWORD bitSetCount = 0;
             ULONG_PTR bitMask = curr->ProcessorMask;
-            ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;    
+            ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
             DWORD i;
-            
+
             for (i = 0; i <= LSHIFT; ++i)
             {
                 bitSetCount += ((bitMask & bitTest)?1:0);
@@ -574,7 +574,7 @@ int32_t xmem::query_sys_info() {
     std::vector<uint32_t> core_ids;
     while (!in.eof()) {
         in.getline(line, 512, '\n');
-        
+
         // the line with CPU feature flags may exceed 512 B, leaving the stream in an error state and the remainder of the line unread
         if(in.fail() && in.gcount() == 511) {
             // clean up the stream
@@ -624,10 +624,10 @@ int32_t xmem::query_sys_info() {
 #endif
 #ifdef __gnu_linux__
     //FIXME: guessing number of caches on GNU/Linux, not sure how to get correct answer. This does not affect X-Mem functionality, however.
-    g_total_l1_caches = g_num_physical_cpus; 
-    g_total_l2_caches = g_num_physical_cpus; 
-    g_total_l3_caches = g_num_physical_packages; 
-    g_total_l4_caches = 0; 
+    g_total_l1_caches = g_num_physical_cpus;
+    g_total_l2_caches = g_num_physical_cpus;
+    g_total_l3_caches = g_num_physical_packages;
+    g_total_l4_caches = 0;
 #endif
 
     //Get page size
@@ -643,7 +643,7 @@ int32_t xmem::query_sys_info() {
 #ifdef __gnu_linux__
     g_page_size = static_cast<size_t>(sysconf(_SC_PAGESIZE));
 #ifdef HAS_LARGE_PAGES
-    g_large_page_size = gethugepagesize(); 
+    g_large_page_size = gethugepagesize();
 #endif
     in.close();
 #endif
@@ -693,7 +693,7 @@ void xmem::report_sys_info() {
 #ifdef __gnu_linux__
     std::cout << " (guesses)";
 #endif
-    std::cout << std::endl; 
+    std::cout << std::endl;
     std::cout << "Regular page size: " << g_page_size << " B" << std::endl;
 #ifdef HAS_LARGE_PAGES
     std::cout << "Large page size: " << g_large_page_size << " B" << std::endl;
@@ -727,7 +727,7 @@ tick_t xmem::start_timer() {
     */
 #endif
 #endif
-    
+
     //TODO: ARM hardware timer
 
 #ifdef USE_QPC_TIMER
@@ -762,7 +762,7 @@ tick_t xmem::stop_timer() {
     tick = __rdtscp(&filler); //Get clock tick. This is a partially serializing instruction. All previous instructions must finish
     __cpuid(dc0, dc1, dc2, dc3, dc4); //Serializing instruction. This forces all previous instructions to finish
     return tick;
-    
+
     /*
     uint32_t low, high;
     __asm__ __volatile__ (
@@ -776,7 +776,7 @@ tick_t xmem::stop_timer() {
     */
 #endif
 #endif
-    
+
     //TODO: ARM hardware timer
 
 #ifdef USE_QPC_TIMER
@@ -784,7 +784,7 @@ tick_t xmem::stop_timer() {
     QueryPerformanceCounter(&tmp);
     return static_cast<tick_t>(tmp.QuadPart);
 #endif
-    
+
 #ifdef USE_POSIX_TIMER
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);
@@ -794,7 +794,7 @@ tick_t xmem::stop_timer() {
 
 #ifdef _WIN32
 bool xmem::boost_scheduling_priority(DWORD& original_priority_class, DWORD& original_priority) {
-    original_priority_class = GetPriorityClass(GetCurrentProcess());  
+    original_priority_class = GetPriorityClass(GetCurrentProcess());
     original_priority = GetThreadPriority(GetCurrentThread());
     SetPriorityClass(GetCurrentProcess(), 0x80); //HIGH_PRIORITY_CLASS
     SetThreadPriority(GetCurrentThread(), 15); //THREAD_PRIORITY_TIME_CRITICAL
