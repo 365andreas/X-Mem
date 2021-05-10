@@ -65,6 +65,7 @@ namespace xmem {
          * @param iterations Number of iterations of the complete benchmark. Used to average results and provide a measure of consistency and reproducibility.
          * @param num_worker_threads The number of worker threads to use in the benchmark.
          * @param mem_node The logical memory NUMA node used in the benchmark.
+         * @param mem_region The region of logical memory NUMA node used in the benchmark.
          * @param cpu_node The logical CPU NUMA node to use for the benchmark.
          * @param pattern_mode This indicates the general type of access pattern used, e.g. sequential or random.
          * @param rw_mode This indicates the general type of read/write mix used, e.g. pure reads or pure writes.
@@ -79,6 +80,7 @@ namespace xmem {
             uint32_t iterations,
             uint32_t num_worker_threads,
             uint32_t mem_node,
+            uint32_t mem_region,
             uint32_t cpu_node,
             pattern_mode_t pattern_mode,
             rw_mode_t rw_mode,
@@ -103,7 +105,7 @@ namespace xmem {
         /**
          * @brief Prints a header piece of information describing the benchmark to the console.
          */
-        void printBenchmarkHeader() const;
+        virtual void printBenchmarkHeader() const;
 
         /**
          * @brief Reports benchmark configuration details to the console.
@@ -303,6 +305,7 @@ namespace xmem {
         //Threading and affinity
         uint32_t num_worker_threads_; /**< The number of worker threads used in this benchmark. */
         uint32_t mem_node_; /**< The memory NUMA node used in this benchmark. */
+        uint32_t mem_region_; /**< The region of memory NUMA node used in this benchmark. */
         uint32_t cpu_node_; /**< The CPU NUMA node used in this benchmark. */
 
         //Benchmarking settings

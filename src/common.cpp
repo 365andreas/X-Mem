@@ -73,6 +73,7 @@ namespace xmem {
     size_t g_page_size; /**< Default page size on the system, in bytes. */
     size_t g_large_page_size; /**< Large page size on the system, in bytes. */
     uint32_t g_num_numa_nodes; /**< Number of NUMA nodes in the system. */
+    uint32_t g_num_regions; /**< Number of regions to check on each NUMA node. */
     uint32_t g_num_logical_cpus; /**< Number of logical CPU cores in the system. This may be different than physical CPUs, e.g. simultaneous multithreading. */
     uint32_t g_num_physical_cpus; /**< Number of physical CPU cores in the system. */
     uint32_t g_num_physical_packages; /**< Number of physical CPU packages in the system. Generally this is the same as number of NUMA nodes, unless UMA emulation is done in hardware. */
@@ -451,6 +452,7 @@ void xmem::init_globals() {
     //Initialize global variables to defaults.
     g_verbose = false;
     g_num_numa_nodes = DEFAULT_NUM_NODES;
+    g_num_regions = DEFAULT_NUM_REGIONS;
     g_num_physical_packages = DEFAULT_NUM_PHYSICAL_PACKAGES;
     g_num_physical_cpus = DEFAULT_NUM_PHYSICAL_CPUS;
     g_num_logical_cpus = DEFAULT_NUM_LOGICAL_CPUS;

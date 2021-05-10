@@ -1,7 +1,7 @@
 /* The MIT License (MIT)
  *
  * Copyright (c) 2014 Microsoft
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -25,7 +25,7 @@
 
 /**
  * @file
- * 
+ *
  * @brief Header file for the BenchmarkManager class.
  */
 
@@ -39,6 +39,7 @@
 #include <Benchmark.h>
 #include <ThroughputBenchmark.h>
 #include <LatencyBenchmark.h>
+#include <LatencyDetailedBenchmark.h>
 #include <Configurator.h>
 
 //Libraries
@@ -81,6 +82,12 @@ namespace xmem {
          */
         bool runLatencyBenchmarks();
 
+        /**
+         * @brief Runs the latency detailed benchmark.
+         * @returns True on benchmarking success.
+         */
+        bool runLatencyDetailedBenchmarks();
+
 #ifdef EXT_DELAY_INJECTED_LOADED_LATENCY_BENCHMARK
         /**
          * @brief Runs the delay-injected loaded latency benchmark extension.
@@ -121,6 +128,7 @@ namespace xmem {
         std::vector<size_t> mem_array_lens_; /**< Length of each memory region to use in benchmarks. */
         std::vector<ThroughputBenchmark*> tp_benchmarks_; /**< Set of throughput benchmarks. */
         std::vector<LatencyBenchmark*> lat_benchmarks_; /**< Set of latency benchmarks. */
+        std::vector<LatencyDetailedBenchmark*> lat_det_benchmarks_; /**< Set of latency detailed benchmarks. */
         std::vector<PowerReader*> dram_power_readers_; /**< Set of power measurement objects for DRAM on each NUMA node. */
         std::fstream results_file_; /**< The results CSV file. */
         bool built_benchmarks_; /**< If true, finished building all benchmarks. */

@@ -54,6 +54,7 @@ Configurator::Configurator(
     run_ext_stream_benchmark_(false),
 #endif
     run_latency_(true),
+    run_latency_detailed_(false),
     run_throughput_(true),
     working_set_size_per_thread_(DEFAULT_WORKING_SET_SIZE_PER_THREAD),
     num_worker_threads_(DEFAULT_NUM_WORKER_THREADS),
@@ -143,14 +144,18 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
     }
 
     //Check runtime modes
-    if (options[MEAS_LATENCY] || options[MEAS_THROUGHPUT] || options[EXTENSION]) { //User explicitly picked at least one mode, so override default selection
+    if (options[MEAS_LATENCY] || options[MEAS_THROUGHPUT] || options[EXTENSION] || options[MEAS_LATENCY_DETAILED]) { //User explicitly picked at least one mode, so override default selection
         run_latency_ = false;
+        run_latency_detailed_ = false;
         run_throughput_ = false;
         run_extensions_ = false;
     }
 
     if (options[MEAS_LATENCY])
         run_latency_ = true;
+
+    if (options[MEAS_LATENCY_DETAILED])
+        run_latency_detailed_ = true;
 
     if (options[MEAS_THROUGHPUT])
         run_throughput_ = true;
@@ -506,7 +511,7 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
     }
 
     //Make sure at least one mode is available
-    if (!run_latency_ && !run_throughput_ && !run_extensions_) {
+    if (!run_latency_ && !run_throughput_ && !run_extensions_ && !run_latency_detailed_) {
         std::cerr << "ERROR: At least one benchmark type must be selected." << std::endl;
         goto error;
     }
@@ -526,6 +531,7 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
     //If the user picked "all" option, override anything else they put in that is relevant.
     if (options[ALL]) {
         run_latency_ = true;
+        run_latency_detailed_ = true;
         run_throughput_ = true;
         run_extensions_ = true;
 #ifdef EXT_DELAY_INJECTED_LOADED_LATENCY_BENCHMARK
@@ -588,6 +594,14 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
             else
                 std::cout << "Unloaded ";
             std::cout << "latency" << std::endl;
+        }
+        if (run_latency_detailed_) {
+            std::cout << "---> ";
+            if (num_worker_threads_ > 1)
+                std::cout << "Loaded ";
+            else
+                std::cout << "Unloaded ";
+            std::cout << "latency detailed" << std::endl;
         }
         if (run_extensions_)
             std::cout << "---> Extensions" << std::endl;
@@ -708,6 +722,7 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
     } else {
         std::cout << working_set_size_per_thread_ << " B == " << working_set_size_per_thread_ / KB  << " KB == " << working_set_size_per_thread_ / MB << " MB (" << working_set_size_per_thread_/(g_page_size) << " pages)" << std::endl;
     }
+    std::cout << std::endl;
 
     //Free up options memory
     delete[] options;

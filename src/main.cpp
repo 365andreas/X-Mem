@@ -141,6 +141,10 @@ int main(int argc, char* argv[]) {
                 benchmgr.runLatencyBenchmarks();
             }
 
+            if (config.latencyDetailedTestSelected()) {
+                benchmgr.runLatencyDetailedBenchmarks();
+            }
+
             if (config.extensionsEnabled()) {
                 std::cout << std::endl;
                 std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;

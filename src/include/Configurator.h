@@ -56,6 +56,7 @@ namespace xmem {
         BASE_TEST_INDEX,
         NUM_WORKER_THREADS,
         MEAS_LATENCY,
+        MEAS_LATENCY_DETAILED,
         ITERATIONS,
         RANDOM_ACCESS_PATTERN,
         SEQUENTIAL_ACCESS_PATTERN,
@@ -79,6 +80,7 @@ namespace xmem {
         "Options:" },
         { ALL, 0, "a", "all", Arg::None, "    -a, --all    \tRun all possible benchmark modes and settings supported by X-Mem. This will override any other relevant user inputs. Note that X-Mem may run for a long time. This does not run extension modes and does not specify the large page option." },
         { CHUNK_SIZE, 0, "c", "chunk_size", MyArg::PositiveInteger, "    -c, --chunk_size    \tA chunk size in bits to use for load traffic-generating threads used in throughput and loaded latency benchmarks. A chunk is the size of each memory access in a benchmark. Allowed values: 32 64 128 256 and 512 (platform dependent). Note that some chunk sizes may not be supported on all hardware. 32-bit chunks are not compatible with random-access patterns on 64-bit machines; these combinations of settings will be skipped if they occur. DEFAULT: 64 on 64-bit systems, 32 on 32-bit systems."},
+        { MEAS_LATENCY_DETAILED, 0, "d", "latency_detailed", Arg::None, "    -d, --latency_detailed    \tUnloaded or loaded latency for all cores benchmarking mode. If 1 thread is used, unloaded latency is measured using 64-bit random reads. Otherwise, 1 thread is always dedicated to the 64-bit random read latency measurement, and remaining threads are used for load traffic generation using access patterns, chunk sizes, etc. specified by other arguments. See the throughput option for more information on load traffic generation."},
         { EXTENSION, 0, "e", "extension", MyArg::NonnegativeInteger, "    -e, --extension    \tRun an X-Mem extension defined by the user at build time. The integer argument specifies a single unique extension. This option may be included multiple times. Note that the extension behavior may or may not depend on the other X-Mem options as its semantics are defined by the extension author." },
         { OUTPUT_FILE, 0, "f", "output_file", MyArg::Required, "    -f, --output_file    \tGenerate an output file in CSV format using the given filename." },
         { HELP, 0, "h", "help", Arg::None, "    -h, --help    \tPrint X-Mem usage and exit." },
@@ -186,6 +188,12 @@ namespace xmem {
          * @returns True if the latency test has been selected to run.
          */
         bool latencyTestSelected() const { return run_latency_; }
+
+        /**
+         * @brief Indicates if the latency test has been selected.
+         * @returns True if the latency test has been selected to run.
+         */
+        bool latencyDetailedTestSelected() const { return run_latency_detailed_; }
 
         /**
          * @brief Indicates if the throughput test has been selected.
@@ -406,6 +414,7 @@ namespace xmem {
 #endif
 
         bool run_latency_; /**< True if latency tests should be run. */
+        bool run_latency_detailed_; /**< True if latency tests should be run. */
         bool run_throughput_; /**< True if throughput tests should be run. */
         size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */
         uint32_t num_worker_threads_; /**< Number of load threads to use for throughput benchmarks, loaded latency benchmarks, and stress tests. */

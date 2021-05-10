@@ -1,36 +1,11 @@
-/* The MIT License (MIT)
- *
- * Copyright (c) 2014 Microsoft
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- * Author: Mark Gottscho <mgottscho@ucla.edu>
- */
-
 /**
  * @file
  *
- * @brief Implementation file for the LatencyBenchmark class.
+ * @brief Implementation file for the LatencyDetailedBenchmark class.
  */
 
 //Headers
-#include <LatencyBenchmark.h>
+#include <LatencyDetailedBenchmark.h>
 #include <common.h>
 #include <benchmark_kernels.h>
 #include <MemoryWorker.h>
@@ -50,12 +25,13 @@
 
 using namespace xmem;
 
-LatencyBenchmark::LatencyBenchmark(
+LatencyDetailedBenchmark::LatencyDetailedBenchmark(
         void* mem_array,
         size_t len,
         uint32_t iterations,
         uint32_t num_worker_threads,
         uint32_t mem_node,
+        uint32_t mem_region,
         uint32_t cpu_node,
         pattern_mode_t pattern_mode,
         rw_mode_t rw_mode,
@@ -70,7 +46,7 @@ LatencyBenchmark::LatencyBenchmark(
             iterations,
             num_worker_threads,
             mem_node,
-            0,
+            mem_region,
             cpu_node,
             pattern_mode,
             rw_mode,
@@ -88,12 +64,17 @@ LatencyBenchmark::LatencyBenchmark(
         load_metric_on_iter_.push_back(0);
 }
 
-void LatencyBenchmark::reportBenchmarkInfo() const {
-    std::cout << "CPU NUMA Node: " << cpu_node_ << std::endl;
-    std::cout << "Memory NUMA Node: " << mem_node_ << std::endl;
-    std::cout << "Latency measurement chunk size: ";
-    std::cout << sizeof(uintptr_t)*8 << "-bit" << std::endl;
-    std::cout << "Latency measurement access pattern: random read (pointer-chasing)" << std::endl;
+void LatencyDetailedBenchmark::printBenchmarkHeader() const {
+    //Spit out useful info
+    // std::cout << std::endl;
+    // std::cout << "-------- Running Benchmark: " << name_;
+    // std::cout << " ----------" << std::endl;
+}
+
+void LatencyDetailedBenchmark::reportBenchmarkInfo() const {
+    std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
+    std::cout << "Memory NUMA Node: " << mem_node_ << " ";
+    std::cout << "Region: " << mem_region_ << " ";
 
     if (num_worker_threads_ > 1) {
         std::cout << "Load Chunk Size: ";
@@ -164,104 +145,36 @@ void LatencyBenchmark::reportBenchmarkInfo() const {
         std::cout << "Load number of worker threads: " << num_worker_threads_-1;
         std::cout << std::endl;
     }
-
-    std::cout << std::endl;
 }
 
 
-void LatencyBenchmark::reportResults() const {
-    std::cout << std::endl;
-    std::cout << "*** RESULTS";
-    std::cout << "***" << std::endl;
-    std::cout << std::endl;
+void LatencyDetailedBenchmark::reportResults() const {
 
     if (has_run_) {
-        for (uint32_t i = 0; i < iterations_; i++) {
-            std::printf("Iter #%4d:    %0.3f %s @    %0.3f MB/s mean self-imposed load", i, metric_on_iter_[i], metric_units_.c_str(), load_metric_on_iter_[i]);
-            //std::cout << "Iter #" << i << ": " << metric_on_iter_[i] << " " << metric_units_ << " @ " << load_metric_on_iter_[i] << " MB/s mean imposed load";
-            if (warning_)
-                std::cout << " (WARNING)";
-            std::cout << std::endl;
-        }
-
-        std::cout << std::endl;
-        std::cout << std::endl;
-
-        std::cout << "Mean: " << mean_metric_ << " " << metric_units_ << " and " << mean_load_metric_ << " MB/s mean imposed load (not necessarily matched)";
+        std::cout << "Mean: " << mean_metric_ << " " << metric_units_; // << " and " << mean_load_metric_ << " MB/s mean imposed load (not necessarily matched)";
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
-
-        std::cout << "Min: " << min_metric_ << " " << metric_units_;
-        if (warning_)
-            std::cout << " (WARNING)";
-        std::cout << std::endl;
-
-        std::cout << "25th Percentile: " << percentile_25_metric_ << " " << metric_units_;
-        if (warning_)
-            std::cout << " (WARNING)";
-        std::cout << std::endl;
-
-        std::cout << "Median: " << median_metric_ << " " << metric_units_;
-        if (warning_)
-            std::cout << " (WARNING)";
-        std::cout << std::endl;
-
-        std::cout << "75th Percentile: " << percentile_75_metric_ << " " << metric_units_;
-        if (warning_)
-            std::cout << " (WARNING)";
-        std::cout << std::endl;
-
-        std::cout << "95th Percentile: " << percentile_95_metric_ << " " << metric_units_;
-        if (warning_)
-            std::cout << " (WARNING)";
-        std::cout << std::endl;
-
-        std::cout << "99th Percentile: " << percentile_99_metric_ << " " << metric_units_;
-        if (warning_)
-            std::cout << " (WARNING)";
-        std::cout << std::endl;
-
-        std::cout << "Max: " << max_metric_ << " " << metric_units_;
-        if (warning_)
-            std::cout << " (WARNING)";
-        std::cout << std::endl;
-
-        std::cout << "Mode: " << mode_metric_ << " " << metric_units_;
-        if (warning_)
-            std::cout << " (WARNING)";
-        std::cout << std::endl;
-
-        std::cout << std::endl;
-        std::cout << std::endl;
-
-        for (uint32_t i = 0; i < dram_power_readers_.size(); i++) {
-            if (dram_power_readers_[i] != NULL) {
-                std::cout << dram_power_readers_[i]->name() << " Power Statistics..." << std::endl;
-                std::cout << "...Mean Power: " << dram_power_readers_[i]->getMeanPower() * dram_power_readers_[i]->getPowerUnits() << " W" << std::endl;
-                std::cout << "...Peak Power: " << dram_power_readers_[i]->getPeakPower() * dram_power_readers_[i]->getPowerUnits() << " W" << std::endl;
-            }
-        }
     }
     else
         std::cerr << "WARNING: Benchmark has not run yet. No reported results." << std::endl;
 }
 
-double LatencyBenchmark::getLoadMetricOnIter(uint32_t iter) const {
+double LatencyDetailedBenchmark::getLoadMetricOnIter(uint32_t iter) const {
     if (has_run_ && iter - 1 <= iterations_)
         return load_metric_on_iter_[iter - 1];
     else //bad call
         return -1;
 }
 
-double LatencyBenchmark::getMeanLoadMetric() const {
+double LatencyDetailedBenchmark::getMeanLoadMetric() const {
     if (has_run_)
         return mean_load_metric_;
     else //bad call
         return -1;
 }
 
-bool LatencyBenchmark::runCore() {
+bool LatencyDetailedBenchmark::runCore() {
     size_t len_per_thread = len_ / num_worker_threads_; //Carve up memory space so each worker has its own area to play in
 
     //Set up latency measurement kernel function pointers
@@ -448,7 +361,6 @@ bool LatencyBenchmark::runCore() {
                 if (iterwarning) std::cout << " -- WARNING";
                 std::cout << std::endl;
             }
-
         }
 
         //Compute overall metrics for this iteration
