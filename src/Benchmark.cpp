@@ -406,6 +406,10 @@ uint32_t Benchmark::getMemNode() const {
     return mem_node_;
 }
 
+uint32_t Benchmark::getMemRegion() const {
+    return mem_region_;
+}
+
 uint32_t Benchmark::getNumThreads() const {
     return num_worker_threads_;
 }

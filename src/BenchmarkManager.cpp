@@ -52,6 +52,7 @@
 //Libraries
 #include <cstdint>
 #include <stdlib.h>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <assert.h>
@@ -540,6 +541,40 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
         }
     }
 
+    // aggregated report of latency detailed benchmarks
+    if (config_.latencyDetailedTestSelected()) {
+        std::cout <<  "Measured idle latencies (in " << lat_det_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
+        std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
+
+        std::cout << std::setw(13) << " ";
+        for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
+            for (uint32_t mem_region = 0; mem_region < g_num_regions; mem_region++) {
+                std::cout << " (Node, Reg)";
+            }
+        }
+        std::cout << std::endl;
+
+        std::cout << std::setw(13) << "CPU NUMA Node" << std::setw(12);
+        for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
+            for (uint32_t mem_region = 0; mem_region < g_num_regions; mem_region++) {
+                std::cout << "(" + std::to_string(*it) + ", " + std::to_string(mem_region) + ")" << std::setw(12);
+            }
+        }
+
+        for (uint32_t i = 0; i < lat_det_benchmarks_.size(); i++) {
+            if (i % (g_num_regions * g_num_numa_nodes) == 0) {
+                std::cout << std::endl;
+                uint32_t cpu_node = lat_det_benchmarks_[i]->getCPUNode();
+                std::cout << std::setw(13) << cpu_node;
+            }
+
+            double mean_metric = lat_det_benchmarks_[i]->getMeanMetric();
+            // std::string metric_units = lat_det_benchmarks_[i]->getMetricUnits();
+            std::cout << std::setw(12) << mean_metric;
+        }
+        std::cout << std::endl;
+    }
+
     if (g_verbose)
         std::cout << std::endl << "Done running latency detailed benchmarks." << std::endl;
 
@@ -646,11 +681,6 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
         }
     }
     std::cout << std::endl;
-    if (config_.latencyDetailedTestSelected()) {
-        // std::cout <<  "Measuring idle latencies (in ns).." << std::endl;
-        // std::cout << "\t\t" << "(Memory NUMA Node, Region)" << std::endl;
-        // std::cout << "CPU NUMA Node \t";
-    }
 }
 
 bool BenchmarkManager::buildBenchmarks() {

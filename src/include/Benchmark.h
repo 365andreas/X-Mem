@@ -245,6 +245,12 @@ namespace xmem {
         uint32_t getMemNode() const;
 
         /**
+         * @brief Gets the region of the memory NUMA node used in this benchmark.
+         * @returns The NUMA memory node used in this benchmark.
+         */
+        uint32_t getMemRegion() const;
+
+        /**
          * @brief Gets the number of worker threads used in this benchmark.
          * @returns The number of worker threads used in this benchmark.
          */

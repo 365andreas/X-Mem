@@ -72,9 +72,9 @@ void LatencyDetailedBenchmark::printBenchmarkHeader() const {
 }
 
 void LatencyDetailedBenchmark::reportBenchmarkInfo() const {
-    std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
-    std::cout << "Memory NUMA Node: " << mem_node_ << " ";
-    std::cout << "Region: " << mem_region_ << " ";
+    // std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
+    // std::cout << "Memory NUMA Node: " << mem_node_ << " ";
+    // std::cout << "Region: " << mem_region_ << " ";
 
     if (num_worker_threads_ > 1) {
         std::cout << "Load Chunk Size: ";
@@ -149,6 +149,10 @@ void LatencyDetailedBenchmark::reportBenchmarkInfo() const {
 
 
 void LatencyDetailedBenchmark::reportResults() const {
+
+    std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
+    std::cout << "Memory NUMA Node: " << mem_node_ << " ";
+    std::cout << "Region: " << mem_region_ << " ";
 
     if (has_run_) {
         std::cout << "Mean: " << mean_metric_ << " " << metric_units_; // << " and " << mean_load_metric_ << " MB/s mean imposed load (not necessarily matched)";
