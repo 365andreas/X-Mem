@@ -724,7 +724,6 @@ bool BenchmarkManager::buildBenchmarks() {
             for (auto cpu_node_it = cpu_numa_node_affinities_.cbegin(); cpu_node_it != cpu_numa_node_affinities_.cend(); cpu_node_it++) { //iterate each cpu NUMA node
                 uint32_t cpu_node = *cpu_node_it;
                 bool buildLatBench = true; //Want to get at least one latency benchmark for all NUMA node combos
-                bool buildLatDetBench = true;
 
                 //DO SEQUENTIAL/STRIDED TESTS
                 if (config_.useSequentialAccessPattern()) {
@@ -778,32 +777,6 @@ bool BenchmarkManager::buildBenchmarks() {
                                         return false;
                                     }
                                     buildLatBench = false; //Wait for next NUMA combo
-                                }
-
-                                // Latency benchamrk from evry core to evry memory region
-
-                                if (config_.getNumWorkerThreads() > 1 || buildLatDetBench) {
-                                    benchmark_name = static_cast<std::ostringstream*>(&(std::ostringstream()
-                                                        << "Test #" << g_test_index << "LD (LatencyDetailed)"))->str();
-                                    lat_det_benchmarks_.push_back(
-                                            new LatencyDetailedBenchmark(mem_array,
-                                                                         mem_array_len,
-                                                                         config_.getIterationsPerTest(),
-                                                                         config_.getNumWorkerThreads(),
-                                                                         mem_node,
-                                                                         mem_region,
-                                                                         cpu_node,
-                                                                         SEQUENTIAL,
-                                                                         rw,
-                                                                         chunk,
-                                                                         stride,
-                                                                         dram_power_readers_,
-                                                                         benchmark_name));
-                                    if (lat_det_benchmarks_[lat_det_benchmarks_.size()-1] == NULL) {
-                                        std::cerr << "ERROR: Failed to build a LatencyBenchmark!" << std::endl;
-                                        return false;
-                                    }
-                                    buildLatDetBench = false; //Wait for next NUMA combo
                                 }
                                 g_test_index++;
                             }
@@ -867,6 +840,50 @@ bool BenchmarkManager::buildBenchmarks() {
 
                             g_test_index++;
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    //Build latency detailed benchmarks
+    for (auto cpu_node_it = cpu_numa_node_affinities_.cbegin(); cpu_node_it != cpu_numa_node_affinities_.cend(); cpu_node_it++) { //iterate each cpu NUMA node
+        uint32_t cpu_node = *cpu_node_it;
+
+        for (auto mem_node_it = memory_numa_node_affinities_.cbegin(); mem_node_it != memory_numa_node_affinities_.cend(); mem_node_it++) { //iterate each memory NUMA node
+            for (uint32_t mem_region = 0; mem_region < g_num_regions; mem_region++) {
+                uint32_t mem_node = *mem_node_it;
+                uint32_t region_id = mem_node * g_num_regions + mem_region;
+                void* mem_array = mem_arrays_[region_id];
+                size_t mem_array_len = mem_array_lens_[region_id];
+
+                for (uint32_t chunk_index = 0; chunk_index < chunks.size(); chunk_index++) { //iterate different chunk sizes
+                    chunk_size_t chunk = chunks[chunk_index];
+
+                    for (uint32_t stride_index = 0; stride_index < strides.size(); stride_index++) {  //iterate different stride lengths
+                        int32_t stride = strides[stride_index];
+
+                        // Latency benchamrk from every core to every memory region
+                        benchmark_name = static_cast<std::ostringstream*>(&(std::ostringstream()
+                                            << "Test #" << g_test_index << "LD (LatencyDetailed)"))->str();
+                        lat_det_benchmarks_.push_back(new LatencyDetailedBenchmark(mem_array,
+                                                                                   mem_array_len,
+                                                                                   config_.getIterationsPerTest(),
+                                                                                   config_.getNumWorkerThreads(),
+                                                                                   mem_node,
+                                                                                   mem_region,
+                                                                                   cpu_node,
+                                                                                   SEQUENTIAL,
+                                                                                   rws[0],
+                                                                                   chunk,
+                                                                                   stride,
+                                                                                   dram_power_readers_,
+                                                                                   benchmark_name));
+                        if (lat_det_benchmarks_[lat_det_benchmarks_.size()-1] == NULL) {
+                            std::cerr << "ERROR: Failed to build a LatencyBenchmark!" << std::endl;
+                            return false;
+                        }
+                        g_test_index++;
                     }
                 }
             }
