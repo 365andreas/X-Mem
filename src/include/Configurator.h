@@ -57,6 +57,7 @@ namespace xmem {
         NUM_WORKER_THREADS,
         MEAS_LATENCY,
         MEAS_LATENCY_DETAILED,
+        MEM_REGIONS,
         ITERATIONS,
         RANDOM_ACCESS_PATTERN,
         SEQUENTIAL_ACCESS_PATTERN,
@@ -87,6 +88,7 @@ namespace xmem {
         { BASE_TEST_INDEX, 0, "i", "base_test_index", MyArg::NonnegativeInteger, "    -i, --base_test_index    \tBase index for the first benchmark to run. This option is provided for user convenience in enumerating benchmark tests across several subsequent runs of X-Mem. DEFAULT: 1" },
         { NUM_WORKER_THREADS, 1, "j", "num_worker_threads", MyArg::PositiveInteger, "    -j, --num_worker_threads    \tNumber of worker threads to use in benchmarks. This may not exceed the number of logical CPUs in the system. For throughput benchmarks, this is the number of independent load-generating threads. For latency benchmarks, this is the number of independent load-generating threads plus one latency measurement thread. In latency benchmarks, 1 worker thread indicates no loading is applied. DEFAULT: 1" },
         { MEAS_LATENCY, 0, "l", "latency", Arg::None, "    -l, --latency    \tUnloaded or loaded latency benchmarking mode. If 1 thread is used, unloaded latency is measured using 64-bit random reads. Otherwise, 1 thread is always dedicated to the 64-bit random read latency measurement, and remaining threads are used for load traffic generation using access patterns, chunk sizes, etc. specified by other arguments. See the throughput option for more information on load traffic generation."},
+        { MEM_REGIONS, 0, "m", "mem_regions", MyArg::PositiveInteger, "    -m, --mem_regions    \tMemory regions to be used for the Latency Detailed benchmarks. DEFAULT: 1" },
         { ITERATIONS, 0, "n", "iterations", MyArg::PositiveInteger, "    -n, --iterations    \tIterations per benchmark. Multiple independent iterations may be performed on each benchmark setting to ensure consistent results. DEFAULT: 1" },
         { RANDOM_ACCESS_PATTERN, 0, "r", "random_access", Arg::None, "    -r, --random_access    \tUse a random access pattern for load traffic-generating threads used in throughput and loaded latency benchmarks." },
         { SEQUENTIAL_ACCESS_PATTERN, 0, "s", "sequential_access", Arg::None, "    -s, --sequential_access    \tUse a sequential and/or strided access pattern for load traffic generating-threads used in throughput and loaded latency benchmarks." },
@@ -264,6 +266,12 @@ namespace xmem {
         std::list<uint32_t> getMemoryNumaNodeAffinities() const { return memory_numa_node_affinities_; }
 
         /**
+         * @brief Gets the number of memory regions per NUMA node for Latency Detailed benchmark.
+         * @returns The iterations for each test.
+         */
+        uint32_t getMemoryRegionsPerNUMANode() const { return mem_regions_; }
+
+        /**
          * @brief Gets the number of iterations that should be run of each benchmark.
          * @returns The iterations for each test.
          */
@@ -434,6 +442,7 @@ namespace xmem {
         bool numa_enabled_; /**< If false, only CPU/memory NUMA nodes 0 may be used. */
         std::list<uint32_t> cpu_numa_node_affinities_; /**< List of CPU NUMA nodes to affinitize on all benchmark experiments. */
         std::list<uint32_t> memory_numa_node_affinities_; /**< List of memory NUMA nodes to affinitize on all benchmark experiments. */
+        uint32_t mem_regions_; /**< Number of memory regions per NUMA node for Latency Detailed benchmark test. */
         uint32_t iterations_; /**< Number of iterations to run for each benchmark test. */
         bool use_random_access_pattern_; /**< If true, run throughput benchmarks with random access pattern. */
         bool use_sequential_access_pattern_; /**< If true, run throughput benchmarks with sequential access pattern. */

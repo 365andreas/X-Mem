@@ -543,12 +543,14 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
 
     // aggregated report of latency detailed benchmarks
     if (config_.latencyDetailedTestSelected()) {
+        uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
+
         std::cout <<  "Measured idle latencies (in " << lat_det_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
         std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
 
         std::cout << std::setw(13) << " ";
         for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-            for (uint32_t mem_region = 0; mem_region < g_num_regions; mem_region++) {
+            for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
                 std::cout << " (Node, Reg)";
             }
         }
@@ -556,13 +558,13 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
 
         std::cout << std::setw(13) << "CPU NUMA Node" << std::setw(12);
         for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-            for (uint32_t mem_region = 0; mem_region < g_num_regions; mem_region++) {
+            for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
                 std::cout << "(" + std::to_string(*it) + ", " + std::to_string(mem_region) + ")" << std::setw(12);
             }
         }
 
         for (uint32_t i = 0; i < lat_det_benchmarks_.size(); i++) {
-            if (i % (g_num_regions * g_num_numa_nodes) == 0) {
+            if (i % (mem_regions_per_numa * g_num_numa_nodes) == 0) {
                 std::cout << std::endl;
                 uint32_t cpu_node = lat_det_benchmarks_[i]->getCPUNode();
                 std::cout << std::setw(13) << cpu_node;
@@ -584,15 +586,17 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
 void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
     //Allocate memory in each NUMA node to be tested
 
+    uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
+
     //We reserve the space for these, but that doesn't mean they will all be used.
-    mem_arrays_.resize(g_num_numa_nodes * g_num_regions);
-    mem_array_lens_.resize(g_num_numa_nodes * g_num_regions);
+    mem_arrays_.resize(g_num_numa_nodes * mem_regions_per_numa);
+    mem_array_lens_.resize(g_num_numa_nodes * mem_regions_per_numa);
 
     for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-        for (uint32_t mem_region = 0; mem_region < g_num_regions; mem_region++) {
+        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
             size_t allocation_size = 0;
             uint32_t numa_node = *it;        // std::cout << "Min: " << min_metric_ << " " << metric_units_;
-            uint32_t region_id = numa_node * g_num_regions + mem_region;
+            uint32_t region_id = numa_node * mem_regions_per_numa + mem_region;
 
 #ifdef HAS_LARGE_PAGES
             if (config_.useLargePages()) {
@@ -745,9 +749,9 @@ bool BenchmarkManager::buildBenchmarks() {
 
     //Build throughput benchmarks. This is a humongous nest of for loops, but rest assured, the range of each loop should be small enough. The problem is we have many combinations to test.
     for (auto mem_node_it = memory_numa_node_affinities_.cbegin(); mem_node_it != memory_numa_node_affinities_.cend(); mem_node_it++) { //iterate each memory NUMA node
-        for (uint32_t mem_region = 0; mem_region < g_num_regions; mem_region++) {
+        for (uint32_t mem_region = 0; mem_region < config_.getMemoryRegionsPerNUMANode(); mem_region++) {
             uint32_t mem_node = *mem_node_it;
-            uint32_t region_id = mem_node * g_num_regions + mem_region;
+            uint32_t region_id = mem_node * config_.getMemoryRegionsPerNUMANode() + mem_region;
             void* mem_array = mem_arrays_[region_id];
             size_t mem_array_len = mem_array_lens_[region_id];
 
@@ -881,9 +885,9 @@ bool BenchmarkManager::buildBenchmarks() {
         uint32_t cpu_node = *cpu_node_it;
 
         for (auto mem_node_it = memory_numa_node_affinities_.cbegin(); mem_node_it != memory_numa_node_affinities_.cend(); mem_node_it++) { //iterate each memory NUMA node
-            for (uint32_t mem_region = 0; mem_region < g_num_regions; mem_region++) {
+            for (uint32_t mem_region = 0; mem_region < config_.getMemoryRegionsPerNUMANode(); mem_region++) {
                 uint32_t mem_node = *mem_node_it;
-                uint32_t region_id = mem_node * g_num_regions + mem_region;
+                uint32_t region_id = mem_node * config_.getMemoryRegionsPerNUMANode() + mem_region;
                 void* mem_array = mem_arrays_[region_id];
                 size_t mem_array_len = mem_array_lens_[region_id];
 

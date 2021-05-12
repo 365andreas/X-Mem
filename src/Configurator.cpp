@@ -80,6 +80,7 @@ Configurator::Configurator(
 #endif
     cpu_numa_node_affinities_(),
     memory_numa_node_affinities_(),
+    mem_regions_(1),
     iterations_(1),
     use_random_access_pattern_(false),
     use_sequential_access_pattern_(true),
@@ -398,6 +399,15 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
             }
             curr = curr->next();
         }
+    }
+
+    //Check memory regions
+    if (options[MEM_REGIONS]) { //Override default value
+        if (!check_single_option_occurrence(&options[MEM_REGIONS]))
+            goto error;
+
+        char *endptr = NULL;
+        mem_regions_ = static_cast<uint32_t>(strtoul(options[MEM_REGIONS].arg, &endptr, 10));
     }
 
     //Check iterations
