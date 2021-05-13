@@ -34,6 +34,7 @@ namespace xmem {
             uint32_t mem_node,
             uint32_t mem_region,
             uint32_t cpu_node,
+            uint32_t cpu,
             bool use_cpu_nodes,
             pattern_mode_t pattern_mode,
             rw_mode_t rw_mode,
@@ -62,6 +63,12 @@ namespace xmem {
         double getMeanLoadMetric() const;
 
         /**
+         * @brief Gets the CPU id node used in this benchmark.
+         * @returns The CPU used in this benchmark.
+         */
+        uint32_t getCPUId() const;
+
+        /**
          * @brief Prints a header piece of information describing the benchmark to the console.
          */
         virtual void printBenchmarkHeader() const;
@@ -79,6 +86,7 @@ namespace xmem {
     protected:
         virtual bool runCore();
 
+        uint32_t cpu_;
         bool use_cpu_nodes_;
 
         std::vector<double> load_metric_on_iter_; /**< Load metrics for each iteration of the benchmark. This is in MB/s. */

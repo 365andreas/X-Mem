@@ -567,8 +567,8 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
         for (uint32_t i = 0; i < lat_det_benchmarks_.size(); i++) {
             if (i % (mem_regions_per_numa * g_num_numa_nodes) == 0) {
                 std::cout << std::endl;
-                uint32_t cpu_node = lat_det_benchmarks_[i]->getCPUNode();
-                std::cout << std::setw(width) << cpu_node;
+                uint32_t pu = config_.allCoresSelected() ? lat_det_benchmarks_[i]->getCPUId() : lat_det_benchmarks_[i]->getCPUNode();
+                std::cout << std::setw(width) << pu;
             }
 
             double mean_metric = lat_det_benchmarks_[i]->getMeanMetric();
@@ -893,9 +893,16 @@ bool BenchmarkManager::buildBenchmarks() {
         use_cpu_nodes = true;
     }
 
+    uint32_t cpu      = -1;
+    uint32_t cpu_node = -1;
     //Build latency detailed benchmarks
     for (auto pu = processor_units.cbegin(); pu != processor_units.cend(); pu++) { //iterate each cpu NUMA node
-        uint32_t cpu_node = *pu;
+        if (config_.allCoresSelected()) {
+            cpu = *pu;
+        }
+        else {
+            cpu_node = *pu;
+        }
 
         for (auto mem_node_it = memory_numa_node_affinities_.cbegin(); mem_node_it != memory_numa_node_affinities_.cend(); mem_node_it++) { //iterate each memory NUMA node
             for (uint32_t mem_region = 0; mem_region < config_.getMemoryRegionsPerNUMANode(); mem_region++) {
@@ -920,6 +927,7 @@ bool BenchmarkManager::buildBenchmarks() {
                                                                                    mem_node,
                                                                                    mem_region,
                                                                                    cpu_node,
+                                                                                   cpu,
                                                                                    use_cpu_nodes,
                                                                                    SEQUENTIAL,
                                                                                    rws[0],

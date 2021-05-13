@@ -33,6 +33,7 @@ LatencyDetailedBenchmark::LatencyDetailedBenchmark(
         uint32_t mem_node,
         uint32_t mem_region,
         uint32_t cpu_node,
+        uint32_t cpu,
         bool use_cpu_nodes,
         pattern_mode_t pattern_mode,
         rw_mode_t rw_mode,
@@ -57,6 +58,7 @@ LatencyDetailedBenchmark::LatencyDetailedBenchmark(
             "ns/access",
             name
         ),
+        cpu_(cpu),
         use_cpu_nodes_(use_cpu_nodes),
         load_metric_on_iter_(),
         mean_load_metric_(0)
@@ -64,6 +66,10 @@ LatencyDetailedBenchmark::LatencyDetailedBenchmark(
 
     for (uint32_t i = 0; i < iterations_; i++)
         load_metric_on_iter_.push_back(0);
+}
+
+uint32_t LatencyDetailedBenchmark::getCPUId() const {
+    return cpu_;
 }
 
 void LatencyDetailedBenchmark::printBenchmarkHeader() const {
@@ -152,7 +158,11 @@ void LatencyDetailedBenchmark::reportBenchmarkInfo() const {
 
 void LatencyDetailedBenchmark::reportResults() const {
 
-    std::cout << (use_cpu_nodes_ ? "CPU NUMA Node: " : "CPU: ") << cpu_node_ << " ";
+    if (use_cpu_nodes_) {
+        std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
+    } else {
+        std::cout << "CPU: " << cpu_ << " ";
+    }
     std::cout << "Memory NUMA Node: " << mem_node_ << " ";
     std::cout << "Region: " << mem_region_ << " ";
 
@@ -261,7 +271,7 @@ bool LatencyDetailedBenchmark::runCore() {
         //Create load workers and load worker threads
         for (uint32_t t = 0; t < num_worker_threads_; t++) {
             void* thread_mem_array = reinterpret_cast<void*>(reinterpret_cast<uint8_t*>(mem_array_) + t*len_per_thread);
-            int32_t cpu_id = use_cpu_nodes_ ? cpu_id_in_numa_node(cpu_node_, t) : cpu_node_;
+            int32_t cpu_id = use_cpu_nodes_ ? cpu_id_in_numa_node(cpu_node_, t) : getCPUId();
             if (cpu_id < 0) {
                 if (use_cpu_nodes_)
                     std::cerr << "WARNING: Failed to find logical CPU " << t << " in NUMA node " << cpu_node_ << std::endl;
