@@ -34,6 +34,7 @@ namespace xmem {
             uint32_t mem_node,
             uint32_t mem_region,
             uint32_t cpu_node,
+            bool use_cpu_nodes,
             pattern_mode_t pattern_mode,
             rw_mode_t rw_mode,
             chunk_size_t chunk_size,
@@ -77,6 +78,8 @@ namespace xmem {
 
     protected:
         virtual bool runCore();
+
+        bool use_cpu_nodes_;
 
         std::vector<double> load_metric_on_iter_; /**< Load metrics for each iteration of the benchmark. This is in MB/s. */
         double mean_load_metric_; /**< The average load throughput in MB/sec that was imposed on the latency measurement. */

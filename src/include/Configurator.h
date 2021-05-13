@@ -49,6 +49,7 @@ namespace xmem {
     enum optionIndex {
         UNKNOWN,
         ALL,
+        ALL_CORES,
         CHUNK_SIZE,
         EXTENSION,
         OUTPUT_FILE,
@@ -90,6 +91,7 @@ namespace xmem {
         { MEAS_LATENCY, 0, "l", "latency", Arg::None, "    -l, --latency    \tUnloaded or loaded latency benchmarking mode. If 1 thread is used, unloaded latency is measured using 64-bit random reads. Otherwise, 1 thread is always dedicated to the 64-bit random read latency measurement, and remaining threads are used for load traffic generation using access patterns, chunk sizes, etc. specified by other arguments. See the throughput option for more information on load traffic generation."},
         { MEM_REGIONS, 0, "m", "mem_regions", MyArg::PositiveInteger, "    -m, --mem_regions    \tMemory regions to be used for the Latency Detailed benchmarks. DEFAULT: 1" },
         { ITERATIONS, 0, "n", "iterations", MyArg::PositiveInteger, "    -n, --iterations    \tIterations per benchmark. Multiple independent iterations may be performed on each benchmark setting to ensure consistent results. DEFAULT: 1" },
+        { ALL_CORES, 0, "q", "all_cores", Arg::None, "    -q, --all_cores    \tRun latency detailed benchmark to every core of the system to cerate a matrix." },
         { RANDOM_ACCESS_PATTERN, 0, "r", "random_access", Arg::None, "    -r, --random_access    \tUse a random access pattern for load traffic-generating threads used in throughput and loaded latency benchmarks." },
         { SEQUENTIAL_ACCESS_PATTERN, 0, "s", "sequential_access", Arg::None, "    -s, --sequential_access    \tUse a sequential and/or strided access pattern for load traffic generating-threads used in throughput and loaded latency benchmarks." },
         { MEAS_THROUGHPUT, 0, "t", "throughput", Arg::None, "    -t, --throughput    \tThroughput benchmarking mode. Aggregate throughput is measured across all worker threads. Each load traffic-generating worker in a particular benchmark runs an identical kernel. Multiple distinct benchmarks may be run depending on the specified benchmark settings (e.g., aggregated 64-bit and 256-bit sequential read throughput using strides of 1 and -8 chunks)." },
@@ -184,6 +186,12 @@ namespace xmem {
          */
         bool runExtStreamBenchmark() const { return run_ext_stream_benchmark_; }
 #endif
+
+        /**
+         * @brief Indicates if all cores have been selected for the latency detailed test.
+         * @returns True if all cores have been selected.
+         */
+        bool allCoresSelected() const { return run_all_cores_; }
 
         /**
          * @brief Indicates if the latency test has been selected.
@@ -422,6 +430,7 @@ namespace xmem {
 #endif
 
         bool run_latency_; /**< True if latency tests should be run. */
+        bool run_all_cores_; /**< True if latency detailed benchmark should run for all cores. */
         bool run_latency_detailed_; /**< True if latency tests should be run. */
         bool run_throughput_; /**< True if throughput tests should be run. */
         size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */

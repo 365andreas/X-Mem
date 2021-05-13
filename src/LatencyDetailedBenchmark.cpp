@@ -33,6 +33,7 @@ LatencyDetailedBenchmark::LatencyDetailedBenchmark(
         uint32_t mem_node,
         uint32_t mem_region,
         uint32_t cpu_node,
+        bool use_cpu_nodes,
         pattern_mode_t pattern_mode,
         rw_mode_t rw_mode,
         chunk_size_t chunk_size,
@@ -56,6 +57,7 @@ LatencyDetailedBenchmark::LatencyDetailedBenchmark(
             "ns/access",
             name
         ),
+        use_cpu_nodes_(use_cpu_nodes),
         load_metric_on_iter_(),
         mean_load_metric_(0)
     {
@@ -150,7 +152,7 @@ void LatencyDetailedBenchmark::reportBenchmarkInfo() const {
 
 void LatencyDetailedBenchmark::reportResults() const {
 
-    std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
+    std::cout << (use_cpu_nodes_ ? "CPU NUMA Node: " : "CPU: ") << cpu_node_ << " ";
     std::cout << "Memory NUMA Node: " << mem_node_ << " ";
     std::cout << "Region: " << mem_region_ << " ";
 
@@ -259,9 +261,13 @@ bool LatencyDetailedBenchmark::runCore() {
         //Create load workers and load worker threads
         for (uint32_t t = 0; t < num_worker_threads_; t++) {
             void* thread_mem_array = reinterpret_cast<void*>(reinterpret_cast<uint8_t*>(mem_array_) + t*len_per_thread);
-            int32_t cpu_id = cpu_id_in_numa_node(cpu_node_, t);
-            if (cpu_id < 0)
-                std::cerr << "WARNING: Failed to find logical CPU " << t << " in NUMA node " << cpu_node_ << std::endl;
+            int32_t cpu_id = use_cpu_nodes_ ? cpu_id_in_numa_node(cpu_node_, t) : cpu_node_;
+            if (cpu_id < 0) {
+                if (use_cpu_nodes_)
+                    std::cerr << "WARNING: Failed to find logical CPU " << t << " in NUMA node " << cpu_node_ << std::endl;
+                else
+                    std::cerr << "WARNING: Failed to find logical CPU " << t << std::endl;
+            }
             if (t == 0) { //special case: thread 0 is always latency thread
                 workers.push_back(new LatencyWorker(thread_mem_array,
                                                     len_per_thread,

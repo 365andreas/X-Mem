@@ -548,7 +548,8 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
         std::cout <<  "Measured idle latencies (in " << lat_det_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
         std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
 
-        std::cout << std::setw(13) << " ";
+        int width = config_.allCoresSelected() ? 3 : 13;
+        std::cout << std::setw(width) << " ";
         for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
             for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
                 std::cout << " (Node, Reg)";
@@ -556,10 +557,10 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
         }
         std::cout << std::endl;
 
-        std::cout << std::setw(13) << "CPU NUMA Node" << std::setw(12);
+        std::cout << (config_.allCoresSelected() ? "CPU" : "CPU NUMA Node");
         for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
             for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
-                std::cout << "(" + std::to_string(*it) + ", " + std::to_string(mem_region) + ")" << std::setw(12);
+                std::cout  << std::setw(12) << "(" + std::to_string(*it) + ", " + std::to_string(mem_region) + ")";
             }
         }
 
@@ -567,7 +568,7 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
             if (i % (mem_regions_per_numa * g_num_numa_nodes) == 0) {
                 std::cout << std::endl;
                 uint32_t cpu_node = lat_det_benchmarks_[i]->getCPUNode();
-                std::cout << std::setw(13) << cpu_node;
+                std::cout << std::setw(width) << cpu_node;
             }
 
             double mean_metric = lat_det_benchmarks_[i]->getMeanMetric();
@@ -880,9 +881,21 @@ bool BenchmarkManager::buildBenchmarks() {
         }
     }
 
+    std::list<uint32_t> processor_units; // List of CPU nodes or CPUs to affinitize for benchmark experiments.
+    bool use_cpu_nodes = false;
+
+    if (config_.allCoresSelected()) {
+        for (uint32_t i = 0; i < g_num_logical_cpus; i++) {
+            processor_units.push_back(i);
+        }
+    } else {
+        processor_units = cpu_numa_node_affinities_;
+        use_cpu_nodes = true;
+    }
+
     //Build latency detailed benchmarks
-    for (auto cpu_node_it = cpu_numa_node_affinities_.cbegin(); cpu_node_it != cpu_numa_node_affinities_.cend(); cpu_node_it++) { //iterate each cpu NUMA node
-        uint32_t cpu_node = *cpu_node_it;
+    for (auto pu = processor_units.cbegin(); pu != processor_units.cend(); pu++) { //iterate each cpu NUMA node
+        uint32_t cpu_node = *pu;
 
         for (auto mem_node_it = memory_numa_node_affinities_.cbegin(); mem_node_it != memory_numa_node_affinities_.cend(); mem_node_it++) { //iterate each memory NUMA node
             for (uint32_t mem_region = 0; mem_region < config_.getMemoryRegionsPerNUMANode(); mem_region++) {
@@ -907,6 +920,7 @@ bool BenchmarkManager::buildBenchmarks() {
                                                                                    mem_node,
                                                                                    mem_region,
                                                                                    cpu_node,
+                                                                                   use_cpu_nodes,
                                                                                    SEQUENTIAL,
                                                                                    rws[0],
                                                                                    chunk,

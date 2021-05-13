@@ -54,6 +54,7 @@ Configurator::Configurator(
     run_ext_stream_benchmark_(false),
 #endif
     run_latency_(true),
+    run_all_cores_(false),
     run_latency_detailed_(false),
     run_throughput_(true),
     working_set_size_per_thread_(DEFAULT_WORKING_SET_SIZE_PER_THREAD),
@@ -584,6 +585,10 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
     if (use_random_access_pattern_ && use_chunk_32b_)
         std::cerr << "NOTE: Random-access load kernels used in throughput and loaded latency benchmarks do not support 32-bit chunk sizes on 64-bit machines. These particular combinations will be omitted." << std::endl;
 #endif
+
+    if (options[ALL_CORES]) { //Override default value
+        run_all_cores_ = true;
+    }
 
     //Check for help or bad options
     if (options[HELP] || options[UNKNOWN] != NULL)
