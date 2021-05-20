@@ -543,41 +543,39 @@ bool BenchmarkManager::runLatencyMatrixBenchmarks() {
     std::cout << std::endl;
 
     // aggregated report of latency matrix benchmarks
-    if (config_.latencyMatrixTestSelected()) {
-        uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
+    uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
 
-        std::cout <<  "Measured idle latencies (in " << lat_mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
-        std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
+    std::cout <<  "Measured idle latencies (in " << lat_mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
+    std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
 
-        int width = config_.allCoresSelected() ? 3 : 13;
-        std::cout << std::setw(width) << " ";
-        for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-            for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
-                std::cout << " (Node, Reg)";
-            }
+    int width = config_.allCoresSelected() ? 3 : 13;
+    std::cout << std::setw(width) << " ";
+    for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
+        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
+            std::cout << " (Node, Reg)";
         }
-        std::cout << std::endl;
-
-        std::cout << (config_.allCoresSelected() ? "CPU" : "CPU NUMA Node");
-        for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-            for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
-                std::cout  << std::setw(12) << "(" + std::to_string(*it) + ", " + std::to_string(mem_region) + ")";
-            }
-        }
-
-        for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++) {
-            if (i % (mem_regions_per_numa * g_num_numa_nodes) == 0) {
-                std::cout << std::endl;
-                uint32_t pu = config_.allCoresSelected() ? lat_mat_benchmarks_[i]->getCPUId() : lat_mat_benchmarks_[i]->getCPUNode();
-                std::cout << std::setw(width) << pu;
-            }
-
-            double mean_metric = lat_mat_benchmarks_[i]->getMeanMetric();
-            // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
-            std::cout << std::setw(12) << mean_metric;
-        }
-        std::cout << std::endl;
     }
+    std::cout << std::endl;
+
+    std::cout << (config_.allCoresSelected() ? "CPU" : "CPU NUMA Node");
+    for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
+        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
+            std::cout  << std::setw(12) << "(" + std::to_string(*it) + ", " + std::to_string(mem_region) + ")";
+        }
+    }
+
+    for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++) {
+        if (i % (mem_regions_per_numa * g_num_numa_nodes) == 0) {
+            std::cout << std::endl;
+            uint32_t pu = config_.allCoresSelected() ? lat_mat_benchmarks_[i]->getCPUId() : lat_mat_benchmarks_[i]->getCPUNode();
+            std::cout << std::setw(width) << pu;
+        }
+
+        double mean_metric = lat_mat_benchmarks_[i]->getMeanMetric();
+        // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
+        std::cout << std::setw(12) << mean_metric;
+    }
+    std::cout << std::endl;
 
     if (g_verbose)
         std::cout << std::endl << "Done running latency matrix benchmarks." << std::endl;
