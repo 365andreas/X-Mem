@@ -1,11 +1,11 @@
 /**
  * @file
  *
- * @brief Header file for the LatencyDetailedBenchmark class.
+ * @brief Header file for the LatencyMatrixBenchmark class.
  */
 
-#ifndef LATENCY_DETAILED_BENCHMARK_H
-#define LATENCY_DETAILED_BENCHMARK_H
+#ifndef LATENCY_MATRIX_BENCHMARK_H
+#define LATENCY_MATRIX_BENCHMARK_H
 
 //Headers
 #include <Benchmark.h>
@@ -20,13 +20,13 @@ namespace xmem {
     /**
      * @brief A type of benchmark that measures memory latency via random pointer chasing. Loading may be provided with separate threads which access memory as quickly as possible using given access patterns.
      */
-    class LatencyDetailedBenchmark : public Benchmark {
+    class LatencyMatrixBenchmark : public Benchmark {
     public:
 
         /**
          * @brief Constructor. Parameters are passed directly to the Benchmark constructor. See Benchmark class documentation for parameter semantics.
          */
-        LatencyDetailedBenchmark(
+        LatencyMatrixBenchmark(
             void* mem_array,
             size_t len,
             uint32_t iterations,
@@ -47,7 +47,7 @@ namespace xmem {
         /**
          * @brief Destructor.
          */
-        virtual ~LatencyDetailedBenchmark() {}
+        virtual ~LatencyMatrixBenchmark() {}
 
         /**
          * @brief Get the average load throughput in MB/sec that was imposed on the latency measurement during the given iteration.

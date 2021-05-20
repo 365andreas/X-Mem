@@ -87,7 +87,7 @@ BenchmarkManager::BenchmarkManager(
         mem_array_lens_(),
         tp_benchmarks_(),
         lat_benchmarks_(),
-        lat_det_benchmarks_(),
+        lat_mat_benchmarks_(),
         dram_power_readers_(),
         results_file_(),
         built_benchmarks_(false)
@@ -149,9 +149,9 @@ BenchmarkManager::~BenchmarkManager() {
     //Free latency benchmarks
     for (uint32_t i = 0; i < lat_benchmarks_.size(); i++)
         delete lat_benchmarks_[i];
-    //Free latency detailed benchmarks
-    for (uint32_t i = 0; i < lat_det_benchmarks_.size(); i++)
-        delete lat_det_benchmarks_[i];
+    //Free latency matrix benchmarks
+    for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++)
+        delete lat_mat_benchmarks_[i];
     //Free memory arrays
     for (uint32_t i = 0; i < mem_arrays_.size(); i++)
         if (mem_arrays_[i] != nullptr) {
@@ -183,8 +183,8 @@ bool BenchmarkManager::runAll() {
         success = success && runThroughputBenchmarks();
     if (config_.latencyTestSelected())
         success = success && runLatencyBenchmarks();
-    if (config_.latencyDetailedTestSelected())
-        success = success && runLatencyDetailedBenchmarks();
+    if (config_.latencyMatrixTestSelected())
+        success = success && runLatencyMatrixBenchmarks();
 
     return success;
 }
@@ -425,7 +425,7 @@ bool BenchmarkManager::runLatencyBenchmarks() {
     return true;
 }
 
-bool BenchmarkManager::runLatencyDetailedBenchmarks() {
+bool BenchmarkManager::runLatencyMatrixBenchmarks() {
     if (!built_benchmarks_) {
         if (!buildBenchmarks()) {
             std::cerr << "ERROR: Failed to build benchmarks." << std::endl;
@@ -433,26 +433,26 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
         }
     }
 
-    for (uint32_t i = 0; i < lat_det_benchmarks_.size(); i++) {
-        lat_det_benchmarks_[i]->run();
-        lat_det_benchmarks_[i]->reportResults(); //to console
+    for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++) {
+        lat_mat_benchmarks_[i]->run();
+        lat_mat_benchmarks_[i]->reportResults(); //to console
 
         //Write to results file if necessary
         if (config_.useOutputFile()) {
-            results_file_ << lat_det_benchmarks_[i]->getName() << ",";
-            results_file_ << lat_det_benchmarks_[i]->getIterations() << ",";
-            results_file_ << static_cast<size_t>(lat_det_benchmarks_[i]->getLen() / lat_det_benchmarks_[i]->getNumThreads() / KB) << ",";
-            results_file_ << lat_det_benchmarks_[i]->getNumThreads() << ",";
-            results_file_ << lat_det_benchmarks_[i]->getNumThreads()-1 << ",";
-            results_file_ << lat_det_benchmarks_[i]->getMemNode() << ",";
-            results_file_ << lat_det_benchmarks_[i]->getCPUNode() << ",";
-            if (lat_det_benchmarks_[i]->getNumThreads() < 2) {
+            results_file_ << lat_mat_benchmarks_[i]->getName() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getIterations() << ",";
+            results_file_ << static_cast<size_t>(lat_mat_benchmarks_[i]->getLen() / lat_mat_benchmarks_[i]->getNumThreads() / KB) << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getNumThreads() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getNumThreads()-1 << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getMemNode() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getCPUNode() << ",";
+            if (lat_mat_benchmarks_[i]->getNumThreads() < 2) {
                 results_file_ << "N/A" << ",";
                 results_file_ << "N/A" << ",";
                 results_file_ << "N/A" << ",";
                 results_file_ << "N/A" << ",";
             } else {
-                pattern_mode_t pattern = lat_det_benchmarks_[i]->getPatternMode();
+                pattern_mode_t pattern = lat_mat_benchmarks_[i]->getPatternMode();
                 switch (pattern) {
                     case SEQUENTIAL:
                         results_file_ << "SEQUENTIAL" << ",";
@@ -465,7 +465,7 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
                         break;
                 }
 
-                rw_mode_t rw_mode = lat_det_benchmarks_[i]->getRWMode();
+                rw_mode_t rw_mode = lat_mat_benchmarks_[i]->getRWMode();
                 switch (rw_mode) {
                     case READ:
                         results_file_ << "READ" << ",";
@@ -478,7 +478,7 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
                         break;
                 }
 
-                chunk_size_t chunk_size = lat_det_benchmarks_[i]->getChunkSize();
+                chunk_size_t chunk_size = lat_mat_benchmarks_[i]->getChunkSize();
                 switch (chunk_size) {
                     case CHUNK_32b:
                         results_file_ << "32" << ",";
@@ -508,10 +508,10 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
                         break;
                 }
 
-                results_file_ << lat_det_benchmarks_[i]->getStrideSize() << ",";
+                results_file_ << lat_mat_benchmarks_[i]->getStrideSize() << ",";
             }
 
-            results_file_ << lat_det_benchmarks_[i]->getMeanLoadMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getMeanLoadMetric() << ",";
             results_file_ << "N/A" << ",";
             results_file_ << "N/A" << ",";
             results_file_ << "N/A" << ",";
@@ -521,31 +521,32 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
             results_file_ << "N/A" << ",";
             results_file_ << "N/A" << ",";
             results_file_ << "MB/s" << ",";
-            results_file_ << lat_det_benchmarks_[i]->getMeanMetric() << ",";
-            results_file_ << lat_det_benchmarks_[i]->getMinMetric() << ",";
-            results_file_ << lat_det_benchmarks_[i]->get25PercentileMetric() << ",";
-            results_file_ << lat_det_benchmarks_[i]->getMedianMetric() << ",";
-            results_file_ << lat_det_benchmarks_[i]->get75PercentileMetric() << ",";
-            results_file_ << lat_det_benchmarks_[i]->get95PercentileMetric() << ",";
-            results_file_ << lat_det_benchmarks_[i]->get99PercentileMetric() << ",";
-            results_file_ << lat_det_benchmarks_[i]->getMaxMetric() << ",";
-            results_file_ << lat_det_benchmarks_[i]->getModeMetric() << ",";
-            results_file_ << lat_det_benchmarks_[i]->getMetricUnits() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getMeanMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getMinMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->get25PercentileMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getMedianMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->get75PercentileMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->get95PercentileMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->get99PercentileMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getMaxMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getModeMetric() << ",";
+            results_file_ << lat_mat_benchmarks_[i]->getMetricUnits() << ",";
             for (uint32_t j = 0; j < g_num_physical_packages; j++) {
-                results_file_ << lat_det_benchmarks_[i]->getMeanDRAMPower(j) << ",";
-                results_file_ << lat_det_benchmarks_[i]->getPeakDRAMPower(j) << ",";
+                results_file_ << lat_mat_benchmarks_[i]->getMeanDRAMPower(j) << ",";
+                results_file_ << lat_mat_benchmarks_[i]->getPeakDRAMPower(j) << ",";
             }
             results_file_ << "N/A" << ",";
             results_file_ << "" << ",";
             results_file_ << std::endl;
         }
     }
+    std::cout << std::endl;
 
-    // aggregated report of latency detailed benchmarks
-    if (config_.latencyDetailedTestSelected()) {
+    // aggregated report of latency matrix benchmarks
+    if (config_.latencyMatrixTestSelected()) {
         uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
 
-        std::cout <<  "Measured idle latencies (in " << lat_det_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
+        std::cout <<  "Measured idle latencies (in " << lat_mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
         std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
 
         int width = config_.allCoresSelected() ? 3 : 13;
@@ -564,22 +565,22 @@ bool BenchmarkManager::runLatencyDetailedBenchmarks() {
             }
         }
 
-        for (uint32_t i = 0; i < lat_det_benchmarks_.size(); i++) {
+        for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++) {
             if (i % (mem_regions_per_numa * g_num_numa_nodes) == 0) {
                 std::cout << std::endl;
-                uint32_t pu = config_.allCoresSelected() ? lat_det_benchmarks_[i]->getCPUId() : lat_det_benchmarks_[i]->getCPUNode();
+                uint32_t pu = config_.allCoresSelected() ? lat_mat_benchmarks_[i]->getCPUId() : lat_mat_benchmarks_[i]->getCPUNode();
                 std::cout << std::setw(width) << pu;
             }
 
-            double mean_metric = lat_det_benchmarks_[i]->getMeanMetric();
-            // std::string metric_units = lat_det_benchmarks_[i]->getMetricUnits();
+            double mean_metric = lat_mat_benchmarks_[i]->getMeanMetric();
+            // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
             std::cout << std::setw(12) << mean_metric;
         }
         std::cout << std::endl;
     }
 
     if (g_verbose)
-        std::cout << std::endl << "Done running latency detailed benchmarks." << std::endl;
+        std::cout << std::endl << "Done running latency matrix benchmarks." << std::endl;
 
     return true;
 }
@@ -662,7 +663,7 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
             std::cout << std::endl;
         }
 
-        if (config_.latencyDetailedTestSelected()) {
+        if (config_.latencyMatrixTestSelected()) {
             std::cout << "Virtual address for memory region #" << mem_region << " on NUMA node " << numa_node << ": ";
             std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
             std::cout << std::endl;
@@ -895,7 +896,7 @@ bool BenchmarkManager::buildBenchmarks() {
 
     uint32_t cpu      = -1;
     uint32_t cpu_node = -1;
-    //Build latency detailed benchmarks
+    //Build latency matrix benchmarks
     for (auto pu = processor_units.cbegin(); pu != processor_units.cend(); pu++) { //iterate each cpu NUMA node
         if (config_.allCoresSelected()) {
             cpu = *pu;
@@ -919,8 +920,8 @@ bool BenchmarkManager::buildBenchmarks() {
 
                         // Latency benchamrk from every core to every memory region
                         benchmark_name = static_cast<std::ostringstream*>(&(std::ostringstream()
-                                            << "Test #" << g_test_index << "LD (LatencyDetailed)"))->str();
-                        lat_det_benchmarks_.push_back(new LatencyDetailedBenchmark(mem_array,
+                                            << "Test #" << g_test_index << "LM (LatencyMatrix)"))->str();
+                        lat_mat_benchmarks_.push_back(new LatencyMatrixBenchmark(mem_array,
                                                                                    mem_array_len,
                                                                                    config_.getIterationsPerTest(),
                                                                                    config_.getNumWorkerThreads(),
@@ -935,7 +936,7 @@ bool BenchmarkManager::buildBenchmarks() {
                                                                                    stride,
                                                                                    dram_power_readers_,
                                                                                    benchmark_name));
-                        if (lat_det_benchmarks_[lat_det_benchmarks_.size()-1] == NULL) {
+                        if (lat_mat_benchmarks_[lat_mat_benchmarks_.size()-1] == NULL) {
                             std::cerr << "ERROR: Failed to build a LatencyBenchmark!" << std::endl;
                             return false;
                         }

@@ -1,11 +1,11 @@
 /**
  * @file
  *
- * @brief Implementation file for the LatencyDetailedBenchmark class.
+ * @brief Implementation file for the LatencyMatrixBenchmark class.
  */
 
 //Headers
-#include <LatencyDetailedBenchmark.h>
+#include <LatencyMatrixBenchmark.h>
 #include <common.h>
 #include <benchmark_kernels.h>
 #include <MemoryWorker.h>
@@ -25,7 +25,7 @@
 
 using namespace xmem;
 
-LatencyDetailedBenchmark::LatencyDetailedBenchmark(
+LatencyMatrixBenchmark::LatencyMatrixBenchmark(
         void* mem_array,
         size_t len,
         uint32_t iterations,
@@ -68,18 +68,18 @@ LatencyDetailedBenchmark::LatencyDetailedBenchmark(
         load_metric_on_iter_.push_back(0);
 }
 
-uint32_t LatencyDetailedBenchmark::getCPUId() const {
+uint32_t LatencyMatrixBenchmark::getCPUId() const {
     return cpu_;
 }
 
-void LatencyDetailedBenchmark::printBenchmarkHeader() const {
+void LatencyMatrixBenchmark::printBenchmarkHeader() const {
     //Spit out useful info
     // std::cout << std::endl;
     // std::cout << "-------- Running Benchmark: " << name_;
     // std::cout << " ----------" << std::endl;
 }
 
-void LatencyDetailedBenchmark::reportBenchmarkInfo() const {
+void LatencyMatrixBenchmark::reportBenchmarkInfo() const {
     // std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
     // std::cout << "Memory NUMA Node: " << mem_node_ << " ";
     // std::cout << "Region: " << mem_region_ << " ";
@@ -156,7 +156,7 @@ void LatencyDetailedBenchmark::reportBenchmarkInfo() const {
 }
 
 
-void LatencyDetailedBenchmark::reportResults() const {
+void LatencyMatrixBenchmark::reportResults() const {
 
     if (use_cpu_nodes_) {
         std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
@@ -176,21 +176,21 @@ void LatencyDetailedBenchmark::reportResults() const {
         std::cerr << "WARNING: Benchmark has not run yet. No reported results." << std::endl;
 }
 
-double LatencyDetailedBenchmark::getLoadMetricOnIter(uint32_t iter) const {
+double LatencyMatrixBenchmark::getLoadMetricOnIter(uint32_t iter) const {
     if (has_run_ && iter - 1 <= iterations_)
         return load_metric_on_iter_[iter - 1];
     else //bad call
         return -1;
 }
 
-double LatencyDetailedBenchmark::getMeanLoadMetric() const {
+double LatencyMatrixBenchmark::getMeanLoadMetric() const {
     if (has_run_)
         return mean_load_metric_;
     else //bad call
         return -1;
 }
 
-bool LatencyDetailedBenchmark::runCore() {
+bool LatencyMatrixBenchmark::runCore() {
     size_t len_per_thread = len_ / num_worker_threads_; //Carve up memory space so each worker has its own area to play in
 
     //Set up latency measurement kernel function pointers
