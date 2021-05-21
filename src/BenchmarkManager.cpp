@@ -88,6 +88,7 @@ BenchmarkManager::BenchmarkManager(
         tp_benchmarks_(),
         lat_benchmarks_(),
         lat_mat_benchmarks_(),
+        thr_mat_benchmarks_(),
         dram_power_readers_(),
         results_file_(),
         built_benchmarks_(false)
@@ -152,6 +153,9 @@ BenchmarkManager::~BenchmarkManager() {
     //Free latency matrix benchmarks
     for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++)
         delete lat_mat_benchmarks_[i];
+    //Free throughput matrix benchmarks
+    for (uint32_t i = 0; i < thr_mat_benchmarks_.size(); i++)
+        delete thr_mat_benchmarks_[i];
     //Free memory arrays
     for (uint32_t i = 0; i < mem_arrays_.size(); i++)
         if (mem_arrays_[i] != nullptr) {
@@ -185,6 +189,8 @@ bool BenchmarkManager::runAll() {
         success = success && runLatencyBenchmarks();
     if (config_.latencyMatrixTestSelected())
         success = success && runLatencyMatrixBenchmarks();
+    if (config_.throughputMatrixTestSelected())
+        success = success && runThroughputMatrixBenchmarks();
 
     return success;
 }
@@ -583,6 +589,162 @@ bool BenchmarkManager::runLatencyMatrixBenchmarks() {
     return true;
 }
 
+bool BenchmarkManager::runThroughputMatrixBenchmarks() {
+    if (!built_benchmarks_) {
+        if (!buildBenchmarks()) {
+            std::cerr << "ERROR: Failed to build benchmarks." << std::endl;
+            return false;
+        }
+    }
+
+    for (uint32_t i = 0; i < thr_mat_benchmarks_.size(); i++) {
+        thr_mat_benchmarks_[i]->run();
+        thr_mat_benchmarks_[i]->reportResults(); //to console
+
+        //Write to results file if necessary
+        if (config_.useOutputFile()) {
+            results_file_ << thr_mat_benchmarks_[i]->getName() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getIterations() << ",";
+            results_file_ << static_cast<size_t>(thr_mat_benchmarks_[i]->getLen() / thr_mat_benchmarks_[i]->getNumThreads() / KB) << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getNumThreads() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getNumThreads()-1 << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getMemNode() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getCPUNode() << ",";
+            if (thr_mat_benchmarks_[i]->getNumThreads() < 2) {
+                results_file_ << "N/A" << ",";
+                results_file_ << "N/A" << ",";
+                results_file_ << "N/A" << ",";
+                results_file_ << "N/A" << ",";
+            } else {
+                pattern_mode_t pattern = thr_mat_benchmarks_[i]->getPatternMode();
+                switch (pattern) {
+                    case SEQUENTIAL:
+                        results_file_ << "SEQUENTIAL" << ",";
+                        break;
+                    case RANDOM:
+                        results_file_ << "RANDOM" << ",";
+                        break;
+                    default:
+                        results_file_ << "UNKNOWN" << ",";
+                        break;
+                }
+
+                rw_mode_t rw_mode = thr_mat_benchmarks_[i]->getRWMode();
+                switch (rw_mode) {
+                    case READ:
+                        results_file_ << "READ" << ",";
+                        break;
+                    case WRITE:
+                        results_file_ << "WRITE" << ",";
+                        break;
+                    default:
+                        results_file_ << "UNKNOWN" << ",";
+                        break;
+                }
+
+                chunk_size_t chunk_size = thr_mat_benchmarks_[i]->getChunkSize();
+                switch (chunk_size) {
+                    case CHUNK_32b:
+                        results_file_ << "32" << ",";
+                        break;
+#ifdef HAS_WORD_64
+                    case CHUNK_64b:
+                        results_file_ << "64" << ",";
+                        break;
+#endif
+#ifdef HAS_WORD_128
+                    case CHUNK_128b:
+                        results_file_ << "128" << ",";
+                        break;
+#endif
+#ifdef HAS_WORD_256
+                    case CHUNK_256b:
+                        results_file_ << "256" << ",";
+                        break;
+#endif
+#ifdef HAS_WORD_512
+                    case CHUNK_512b:
+                        results_file_ << "512" << ",";
+                        break;
+#endif
+                    default:
+                        results_file_ << "UNKNOWN" << ",";
+                        break;
+                }
+
+                results_file_ << thr_mat_benchmarks_[i]->getStrideSize() << ",";
+            }
+
+            results_file_ << "N/A" << ",";
+            results_file_ << "N/A" << ",";
+            results_file_ << "N/A" << ",";
+            results_file_ << "N/A" << ",";
+            results_file_ << "N/A" << ",";
+            results_file_ << "N/A" << ",";
+            results_file_ << "N/A" << ",";
+            results_file_ << "N/A" << ",";
+            results_file_ << "MB/s" << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getMeanMetric() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getMinMetric() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->get25PercentileMetric() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getMedianMetric() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->get75PercentileMetric() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->get95PercentileMetric() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->get99PercentileMetric() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getMaxMetric() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getModeMetric() << ",";
+            results_file_ << thr_mat_benchmarks_[i]->getMetricUnits() << ",";
+            for (uint32_t j = 0; j < g_num_physical_packages; j++) {
+                results_file_ << thr_mat_benchmarks_[i]->getMeanDRAMPower(j) << ",";
+                results_file_ << thr_mat_benchmarks_[i]->getPeakDRAMPower(j) << ",";
+            }
+            results_file_ << "N/A" << ",";
+            results_file_ << "" << ",";
+            results_file_ << std::endl;
+        }
+    }
+    std::cout << std::endl;
+
+    // aggregated report of throughput matrix benchmarks
+    uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
+
+    std::cout <<  "Measured idle throughputs (in " << thr_mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
+    std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl; //Change the output and for latency.
+
+    int width = config_.allCoresSelected() ? 3 : 13;
+    std::cout << std::setw(width) << " ";
+    for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
+        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
+            std::cout << " (Node, Reg)";
+        }
+    }
+    std::cout << std::endl;
+
+    std::cout << (config_.allCoresSelected() ? "CPU" : "CPU NUMA Node");
+    for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
+        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
+            std::cout  << std::setw(12) << "(" + std::to_string(*it) + ", " + std::to_string(mem_region) + ")";
+        }
+    }
+
+    for (uint32_t i = 0; i < thr_mat_benchmarks_.size(); i++) {
+        if (i % (mem_regions_per_numa * g_num_numa_nodes) == 0) {
+            std::cout << std::endl;
+            uint32_t pu = config_.allCoresSelected() ? thr_mat_benchmarks_[i]->getCPUId() : thr_mat_benchmarks_[i]->getCPUNode();
+            std::cout << std::setw(width) << pu;
+        }
+
+        double mean_metric = thr_mat_benchmarks_[i]->getMeanMetric();
+        std::cout << std::setw(12) << mean_metric;
+    }
+    std::cout << std::endl;
+
+    if (g_verbose)
+        std::cout << std::endl << "Done running throughput matrix benchmarks." << std::endl;
+
+    return true;
+}
+
 void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
     //Allocate memory in each NUMA node to be tested
 
@@ -661,7 +823,7 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
             std::cout << std::endl;
         }
 
-        if (config_.latencyMatrixTestSelected()) {
+        if (config_.latencyMatrixTestSelected() || config_.throughputMatrixTestSelected()) {
             std::cout << "Virtual address for memory region #" << mem_region << " on NUMA node " << numa_node << ": ";
             std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
             std::cout << std::endl;
@@ -916,7 +1078,7 @@ bool BenchmarkManager::buildBenchmarks() {
                     for (uint32_t stride_index = 0; stride_index < strides.size(); stride_index++) {  //iterate different stride lengths
                         int32_t stride = strides[stride_index];
 
-                        // Latency benchamrk from every core to every memory region
+                        // Latency benchmark from every core to every memory region
                         benchmark_name = static_cast<std::ostringstream*>(&(std::ostringstream()
                                             << "Test #" << g_test_index << "LM (LatencyMatrix)"))->str();
                         lat_mat_benchmarks_.push_back(new LatencyMatrixBenchmark(mem_array,
@@ -929,13 +1091,65 @@ bool BenchmarkManager::buildBenchmarks() {
                                                                                    cpu,
                                                                                    use_cpu_nodes,
                                                                                    SEQUENTIAL,
-                                                                                   rws[0],
+                                                                                   READ,
                                                                                    chunk,
                                                                                    stride,
                                                                                    dram_power_readers_,
                                                                                    benchmark_name));
                         if (lat_mat_benchmarks_[lat_mat_benchmarks_.size()-1] == NULL) {
-                            std::cerr << "ERROR: Failed to build a LatencyBenchmark!" << std::endl;
+                            std::cerr << "ERROR: Failed to build a LatencyMatrixBenchmark!" << std::endl;
+                            return false;
+                        }
+                        g_test_index++;
+                    }
+                }
+            }
+        }
+    }
+
+    //Build throughput matrix benchmarks
+    for (auto pu = processor_units.cbegin(); pu != processor_units.cend(); pu++) { //iterate each cpu NUMA node
+        if (config_.allCoresSelected()) {
+            cpu = *pu;
+        }
+        else {
+            cpu_node = *pu;
+        }
+
+        for (auto mem_node_it = memory_numa_node_affinities_.cbegin(); mem_node_it != memory_numa_node_affinities_.cend(); mem_node_it++) { //iterate each memory NUMA node
+            for (uint32_t mem_region = 0; mem_region < config_.getMemoryRegionsPerNUMANode(); mem_region++) {
+                uint32_t mem_node = *mem_node_it;
+                uint32_t region_id = mem_node * config_.getMemoryRegionsPerNUMANode() + mem_region;
+                void* mem_array = mem_arrays_[region_id];
+                size_t mem_array_len = mem_array_lens_[region_id];
+
+                for (uint32_t chunk_index = 0; chunk_index < chunks.size(); chunk_index++) { //iterate different chunk sizes
+                    chunk_size_t chunk = chunks[chunk_index];
+
+                    for (uint32_t stride_index = 0; stride_index < strides.size(); stride_index++) {  //iterate different stride lengths
+                        int32_t stride = strides[stride_index];
+
+                        // Throughput benchmark from every core to every memory region
+                        benchmark_name = static_cast<std::ostringstream*>(&(std::ostringstream()
+                                            << "Test #" << g_test_index << "TM (ThroughputMatrix)"))->str();
+                        thr_mat_benchmarks_.push_back(
+                            new ThroughputMatrixBenchmark(mem_array,
+                                mem_array_len,
+                                config_.getIterationsPerTest(),
+                                g_num_logical_cpus, // get all cores requesting data from memory in order to achieve higher b/w
+                                mem_node,
+                                mem_region,
+                                cpu_node,
+                                cpu,
+                                use_cpu_nodes,
+                                SEQUENTIAL,
+                                READ,
+                                chunk,
+                                stride,
+                                dram_power_readers_,
+                                benchmark_name));
+                        if (thr_mat_benchmarks_[thr_mat_benchmarks_.size()-1] == NULL) {
+                            std::cerr << "ERROR: Failed to build a ThroughputMatrixBenchmark!" << std::endl;
                             return false;
                         }
                         g_test_index++;

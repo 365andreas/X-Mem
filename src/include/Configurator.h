@@ -63,6 +63,7 @@ namespace xmem {
         RANDOM_ACCESS_PATTERN,
         SEQUENTIAL_ACCESS_PATTERN,
         MEAS_THROUGHPUT,
+        MEAS_THROUGHPUT_MATRIX,
         NUMA_DISABLE,
         VERBOSE,
         WORKING_SET_SIZE_PER_THREAD,
@@ -104,6 +105,7 @@ namespace xmem {
         { STRIDE_SIZE, 0, "S", "stride_size", MyArg::Integer, "    -S, --stride_size    \tA stride size to use for load traffic-generating threads, specified in powers-of-two multiples of the chunk size(s). Allowed values: 1, -1, 2, -2, 4, -4, 8, -8, 16, -16. Positive indicates the forward direction (increasing addresses), while negative indicates the reverse direction." },
         { ALL_CORES, 0, "", "all_cores", Arg::None, "    --all_cores    \tRun matrix benchmarks for every core of the system." },
         { MEAS_LATENCY_MATRIX, 0, "", "latency_matrix", Arg::None, "    --latency_matrix    \tUnloaded latency for all CPU NUMA nodes of the system benchmarking mode."},
+        { MEAS_THROUGHPUT_MATRIX, 0, "", "throughput_matrix", Arg::None, "    --throughput_matrix    \tRun throughput benchmark for every core of the system." },
         { UNKNOWN, 0, "", "", Arg::None,
         "\n"
         "If a given option is not specified, X-Mem defaults will be used where appropriate.\n"
@@ -200,8 +202,8 @@ namespace xmem {
         bool latencyTestSelected() const { return run_latency_; }
 
         /**
-         * @brief Indicates if the latency test has been selected.
-         * @returns True if the latency test has been selected to run.
+         * @brief Indicates if the latency matrix test has been selected.
+         * @returns True if the latency matrix test has been selected to run.
          */
         bool latencyMatrixTestSelected() const { return run_latency_matrix_; }
 
@@ -210,6 +212,12 @@ namespace xmem {
          * @returns True if the throughput test has been selected to run.
          */
         bool throughputTestSelected() const { return run_throughput_; }
+
+        /**
+         * @brief Indicates if the throughput matrix test has been selected.
+         * @returns True if the throughput matrix test has been selected to run.
+         */
+        bool throughputMatrixTestSelected() const { return run_throughput_matrix_; }
 
         /**
          * @brief Gets the working set size in bytes for each worker thread, if applicable.
@@ -430,9 +438,10 @@ namespace xmem {
 #endif
 
         bool run_latency_; /**< True if latency tests should be run. */
-        bool run_all_cores_; /**< True if matrix benchmarks should run for all cores. */
-        bool run_latency_matrix_; /**< True if latency tests should be run. */
         bool run_throughput_; /**< True if throughput tests should be run. */
+        bool run_all_cores_; /**< True if matrix benchmarks should run for all cores. */
+        bool run_latency_matrix_; /**< True if latency matrix tests should be run. */
+        bool run_throughput_matrix_; /**< True if throughput matrix tests should be run. */
         size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */
         uint32_t num_worker_threads_; /**< Number of load threads to use for throughput benchmarks, loaded latency benchmarks, and stress tests. */
         bool use_chunk_32b_; /**< If true, use chunk sizes of 32-bits where applicable. */

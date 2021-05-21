@@ -40,6 +40,7 @@
 #include <ThroughputBenchmark.h>
 #include <LatencyBenchmark.h>
 #include <LatencyMatrixBenchmark.h>
+#include <ThroughputMatrixBenchmark.h>
 #include <Configurator.h>
 
 //Libraries
@@ -88,6 +89,12 @@ namespace xmem {
          */
         bool runLatencyMatrixBenchmarks();
 
+        /**
+         * @brief Runs the throughput matrix benchmark.
+         * @returns True on benchmarking success.
+         */
+        bool runThroughputMatrixBenchmarks();
+
 #ifdef EXT_DELAY_INJECTED_LOADED_LATENCY_BENCHMARK
         /**
          * @brief Runs the delay-injected loaded latency benchmark extension.
@@ -129,6 +136,7 @@ namespace xmem {
         std::vector<ThroughputBenchmark*> tp_benchmarks_; /**< Set of throughput benchmarks. */
         std::vector<LatencyBenchmark*> lat_benchmarks_; /**< Set of latency benchmarks. */
         std::vector<LatencyMatrixBenchmark*> lat_mat_benchmarks_; /**< Set of latency matrix benchmarks. */
+        std::vector<ThroughputMatrixBenchmark*> thr_mat_benchmarks_; /**< Set of throughput matrix benchmarks. */
         std::vector<PowerReader*> dram_power_readers_; /**< Set of power measurement objects for DRAM on each NUMA node. */
         std::fstream results_file_; /**< The results CSV file. */
         bool built_benchmarks_; /**< If true, finished building all benchmarks. */

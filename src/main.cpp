@@ -145,6 +145,10 @@ int main(int argc, char* argv[]) {
                 benchmgr.runLatencyMatrixBenchmarks();
             }
 
+            if (config.throughputMatrixTestSelected()) {
+                benchmgr.runThroughputMatrixBenchmarks();
+            }
+
             if (config.extensionsEnabled()) {
                 std::cout << std::endl;
                 std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
