@@ -76,6 +76,7 @@ namespace xmem {
     uint32_t g_num_logical_cpus; /**< Number of logical CPU cores in the system. This may be different than physical CPUs, e.g. simultaneous multithreading. */
     uint32_t g_num_physical_cpus; /**< Number of physical CPU cores in the system. */
     uint32_t g_num_physical_packages; /**< Number of physical CPU packages in the system. Generally this is the same as number of NUMA nodes, unless UMA emulation is done in hardware. */
+    std::vector<uint32_t> g_physical_package_of_cpu; /**< Mapping of logical CPU cores in the system to the according physical package that they belong. */
     uint32_t g_total_l1_caches; /**< Total number of L1 caches in the system. */
     uint32_t g_total_l2_caches; /**< Total number of L2 caches in the system. */
     uint32_t g_total_l3_caches; /**< Total number of L3 caches in the system. */
@@ -452,6 +453,7 @@ void xmem::init_globals() {
     g_verbose = false;
     g_num_numa_nodes = DEFAULT_NUM_NODES;
     g_num_physical_packages = DEFAULT_NUM_PHYSICAL_PACKAGES;
+    g_physical_package_of_cpu = DEFAULT_PHYSICAL_PACKAGE_OF_CPU;
     g_num_physical_cpus = DEFAULT_NUM_PHYSICAL_CPUS;
     g_num_logical_cpus = DEFAULT_NUM_LOGICAL_CPUS;
     g_total_l1_caches = DEFAULT_NUM_L1_CACHES;
@@ -594,6 +596,43 @@ int32_t xmem::query_sys_info() {
     g_num_physical_cpus = core_ids.size() * g_num_physical_packages; //FIXME: currently this assumes each processor package has an equal number of cores. This may not be true in general! Need more complicated /proc/cpuinfo parsing.
 #endif
 
+    //Get mapping of physical CPUs to packages
+#ifdef _WIN32
+    //TODO: add implementation for WIN32
+#endif
+#ifdef __gnu_linux__
+    //Get number of logical CPUs
+    g_num_logical_cpus = sysconf(_SC_NPROCESSORS_ONLN); //This isn't really portable -- requires glibc extensions to sysconf()
+    g_physical_package_of_cpu.resize(g_num_logical_cpus);
+
+    in.clear();
+    in.seekg(0);
+    uint32_t cpu = 0;
+    uint32_t physical_id = 0;
+    while (!in.eof()) {
+
+        in.getline(line, 512, '\n');
+
+        // the line with CPU feature flags may exceed 512 B, leaving the stream in an error state and the remainder of the line unread
+        if(in.fail() && in.gcount() == 511) {
+            // clean up the stream
+            in.clear();
+            // eat the remaining line
+            in.ignore(std::numeric_limits<std::streamsize>::max(),
+                '\n');
+        }
+
+        std::string line_string(line);
+        if (line_string.find("processor") != std::string::npos) {
+            sscanf(line, "processor\t\t\t: %u", &cpu);
+        } else if (line_string.find("physical id") != std::string::npos) {
+            sscanf(line, "physical id\t\t\t: %u", &physical_id);
+            g_physical_package_of_cpu[cpu] = physical_id;
+        }
+
+    }
+#endif
+
     //Get number of caches
 #ifdef _WIN32
     curr = buffer;
@@ -665,6 +704,9 @@ void xmem::report_sys_info() {
     std::cout << "Number of physical processor packages: " << g_num_physical_packages;
     if (g_num_physical_packages == DEFAULT_NUM_PHYSICAL_PACKAGES)
         std::cout << "?";
+    std::cout << std::endl;
+    if (g_physical_package_of_cpu.empty())
+        std::cout << "Mapping of physical core to packages is empty?";
     std::cout << std::endl;
     std::cout << "Number of physical processor cores: " << g_num_physical_cpus;
     if (g_num_physical_cpus == DEFAULT_NUM_PHYSICAL_CPUS)

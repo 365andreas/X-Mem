@@ -35,6 +35,7 @@
 //Libraries
 #include <cstdint>
 #include <cstddef>
+#include <vector>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -250,6 +251,7 @@ namespace xmem {
 #define DEFAULT_NUM_WORKER_THREADS 1 /**< Default number of worker threads to use. */
 #define DEFAULT_NUM_NODES 0 /**< Default number of NUMA nodes. */
 #define DEFAULT_NUM_PHYSICAL_PACKAGES 0 /**< Default number of physical packages. */
+#define DEFAULT_PHYSICAL_PACKAGE_OF_CPU {} /**< Default mapping of physical CPU cores in the system to the according physical package. */
 #define DEFAULT_NUM_PHYSICAL_CPUS 0 /**< Default number of physical CPU cores. */
 #define DEFAULT_NUM_LOGICAL_CPUS 0 /**< Default number of logical CPU cores. */
 #define DEFAULT_NUM_L1_CACHES 0 /**< Default number of L1 caches. */
@@ -363,6 +365,7 @@ namespace xmem {
     extern uint32_t g_num_numa_nodes;
     extern uint32_t g_num_logical_cpus;
     extern uint32_t g_num_physical_packages;
+    extern std::vector<uint32_t> g_physical_package_of_cpu;
     extern uint32_t g_starting_test_index;
     extern uint32_t g_test_index;
     extern tick_t g_ticks_per_ms;

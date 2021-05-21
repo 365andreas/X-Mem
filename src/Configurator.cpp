@@ -54,9 +54,9 @@ Configurator::Configurator(
     run_ext_stream_benchmark_(false),
 #endif
     run_latency_(true),
+    run_throughput_(true),
     run_all_cores_(false),
     run_latency_matrix_(false),
-    run_throughput_(true),
     run_throughput_matrix_(false),
     working_set_size_per_thread_(DEFAULT_WORKING_SET_SIZE_PER_THREAD),
     num_worker_threads_(DEFAULT_NUM_WORKER_THREADS),
