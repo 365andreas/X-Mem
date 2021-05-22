@@ -293,6 +293,8 @@ bool ThroughputMatrixBenchmark::runCore() {
 
         //Compute metric for this iteration
         metric_on_iter_[i] = ((static_cast<double>(total_passes) * static_cast<double>(bytes_per_pass)) / static_cast<double>(MB))   /   ((static_cast<double>(avg_adjusted_ticks) * g_ns_per_tick) / 1e9);
+        enumerator_metric_on_iter_[i] = (static_cast<double>(total_passes) * static_cast<double>(bytes_per_pass)) / static_cast<double>(MB);
+        denominator_metric_on_iter_[i] = (static_cast<double>(avg_adjusted_ticks) * g_ns_per_tick) / 1e9;
 
         //Clean up workers and threads for this iteration
         for (uint32_t t = 0; t < num_worker_threads_; t++) {

@@ -75,6 +75,8 @@ Benchmark::Benchmark(
         dram_power_readers_(dram_power_readers),
         dram_power_threads_(),
         metric_on_iter_(),
+        enumerator_metric_on_iter_(),
+        denominator_metric_on_iter_(),
         mean_metric_(0),
         min_metric_(0),
         percentile_25_metric_(0),
@@ -92,9 +94,20 @@ Benchmark::Benchmark(
         has_run_(false),
         warning_(false)
     {
+        // extract metric units for enumerator and denominator of ratio metrics
+        enumerator_metric_units_ = "None";
+        denominator_metric_units_= "None";
+        size_t pos = 0;
+        std::string units = metric_units_;
+        if ((pos = units.find("/")) != std::string::npos) {
+            enumerator_metric_units_ = units.substr(0, pos);
+            units.erase(0, pos + 1);
+            denominator_metric_units_ = units;
+        }
 
-    for (uint32_t i = 0; i < iterations_; i++)
-        metric_on_iter_.push_back(-1);
+        metric_on_iter_.resize(iterations_, -1);
+        enumerator_metric_on_iter_.resize(iterations_, -1);
+        denominator_metric_on_iter_.resize(iterations_, -1);
 }
 
 Benchmark::~Benchmark() {

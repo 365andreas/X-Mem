@@ -326,6 +326,8 @@ namespace xmem {
 
         //Benchmark results
         std::vector<double> metric_on_iter_; /**< Metrics for each iteration of the benchmark. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+        std::vector<double> enumerator_metric_on_iter_; /**< Metrics for each iteration of the benchmark. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+        std::vector<double> denominator_metric_on_iter_; /**< Denominator metric for ratio metrics for each iteration of the benchmark. */
         double mean_metric_; /**< Average metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
         double min_metric_; /**< Minimum metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
         double percentile_25_metric_; /**< 25th percentile metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
@@ -336,6 +338,8 @@ namespace xmem {
         double max_metric_; /**< Maximum metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
         double mode_metric_; /**< Mode metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
         std::string metric_units_; /**< String representing the units of measurement for the metric. */
+        std::string enumerator_metric_units_; /**< String representing the units of measurement for the enumerator of ratio metrics. */
+        std::string denominator_metric_units_; /**< String representing the units of measurement for the denominator of ratio metrics. */
         std::vector<double> mean_dram_power_socket_; /**< The mean DRAM power in this benchmark, per socket. */
         std::vector<double> peak_dram_power_socket_; /**< The peak DRAM power in this benchmark, per socket. */
 
