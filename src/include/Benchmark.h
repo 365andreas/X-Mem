@@ -283,9 +283,14 @@ namespace xmem {
         virtual bool runCore() = 0;
 
         /**
+         * @brief Computes the median metric across `n` iterations.
+         */
+        void computeMedian(std::vector<double> metrics, uint32_t n);
+
+        /**
          * @brief Computes the metrics across iterations.
          */
-        void computeMetrics();
+        virtual void computeMetrics();
 
         /**
          * @brief Starts the DRAM power measurement threads.
@@ -337,6 +342,8 @@ namespace xmem {
         double percentile_99_metric_; /**< 99th percentile metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
         double max_metric_; /**< Maximum metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
         double mode_metric_; /**< Mode metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+        double lower_95_CI_median_; /**< Lower bound value of the 95% CI of the median. */
+        double upper_95_CI_median_; /**< Upper bound value of the 95% CI of the median. */
         std::string metric_units_; /**< String representing the units of measurement for the metric. */
         std::string enumerator_metric_units_; /**< String representing the units of measurement for the enumerator of ratio metrics. */
         std::string denominator_metric_units_; /**< String representing the units of measurement for the denominator of ratio metrics. */

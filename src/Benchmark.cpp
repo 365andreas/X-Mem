@@ -34,8 +34,11 @@
 #include <common.h>
 #include <benchmark_kernels.h>
 #include <PowerReader.h>
+#include <util.h>
 
 //Libraries
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <vector>
@@ -439,6 +442,34 @@ rw_mode_t Benchmark::getRWMode() const {
     return rw_mode_;
 }
 
+void Benchmark::computeMedian(std::vector<double> metrics, uint32_t n) {
+
+    if ((n > metrics.size()) || (n <= 0)) {
+        std::cerr << "WARNING: Wrong arg in computeMedian()." << std::endl;
+        return;
+    }
+
+    // Keep only first n elems.
+    metrics.resize(n);
+
+    median_metric_ = compute_median(metrics);
+
+    if (n <= 5) {
+        std::cerr << "WARNING: Number of metrics given is too small to compute the CI of the median." << std::endl;
+        return;
+    }
+
+    // Build sorted array of metrics from each iteration
+    std::vector<double> sortedMetrics = metrics;
+    std::sort(sortedMetrics.begin(), sortedMetrics.end());
+
+    uint32_t lower_95_CI_rank = std::max((uint32_t) 1, static_cast<uint32_t>(      (n - Z_CI_95 * sqrt(n)) / 2.0));
+    uint32_t upper_95_CI_rank = std::min(           n, static_cast<uint32_t>(ceil(((n + Z_CI_95 * sqrt(n)) / 2.0) + 1.0)));
+
+    lower_95_CI_median_ = sortedMetrics[lower_95_CI_rank - 1]; //-1 since it is zero-indexed
+    upper_95_CI_median_ = sortedMetrics[upper_95_CI_rank - 1]; //-1 since it is zero-indexed
+}
+
 void Benchmark::computeMetrics() {
     if (has_run_) {
         //Compute mean
@@ -448,14 +479,14 @@ void Benchmark::computeMetrics() {
         mean_metric_ /= iterations_;
 
         //Build sorted array of metrics from each iteration
-        std::vector<double> sortedMetrics = metric_on_iter_;;
+        std::vector<double> sortedMetrics = metric_on_iter_;
         std::sort(sortedMetrics.begin(), sortedMetrics.end());
 
         //Compute percentiles
         min_metric_ = sortedMetrics.front();
         percentile_25_metric_ = sortedMetrics[sortedMetrics.size()/4];
         percentile_75_metric_ = sortedMetrics[sortedMetrics.size()*3/4];
-        median_metric_ = sortedMetrics[sortedMetrics.size()/2];
+        median_metric_ = compute_median(sortedMetrics);
         percentile_95_metric_ = sortedMetrics[sortedMetrics.size()*95/100];
         percentile_99_metric_ = sortedMetrics[sortedMetrics.size()*99/100];
         max_metric_ = sortedMetrics.back();

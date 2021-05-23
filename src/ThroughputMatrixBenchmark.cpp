@@ -5,14 +5,17 @@
  */
 
 //Headers
+#include <LoadWorker.h>
 #include <ThroughputMatrixBenchmark.h>
 #include <common.h>
 #include <benchmark_kernels.h>
-#include <LoadWorker.h>
+#include <util.h>
 
 //Libraries
-#include <iostream>
+#include <algorithm>
 #include <assert.h>
+#include <iostream>
+#include <map>
 #include <time.h>
 
 using namespace xmem;
@@ -51,7 +54,8 @@ ThroughputMatrixBenchmark::ThroughputMatrixBenchmark(
             name
         ),
         cpu_(cpu),
-        use_cpu_nodes_(use_cpu_nodes)
+        use_cpu_nodes_(use_cpu_nodes),
+        iterations_needed_(0)
     {
 }
 
@@ -67,9 +71,6 @@ void ThroughputMatrixBenchmark::printBenchmarkHeader() const {
 }
 
 void ThroughputMatrixBenchmark::reportBenchmarkInfo() const {
-    // std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
-    // std::cout << "Memory NUMA Node: " << mem_node_ << " ";
-    // std::cout << "Region: " << mem_region_ << " ";
 
     if ((num_worker_threads_ > 1) && g_verbose) {
         std::cout << "Load Chunk Size: ";
@@ -154,13 +155,56 @@ void ThroughputMatrixBenchmark::reportResults() const {
     std::cout << "Region: " << mem_region_ << " ";
 
     if (has_run_) {
-        std::cout << "Mean: " << mean_metric_ << " " << metric_units_; // << " and " << mean_load_metric_ << " MB/s mean imposed load (not necessarily matched)";
+        std::cout << "Mean: "       << mean_metric_        << " " << metric_units_ << " "; // << " and " << mean_load_metric_ << " MB/s mean imposed load (not necessarily matched)";
+        std::cout << "Median: "     << median_metric_      << " " << metric_units_ << " ";
+        std::cout << "LB 95% CI: "  << lower_95_CI_median_ << " " << metric_units_ << " ";
+        std::cout << "UB 95% CI: "  << upper_95_CI_median_ << " " << metric_units_ << " ";
+        std::cout << "iterations: " << iterations_;
         if (warning_)
             std::cout << " (WARNING)";
         std::cout << std::endl;
     }
     else
         std::cerr << "WARNING: Benchmark has not run yet. No reported results." << std::endl;
+}
+
+void ThroughputMatrixBenchmark::computeMetrics() {
+    if (has_run_) {
+
+        // Resize vector according to iterations executed.
+        metric_on_iter_.resize(iterations_);
+        enumerator_metric_on_iter_.resize(iterations_);
+
+        //Compute mean
+        mean_metric_ = 0;
+        for (uint32_t i = 0; i < iterations_; i++)
+            mean_metric_ += metric_on_iter_[i];
+        mean_metric_ /= iterations_;
+
+        //Build sorted array of metrics from each iteration
+        std::vector<double> sortedMetrics = metric_on_iter_;
+        std::sort(sortedMetrics.begin(), sortedMetrics.end());
+
+        //Compute percentiles
+        min_metric_ = sortedMetrics.front();
+        percentile_25_metric_ = sortedMetrics[sortedMetrics.size()/4];
+        percentile_75_metric_ = sortedMetrics[sortedMetrics.size()*3/4];
+        median_metric_ = compute_median(metric_on_iter_);
+        percentile_95_metric_ = sortedMetrics[sortedMetrics.size()*95/100];
+        percentile_99_metric_ = sortedMetrics[sortedMetrics.size()*99/100];
+        max_metric_ = sortedMetrics.back();
+
+        //Compute mode
+        std::map<double,uint32_t> metricCounts;
+        for (uint32_t i = 0; i < iterations_; i++)
+            metricCounts[metric_on_iter_[i]]++;
+        mode_metric_ = 0;
+        uint32_t greatest_count = 0;
+        for (auto it = metricCounts.cbegin(); it != metricCounts.cend(); it++) {
+            if (it->second > greatest_count)
+                mode_metric_ = it->first;
+        }
+    }
 }
 
 bool ThroughputMatrixBenchmark::runCore() {
@@ -292,9 +336,12 @@ bool ThroughputMatrixBenchmark::runCore() {
         }
 
         //Compute metric for this iteration
-        metric_on_iter_[i] = ((static_cast<double>(total_passes) * static_cast<double>(bytes_per_pass)) / static_cast<double>(MB))   /   ((static_cast<double>(avg_adjusted_ticks) * g_ns_per_tick) / 1e9);
         enumerator_metric_on_iter_[i] = (static_cast<double>(total_passes) * static_cast<double>(bytes_per_pass)) / static_cast<double>(MB);
         denominator_metric_on_iter_[i] = (static_cast<double>(avg_adjusted_ticks) * g_ns_per_tick) / 1e9;
+        metric_on_iter_[i] = enumerator_metric_on_iter_[i] / denominator_metric_on_iter_[i];
+        // std::cout << "latency_matrix: iter " << i << " " << enumerator_metric_on_iter_[i] << " " << enumerator_metric_units_
+        //           << " per " << denominator_metric_on_iter_[i] << " " << denominator_metric_units_ << " -> " << metric_on_iter_[i]
+        //           << " " << metric_units_ << std::endl;
 
         //Clean up workers and threads for this iteration
         for (uint32_t t = 0; t < num_worker_threads_; t++) {
@@ -303,6 +350,30 @@ bool ThroughputMatrixBenchmark::runCore() {
         }
         worker_threads.clear();
         workers.clear();
+
+        if (i >= 5) {
+            // 95% CI must not be computed for lower than 6 iterations of the experiment
+            computeMedian(metric_on_iter_, i + 1);
+            // std::cout << "median_metric_: "      << median_metric_      << std::endl;
+            // std::cout << "lower_95_CI_median_: " << lower_95_CI_median_ << std::endl;
+            // std::cout << "upper_95_CI_median_: " << upper_95_CI_median_ << std::endl;
+
+            if (   (lower_95_CI_median_ >= 0.95 * median_metric_)
+                && (upper_95_CI_median_ <= 1.05 * median_metric_)) {
+                // 95% CI is within 5% of the median
+                iterations_needed_ = i + 1;
+                // Resizing vector for keeping the results of the measurements since they are fewer than the max.
+                iterations_ = iterations_needed_;
+                metric_on_iter_.resize(iterations_needed_);
+                enumerator_metric_on_iter_.resize(iterations_needed_);
+                denominator_metric_on_iter_.resize(iterations_needed_);
+                break;
+            } else if (i == iterations_ - 1) {
+                std::cerr << "WARNING: 95% CI did not converge within 5% of median value!" << std::endl;
+            }
+        } else if (i == iterations_ - 1) {
+            std::cerr << "WARNING: 95% CI cannot be computed for fewer than six iterations!" << std::endl;
+        }
     }
 
     //Stop power measurement

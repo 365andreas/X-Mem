@@ -70,11 +70,17 @@ namespace xmem {
          */
         virtual void reportResults() const;
 
+        /**
+         * @brief Computes the metrics across iterations.
+         */
+        virtual void computeMetrics();
+
     protected:
         virtual bool runCore();
 
         uint32_t cpu_;
         bool use_cpu_nodes_;
+        uint32_t iterations_needed_;
 
     };
 };

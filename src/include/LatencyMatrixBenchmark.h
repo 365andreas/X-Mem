@@ -83,11 +83,17 @@ namespace xmem {
          */
         virtual void reportResults() const;
 
+        /**
+         * @brief Computes the metrics across iterations.
+         */
+        virtual void computeMetrics();
+
     protected:
         virtual bool runCore();
 
         uint32_t cpu_;
         bool use_cpu_nodes_;
+        uint32_t iterations_needed_;
 
         std::vector<double> load_metric_on_iter_; /**< Load metrics for each iteration of the benchmark. This is in MB/s. */
         double mean_load_metric_; /**< The average load throughput in MB/sec that was imposed on the latency measurement. */

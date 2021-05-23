@@ -577,9 +577,9 @@ bool BenchmarkManager::runLatencyMatrixBenchmarks() {
             std::cout << std::setw(width) << pu;
         }
 
-        double mean_metric = lat_mat_benchmarks_[i]->getMeanMetric();
+        double median_metric = lat_mat_benchmarks_[i]->getMedianMetric();
         // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
-        std::cout << std::setw(12) << mean_metric;
+        std::cout << std::setw(12) << median_metric;
     }
     std::cout << std::endl;
 
@@ -708,7 +708,7 @@ bool BenchmarkManager::runThroughputMatrixBenchmarks() {
     // aggregated report of throughput matrix benchmarks
     uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
 
-    std::cout <<  "Measured idle throughputs (in " << thr_mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
+    std::cout <<  "Measured unloaded throughputs (in " << thr_mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
     std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl; //Change the output and for latency.
 
     int width = config_.allCoresSelected() ? 3 : 13;
@@ -734,8 +734,8 @@ bool BenchmarkManager::runThroughputMatrixBenchmarks() {
             std::cout << std::setw(width) << pu;
         }
 
-        double mean_metric = thr_mat_benchmarks_[i]->getMeanMetric();
-        std::cout << std::setw(12) << mean_metric;
+        double median_metric = thr_mat_benchmarks_[i]->getMedianMetric();
+        std::cout << std::setw(12) << median_metric;
     }
     std::cout << std::endl;
 
