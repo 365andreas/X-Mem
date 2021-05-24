@@ -4,7 +4,7 @@
 
 /**
  * @file
- * 
+ *
  * @brief Extensions to third-party optionparser-related code.
  */
 
@@ -15,12 +15,14 @@
 #include <ExampleArg.h>
 
 //Libraries
+#include <climits>
 #include <cstdint>
-#include <stdio.h>
 #include <cstdlib>
+#include <sstream>
+#include <stdio.h>
 
 namespace xmem {
-            
+
     class MyArg : public ExampleArg
     {
     public:
@@ -68,6 +70,46 @@ namespace xmem {
             if (msg)
                 printError("Option '", option, "' requires a positive integer argument\n");
             return ARG_ILLEGAL;
+        }
+
+        /**
+         * @brief Checks an option that it is a hexadecimal address.
+         */
+        static ArgStatus HexAddress(const Option& option, bool msg) {
+            char* endptr = 0;
+            unsigned long long tmp = -1;
+            if (option.arg != 0)
+                tmp = strtoull(option.arg, &endptr, 16);
+            if (endptr != option.arg && *endptr == 0 && tmp > 0 && tmp != ULLONG_MAX)
+                return ARG_OK;
+
+            if (msg)
+                printError("Option '", option, "' requires a hexadecimal address argument\n");
+            return ARG_ILLEGAL;
+        }
+
+        /**
+         * @brief Checks an option that it is a list of hexadecimal address.
+         */
+        static ArgStatus HexAddresses(const Option& option, bool msg) {
+            char* endptr = 0;
+            unsigned long long tmp = -1;
+            if (option.arg != 0) {
+                std::string t;
+                std::stringstream ss(option.arg);
+
+                while(getline(ss, t, ',')) {
+                    endptr = 0;
+                    tmp = strtoull(t.c_str(), &endptr, 16);
+                    if (tmp <= 0 || tmp == ULLONG_MAX || *endptr != 0 || endptr == option.arg) {
+                        if (msg)
+                            printError("Option '", option, "' requires a hexadecimal address argument\n");
+                        return ARG_ILLEGAL;
+                    }
+                }
+            }
+
+            return ARG_OK;
         }
     };
 };

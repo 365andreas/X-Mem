@@ -50,12 +50,17 @@
 #endif
 
 //Libraries
+#include <assert.h>
 #include <cstdint>
-#include <stdlib.h>
+#include <fcntl.h>
 #include <iomanip>
 #include <iostream>
+#include <numaif.h>
 #include <sstream>
-#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -750,99 +755,146 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
 
     uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
 
-    //We reserve the space for these, but that doesn't mean they will all be used.
-    mem_arrays_.resize(g_num_numa_nodes * mem_regions_per_numa);
-    mem_array_lens_.resize(g_num_numa_nodes * mem_regions_per_numa);
+    std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
+    bool use_physical_addresses = ! mem_regions_phys_addr.empty();
 
-    for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
-            size_t allocation_size = 0;
-            uint32_t numa_node = *it;        // std::cout << "Min: " << min_metric_ << " " << metric_units_;
-            uint32_t region_id = numa_node * mem_regions_per_numa + mem_region;
+    if (! use_physical_addresses) {
+        //We reserve the space for these, but that doesn't mean they will all be used.
+        mem_arrays_.resize(g_num_numa_nodes * mem_regions_per_numa);
+        mem_array_lens_.resize(g_num_numa_nodes * mem_regions_per_numa);
+
+        for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
+            for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
+                size_t allocation_size = 0;
+                uint32_t numa_node = *it;        // std::cout << "Min: " << min_metric_ << " " << metric_units_;
+                uint32_t region_id = numa_node * mem_regions_per_numa + mem_region;
 
 #ifdef HAS_LARGE_PAGES
-            if (config_.useLargePages()) {
-                size_t remainder = 0;
-                //For large pages, working set size could be less than a single large page. So let's allocate the right amount of memory, which is the working set size rounded up to nearest large page, which could be more than we actually use.
-                if (config_.getNumWorkerThreads() * working_set_size < g_large_page_size)
-                    allocation_size = g_large_page_size;
-                else {
-                    remainder = (config_.getNumWorkerThreads() * working_set_size) % g_large_page_size;
-                    allocation_size = (config_.getNumWorkerThreads() * working_set_size) + remainder;
-                }
+                if (config_.useLargePages()) {
+                    size_t remainder = 0;
+                    //For large pages, working set size could be less than a single large page. So let's allocate the right amount of memory, which is the working set size rounded up to nearest large page, which could be more than we actually use.
+                    if (config_.getNumWorkerThreads() * working_set_size < g_large_page_size)
+                        allocation_size = g_large_page_size;
+                    else {
+                        remainder = (config_.getNumWorkerThreads() * working_set_size) % g_large_page_size;
+                        allocation_size = (config_.getNumWorkerThreads() * working_set_size) + remainder;
+                    }
 
 #ifdef _WIN32
-                //Make sure we have necessary privileges
-                HANDLE hToken;
-                if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
-                    std::cerr << "ERROR: Failed to open process token to adjust privileges! Did you remember to run in Administrator mode?" << std::endl;
-                    exit(-1);
-                }
-                if (!SetPrivilege(hToken,"SeLockMemoryPrivilege", true)) {
-                    std::cerr << "ERROR: Failed to adjust privileges to allow locking memory pages! Did you remember to run in Administrator mode?" << std::endl;
-                    exit(-1);
-                }
-                CloseHandle(hToken);
+                    //Make sure we have necessary privileges
+                    HANDLE hToken;
+                    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+                        std::cerr << "ERROR: Failed to open process token to adjust privileges! Did you remember to run in Administrator mode?" << std::endl;
+                        exit(-1);
+                    }
+                    if (!SetPrivilege(hToken,"SeLockMemoryPrivilege", true)) {
+                        std::cerr << "ERROR: Failed to adjust privileges to allow locking memory pages! Did you remember to run in Administrator mode?" << std::endl;
+                        exit(-1);
+                    }
+                    CloseHandle(hToken);
 
-                mem_arrays_[numa_node] = VirtualAllocExNuma(GetCurrentProcess(), NULL, allocation_size, MEM_COMMIT | MEM_RESERVE | MEM_LARGE_PAGES, PAGE_READWRITE, numa_node); //Windows NUMA allocation. Make the allocation one page bigger than necessary so that we can do alignment.
+                    mem_arrays_[numa_node] = VirtualAllocExNuma(GetCurrentProcess(), NULL, allocation_size, MEM_COMMIT | MEM_RESERVE | MEM_LARGE_PAGES, PAGE_READWRITE, numa_node); //Windows NUMA allocation. Make the allocation one page bigger than necessary so that we can do alignment.
 #endif
 #ifdef __gnu_linux__
-                mem_arrays_[numa_node] = get_huge_pages(allocation_size, GHP_DEFAULT);
+                    mem_arrays_[numa_node] = get_huge_pages(allocation_size, GHP_DEFAULT);
 #endif
-            } else { //Non-large pages (nominal case)
+                } else { //Non-large pages (nominal case)
 #endif
-                //Under normal (not large-page) operation, working set size is a multiple of regular pages.
-                allocation_size = config_.getNumWorkerThreads() * working_set_size + g_page_size;
+                    //Under normal (not large-page) operation, working set size is a multiple of regular pages.
+                    allocation_size = config_.getNumWorkerThreads() * working_set_size + g_page_size;
 #ifdef _WIN32
-                mem_arrays_[region_id] = VirtualAllocExNuma(GetCurrentProcess(), NULL, allocation_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE, numa_node); //Windows NUMA allocation. Make the allocation one page bigger than necessary so that we can do alignment.
+                    mem_arrays_[region_id] = VirtualAllocExNuma(GetCurrentProcess(), NULL, allocation_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE, numa_node); //Windows NUMA allocation. Make the allocation one page bigger than necessary so that we can do alignment.
 #endif
 #ifdef __gnu_linux__
 #ifdef HAS_NUMA
-                numa_set_strict(1); //Enforce NUMA memory allocation to land on specified node or fail otherwise. Alternative node fallback is forbidden.
-                mem_arrays_[region_id] = numa_alloc_onnode(allocation_size, numa_node);
+                    numa_set_strict(1); //Enforce NUMA memory allocation to land on specified node or fail otherwise. Alternative node fallback is forbidden.
+                    mem_arrays_[region_id] = numa_alloc_onnode(allocation_size, numa_node);
 #endif
 #ifndef HAS_NUMA //special case
-                mem_arrays_[region_id] = malloc(allocation_size);
-                orig_malloc_addr_ = mem_arrays_[numa_node];
+                    mem_arrays_[region_id] = malloc(allocation_size);
+                    orig_malloc_addr_ = mem_arrays_[numa_node];
 #endif
 #endif
 #ifdef HAS_LARGE_PAGES
-            }
+                }
 #endif
 
-            if (mem_arrays_[region_id] != nullptr)
-                mem_array_lens_[region_id] = config_.getNumWorkerThreads() * working_set_size;
-            else {
-                std::cerr << "ERROR: Failed to allocate " << allocation_size << " B on NUMA node " << numa_node << " for " << config_.getNumWorkerThreads() << " worker threads." << std::endl;
-                exit(-1);
+                if (mem_arrays_[region_id] != nullptr) {
+                    mem_array_lens_[region_id] = config_.getNumWorkerThreads() * working_set_size;
+                }
+                else {
+                    std::cerr << "ERROR: Failed to allocate " << allocation_size << " B on NUMA node " << numa_node << " for " << config_.getNumWorkerThreads() << " worker threads." << std::endl;
+                    exit(-1);
+                }
+
+                if (g_verbose) {
+                    std::cout << "Virtual address for memory region #" << mem_region << " on NUMA node " << numa_node << ": ";
+                    std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
+                    std::cout << std::endl;
+                }
+
+                if (config_.latencyMatrixTestSelected() || config_.throughputMatrixTestSelected()) {
+                    std::cout << "Virtual address for memory region #" << mem_region << " on NUMA node " << numa_node << ": ";
+                    std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
+                    std::cout << std::endl;
+                }
+
+                //upwards alignment to page boundary
+                uintptr_t mask;
+                if (config_.useLargePages())
+                    mask = static_cast<uintptr_t>(g_large_page_size)-1;
+                else
+                    mask = static_cast<uintptr_t>(g_page_size)-1; //e.g. 4095 bytes
+                uintptr_t tmp_ptr = reinterpret_cast<uintptr_t>(mem_arrays_[region_id]);
+                uintptr_t aligned_addr = (tmp_ptr + mask) & ~mask; //add one page to the address, then truncate least significant bits of address to be page aligned.
+                mem_arrays_[region_id] = reinterpret_cast<void*>(aligned_addr);
+
+                if (g_verbose) {
+                    std::cout << " --- ALIGNED --> ";
+                    std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
+                    std::cout << std::endl;
+                }
             }
-
-        if (g_verbose) {
-            std::cout << "Virtual address for memory region #" << mem_region << " on NUMA node " << numa_node << ": ";
-            std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
-            std::cout << std::endl;
+        }
+    } else {
+        int fd = open("/dev/mem", O_SYNC);
+        if (fd < 0) {
+            perror("Failed to open /dev/mem.");
         }
 
-        if (config_.latencyMatrixTestSelected() || config_.throughputMatrixTestSelected()) {
-            std::cout << "Virtual address for memory region #" << mem_region << " on NUMA node " << numa_node << ": ";
-            std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
-            std::cout << std::endl;
-        }
+        for (uint32_t region_id = 0; region_id < mem_regions_phys_addr.size(); region_id++) {
 
-            //upwards alignment to page boundary
-            uintptr_t mask;
-            if (config_.useLargePages())
-                mask = static_cast<uintptr_t>(g_large_page_size)-1;
-            else
-                mask = static_cast<uintptr_t>(g_page_size)-1; //e.g. 4095 bytes
-            uintptr_t tmp_ptr = reinterpret_cast<uintptr_t>(mem_arrays_[region_id]);
-            uintptr_t aligned_addr = (tmp_ptr + mask) & ~mask; //add one page to the address, then truncate least significant bits of address to be page aligned.
-            mem_arrays_[region_id] = reinterpret_cast<void*>(aligned_addr);
+            size_t allocation_size = working_set_size;
+            size_t phys_addr = mem_regions_phys_addr[region_id];
 
-            if (g_verbose) {
-                std::cout << " --- ALIGNED --> ";
-                std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
+            // Truncate offset to a multiple of the page size, or mmap will fail.
+            size_t page_size = sysconf(_SC_PAGE_SIZE);
+            size_t page_base = (phys_addr / page_size) * page_size;
+            size_t page_offset = phys_addr - page_base;
+            size_t len = page_offset + allocation_size;
+
+
+            void *virt_addr = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, page_base);
+
+            mem_arrays_[region_id] = virt_addr;
+            mem_array_lens_[region_id] = allocation_size;
+
+            if (config_.latencyMatrixTestSelected() || config_.throughputMatrixTestSelected()) {
+                std::cout << "Virtual address for memory region ";
+                std::printf("0x%.16llX", static_cast<long long unsigned int>(phys_addr));
+                std::cout << "is ";
+                std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(virt_addr));
+
+                size_t num_pages = len / page_size;
+                num_pages += ((len % page_size) > 0) ? 1 : 0;
+                int *status = (int *) malloc(num_pages * sizeof(int));
+                move_pages(0 /*self memory */, 1, &virt_addr, NULL, status, 0);
+                std::cout << " on NUMA node " << status[0] << "  (first page)";
+                if (num_pages > 1) {
+                    std::cout << " and on NUMA node " << status[num_pages - 1] << "(last page, " << num_pages << ")";
+                }
                 std::cout << std::endl;
+                free(status);
             }
         }
     }

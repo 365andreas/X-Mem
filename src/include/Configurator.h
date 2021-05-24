@@ -70,6 +70,7 @@ namespace xmem {
         CPU_NUMA_NODE_AFFINITY,
         USE_LARGE_PAGES,
         MEMORY_NUMA_NODE_AFFINITY,
+        MEM_REGIONS_PHYS,
         USE_READS,
         USE_WRITES,
         STRIDE_SIZE
@@ -105,6 +106,7 @@ namespace xmem {
         { STRIDE_SIZE, 0, "S", "stride_size", MyArg::Integer, "    -S, --stride_size    \tA stride size to use for load traffic-generating threads, specified in powers-of-two multiples of the chunk size(s). Allowed values: 1, -1, 2, -2, 4, -4, 8, -8, 16, -16. Positive indicates the forward direction (increasing addresses), while negative indicates the reverse direction." },
         { ALL_CORES, 0, "", "all_cores", Arg::None, "    --all_cores    \tRun matrix benchmarks for every core of the system." },
         { MEAS_LATENCY_MATRIX, 0, "", "latency_matrix", Arg::None, "    --latency_matrix    \tUnloaded latency for all CPU NUMA nodes of the system benchmarking mode."},
+        { MEM_REGIONS_PHYS, 0, "", "regions", MyArg::HexAddresses, "    --regions    \tPhysical addresses of memory regions to be tested. (only for matrix benchmarks)" },
         { MEAS_THROUGHPUT_MATRIX, 0, "", "throughput_matrix", Arg::None, "    --throughput_matrix    \tRun throughput benchmark for every core of the system." },
         { UNKNOWN, 0, "", "", Arg::None,
         "\n"
@@ -288,6 +290,12 @@ namespace xmem {
         uint32_t getMemoryRegionsPerNUMANode() const { return mem_regions_; }
 
         /**
+         * @brief Gets the memory regions' physical addresses for the matrix benchmarks.
+         * @returns The vector of physical addresses.
+         */
+        std::vector<uint64_t> getMemoryRegionsPhysAddresses() const { return mem_regions_phys_addr_; }
+
+        /**
          * @brief Gets the number of iterations that should be run of each benchmark.
          * @returns The iterations for each test.
          */
@@ -461,6 +469,7 @@ namespace xmem {
         std::list<uint32_t> cpu_numa_node_affinities_; /**< List of CPU NUMA nodes to affinitize on all benchmark experiments. */
         std::list<uint32_t> memory_numa_node_affinities_; /**< List of memory NUMA nodes to affinitize on all benchmark experiments. */
         uint32_t mem_regions_; /**< Number of memory regions per NUMA node for the matrix benchmark tests. */
+        std::vector<uint64_t> mem_regions_phys_addr_; /**< Vector of physical addresses of memory regions to be used for matrix benchmark experiments. */
         uint32_t iterations_; /**< Number of iterations to run for each benchmark test. */
         bool use_random_access_pattern_; /**< If true, run throughput benchmarks with random access pattern. */
         bool use_sequential_access_pattern_; /**< If true, run throughput benchmarks with sequential access pattern. */

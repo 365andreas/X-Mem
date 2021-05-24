@@ -83,6 +83,7 @@ Configurator::Configurator(
     cpu_numa_node_affinities_(),
     memory_numa_node_affinities_(),
     mem_regions_(1),
+    mem_regions_phys_addr_(),
     iterations_(1),
     use_random_access_pattern_(false),
     use_sequential_access_pattern_(true),
@@ -128,7 +129,7 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
         goto error;
     }
 
-    //X-Mem doesn't have any non-option arguments, so we will presume the user wants a help message.
+    // X-Mem doesn't have any non-option arguments, so we will presume the user wants a help message.
     if (parse.nonOptionsCount() > 0) {
         std::cerr << "ERROR: X-Mem does not support any non-option arguments." << std::endl;
         goto error;
@@ -408,15 +409,6 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
         }
     }
 
-    //Check memory regions
-    if (options[MEM_REGIONS]) { //Override default value
-        if (!check_single_option_occurrence(&options[MEM_REGIONS]))
-            goto error;
-
-        char *endptr = NULL;
-        mem_regions_ = static_cast<uint32_t>(strtoul(options[MEM_REGIONS].arg, &endptr, 10));
-    }
-
     //Check iterations
     if (options[ITERATIONS]) { //Override default value
         if (!check_single_option_occurrence(&options[ITERATIONS]))
@@ -592,6 +584,38 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
     if (use_random_access_pattern_ && use_chunk_32b_)
         std::cerr << "NOTE: Random-access load kernels used in throughput and loaded latency benchmarks do not support 32-bit chunk sizes on 64-bit machines. These particular combinations will be omitted." << std::endl;
 #endif
+
+    if (options[MEM_REGIONS] && options[MEM_REGIONS_PHYS]) {
+        std::cerr << "ERROR: Both number of virtual memory regions and physical addresses of regions were set" << std::endl;
+        goto error;
+    }
+
+    //Check memory regions
+    if (options[MEM_REGIONS]) { //Override default value
+        if (!check_single_option_occurrence(&options[MEM_REGIONS]))
+            goto error;
+
+        char *endptr = NULL;
+        mem_regions_ = static_cast<uint32_t>(strtoul(options[MEM_REGIONS].arg, &endptr, 10));
+    }
+
+    if (options[MEM_REGIONS_PHYS]) {
+        if (run_latency_ || run_throughput_) {
+            std::cerr << "ERROR: Passing physical addresses of regions along with non matrix benchmarks is not "
+                      << "supported" << std::endl;
+            goto error;
+        }
+
+        std::string addr_string;
+        std::stringstream ss(options[MEM_REGIONS_PHYS].arg);
+
+        mem_regions_ = 0;
+        while(getline(ss, addr_string, ',')) {
+            uint64_t addr = static_cast<uint64_t>(strtoull(addr_string.c_str(), NULL, 16));
+            mem_regions_phys_addr_.push_back(addr);
+            mem_regions_++;
+        }
+    }
 
     if (options[ALL_CORES]) { //Override default value
         run_all_cores_ = true;
