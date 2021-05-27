@@ -903,6 +903,7 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
                 std::cout << " is ";
                 std::printf("0x%.16llx", reinterpret_cast<long long unsigned int>(virt_addr));
 
+                // check on which NUMA node this region belongs to
                 size_t num_pages = len / page_size;
                 num_pages += ((len % page_size) > 0) ? 1 : 0;
                 int *status = (int *) malloc(num_pages * sizeof(int));
@@ -916,14 +917,15 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
                 }
                 for(uint32_t i = 0; i < num_pages; i++) {
                     if (status[i] < 0) {
-                        errno = -status[0];
+                        errno = -status[i];
                         perror("WARNING! In move_page() status returned error");
+                        std::cerr << std::endl << "^^^ page #" << i + 1 << std::endl;
                         mem_array_node_[region_id] = static_cast<uint32_t>(-1);
                     } else if (i == 0) {
                         std::cout << " on NUMA node " << status[0] << " (first page)";
                         mem_array_node_[region_id] = status[0];
                     } else if (i == num_pages - 1) {
-                        std::cout << " and on NUMA node " << status[num_pages - 1] << "(last page, " << num_pages << ")";
+                        std::cout << " and on NUMA node " << status[num_pages - 1] << " (last page, " << num_pages << ")";
                     }
                 }
                 std::cout << std::endl;
