@@ -32,6 +32,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#define DEV_FROM_MEDIAN 0.05 // deviation of CI range from the median value
+
 //Libraries
 #include <cstdint>
 #include <cstddef>

@@ -358,9 +358,9 @@ bool ThroughputMatrixBenchmark::runCore() {
             // std::cout << "lower_95_CI_median_: " << lower_95_CI_median_ << std::endl;
             // std::cout << "upper_95_CI_median_: " << upper_95_CI_median_ << std::endl;
 
-            if (   (lower_95_CI_median_ >= 0.95 * median_metric_)
-                && (upper_95_CI_median_ <= 1.05 * median_metric_)) {
-                // 95% CI is within 5% of the median
+            if (   (lower_95_CI_median_ >= (1 - DEV_FROM_MEDIAN) * median_metric_)
+                && (upper_95_CI_median_ <= (1 + DEV_FROM_MEDIAN) * median_metric_)) {
+                // 95% CI is within DEV_FROM_MEDIAN % of the median
                 iterations_needed_ = i + 1;
                 // Resizing vector for keeping the results of the measurements since they are fewer than the max.
                 iterations_ = iterations_needed_;
@@ -369,7 +369,7 @@ bool ThroughputMatrixBenchmark::runCore() {
                 denominator_metric_on_iter_.resize(iterations_needed_);
                 break;
             } else if (i == iterations_ - 1) {
-                std::cerr << "WARNING: 95% CI did not converge within 5% of median value!" << std::endl;
+                std::cerr << "WARNING: 95% CI did not converge within " << DEV_FROM_MEDIAN * 100 << "% of median value!" << std::endl;
             }
         } else if (i == iterations_ - 1) {
             std::cerr << "WARNING: 95% CI cannot be computed for fewer than six iterations!" << std::endl;
