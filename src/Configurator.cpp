@@ -83,6 +83,7 @@ Configurator::Configurator(
     cpu_numa_node_affinities_(),
     memory_numa_node_affinities_(),
     mem_regions_(1),
+    mem_regions_in_phys_addr_(false),
     mem_regions_phys_addr_(),
     iterations_(1),
     use_random_access_pattern_(false),
@@ -605,6 +606,8 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
                       << "supported" << std::endl;
             goto error;
         }
+
+        mem_regions_in_phys_addr_ = true;
 
         std::string addr_string;
         std::stringstream ss(options[MEM_REGIONS_PHYS].arg);

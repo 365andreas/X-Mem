@@ -52,6 +52,7 @@
 //Libraries
 #include <assert.h>
 #include <cstdint>
+#include <errno.h>
 #include <fcntl.h>
 #include <iomanip>
 #include <iostream>
@@ -90,6 +91,7 @@ BenchmarkManager::BenchmarkManager(
         orig_malloc_addr_(NULL),
 #endif
         mem_array_lens_(),
+        mem_array_node_(),
         tp_benchmarks_(),
         lat_benchmarks_(),
         lat_mat_benchmarks_(),
@@ -559,24 +561,32 @@ bool BenchmarkManager::runLatencyMatrixBenchmarks() {
     std::cout <<  "Measured idle latencies (in " << lat_mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
     std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
 
+    std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
+
     int width = config_.allCoresSelected() ? 3 : 13;
     std::cout << std::setw(width) << " ";
-    for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
-            std::cout << " (Node, Reg)";
-        }
+    for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
+        std::cout << " (Node, Reg)";
     }
     std::cout << std::endl;
 
+    uint32_t regions_per_pu = config_.memoryRegionsInPhysAddr() ? mem_regions_phys_addr.size()
+                                                                : mem_regions_per_numa * g_num_numa_nodes;
+
     std::cout << (config_.allCoresSelected() ? "CPU" : "CPU NUMA Node");
-    for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
-            std::cout  << std::setw(12) << "(" + std::to_string(*it) + ", " + std::to_string(mem_region) + ")";
+    for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
+        uint32_t mem_node = mem_array_node_[region_id];
+        uint32_t mem_region = region_id;
+        if (! config_.memoryRegionsInPhysAddr()) {
+            mem_region = region_id % config_.getMemoryRegionsPerNUMANode();
         }
+
+        std::string node_str = (mem_node == static_cast<uint32_t>(-1)) ? "?" : std::to_string(mem_node);
+        std::cout  << std::setw(12) << "(" + node_str + ", " + std::to_string(mem_region) + ")";
     }
 
     for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++) {
-        if (i % (mem_regions_per_numa * g_num_numa_nodes) == 0) {
+        if (i % regions_per_pu == 0) {
             std::cout << std::endl;
             uint32_t pu = config_.allCoresSelected() ? lat_mat_benchmarks_[i]->getCPUId() : lat_mat_benchmarks_[i]->getCPUNode();
             std::cout << std::setw(width) << pu;
@@ -718,10 +728,8 @@ bool BenchmarkManager::runThroughputMatrixBenchmarks() {
 
     int width = config_.allCoresSelected() ? 3 : 13;
     std::cout << std::setw(width) << " ";
-    for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
-            std::cout << " (Node, Reg)";
-        }
+    for (auto &it : mem_arrays_) {
+        std::cout << " (Node, Reg)";
     }
     std::cout << std::endl;
 
@@ -756,18 +764,22 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
     uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
 
     std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
-    bool use_physical_addresses = ! mem_regions_phys_addr.empty();
 
-    if (! use_physical_addresses) {
+    uint32_t mem_regions_per_cpu = config_.memoryRegionsInPhysAddr() ? mem_regions_phys_addr.size()
+                                                                     : g_num_numa_nodes * mem_regions_per_numa;
+
+    mem_arrays_.resize(mem_regions_per_cpu);
+    mem_array_lens_.resize(mem_regions_per_cpu);
+    mem_array_node_.resize(mem_regions_per_cpu);
+
+    if (! config_.memoryRegionsInPhysAddr()) {
         //We reserve the space for these, but that doesn't mean they will all be used.
-        mem_arrays_.resize(g_num_numa_nodes * mem_regions_per_numa);
-        mem_array_lens_.resize(g_num_numa_nodes * mem_regions_per_numa);
-
         for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
             for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
                 size_t allocation_size = 0;
-                uint32_t numa_node = *it;        // std::cout << "Min: " << min_metric_ << " " << metric_units_;
+                uint32_t numa_node = *it;
                 uint32_t region_id = numa_node * mem_regions_per_numa + mem_region;
+                mem_array_node_[region_id] = numa_node;
 
 #ifdef HAS_LARGE_PAGES
                 if (config_.useLargePages()) {
@@ -829,13 +841,13 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
 
                 if (g_verbose) {
                     std::cout << "Virtual address for memory region #" << mem_region << " on NUMA node " << numa_node << ": ";
-                    std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
+                    std::printf("0x%.16llx", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
                     std::cout << std::endl;
                 }
 
                 if (config_.latencyMatrixTestSelected() || config_.throughputMatrixTestSelected()) {
                     std::cout << "Virtual address for memory region #" << mem_region << " on NUMA node " << numa_node << ": ";
-                    std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
+                    std::printf("0x%.16llx", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
                     std::cout << std::endl;
                 }
 
@@ -851,7 +863,7 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
 
                 if (g_verbose) {
                     std::cout << " --- ALIGNED --> ";
-                    std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
+                    std::printf("0x%.16llx", reinterpret_cast<long long unsigned int>(mem_arrays_[region_id]));
                     std::cout << std::endl;
                 }
             }
@@ -859,7 +871,8 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
     } else {
         int fd = open("/dev/mem", O_SYNC);
         if (fd < 0) {
-            perror("Failed to open /dev/mem.");
+            perror("ERROR! Failed to open /dev/mem");
+            exit(-1);
         }
 
         for (uint32_t region_id = 0; region_id < mem_regions_phys_addr.size(); region_id++) {
@@ -875,25 +888,46 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
 
 
             void *virt_addr = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, page_base);
+            if (virt_addr == MAP_FAILED) {
+                perror("ERROR! Failed to mmap /dev/mem");
+                exit(-1);
+            }
 
             mem_arrays_[region_id] = virt_addr;
             mem_array_lens_[region_id] = allocation_size;
+            mem_array_node_[region_id] = -1;
 
             if (config_.latencyMatrixTestSelected() || config_.throughputMatrixTestSelected()) {
-                std::cout << "Virtual address for memory region ";
-                std::printf("0x%.16llX", static_cast<long long unsigned int>(phys_addr));
-                std::cout << "is ";
-                std::printf("0x%.16llX", reinterpret_cast<long long unsigned int>(virt_addr));
+                std::cout << "Virtual address for memory region #" << region_id << ": ";
+                std::printf("0x%.16llx", static_cast<long long unsigned int>(phys_addr));
+                std::cout << " is ";
+                std::printf("0x%.16llx", reinterpret_cast<long long unsigned int>(virt_addr));
 
                 size_t num_pages = len / page_size;
                 num_pages += ((len % page_size) > 0) ? 1 : 0;
                 int *status = (int *) malloc(num_pages * sizeof(int));
-                move_pages(0 /*self memory */, 1, &virt_addr, NULL, status, 0);
-                std::cout << " on NUMA node " << status[0] << "  (first page)";
-                if (num_pages > 1) {
-                    std::cout << " and on NUMA node " << status[num_pages - 1] << "(last page, " << num_pages << ")";
+                void **pages = (void **) malloc(num_pages * sizeof(void *));
+                memset(virt_addr, 0x41, len);
+                for(uint32_t i = 0; i < num_pages; i++) {
+                    pages[i] = &((char *) virt_addr)[i*4096];
+                }
+                if (0 != move_pages(0 /*self memory */, 1, pages, NULL, status, MPOL_MF_MOVE_ALL)) {
+                    perror("WARNING! In move_page() willing to learn on which NUMA node belongs a physical address");\
+                }
+                for(uint32_t i = 0; i < num_pages; i++) {
+                    if (status[i] < 0) {
+                        errno = -status[0];
+                        perror("WARNING! In move_page() status returned error");
+                        mem_array_node_[region_id] = static_cast<uint32_t>(-1);
+                    } else if (i == 0) {
+                        std::cout << " on NUMA node " << status[0] << " (first page)";
+                        mem_array_node_[region_id] = status[0];
+                    } else if (i == num_pages - 1) {
+                        std::cout << " and on NUMA node " << status[num_pages - 1] << "(last page, " << num_pages << ")";
+                    }
                 }
                 std::cout << std::endl;
+                free(pages);
                 free(status);
             }
         }
@@ -1106,6 +1140,8 @@ bool BenchmarkManager::buildBenchmarks() {
         use_cpu_nodes = true;
     }
 
+    std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
+
     uint32_t cpu      = -1;
     uint32_t cpu_node = -1;
     //Build latency matrix benchmarks
@@ -1117,43 +1153,44 @@ bool BenchmarkManager::buildBenchmarks() {
             cpu_node = *pu;
         }
 
-        for (auto mem_node_it = memory_numa_node_affinities_.cbegin(); mem_node_it != memory_numa_node_affinities_.cend(); mem_node_it++) { //iterate each memory NUMA node
-            for (uint32_t mem_region = 0; mem_region < config_.getMemoryRegionsPerNUMANode(); mem_region++) {
-                uint32_t mem_node = *mem_node_it;
-                uint32_t region_id = mem_node * config_.getMemoryRegionsPerNUMANode() + mem_region;
-                void* mem_array = mem_arrays_[region_id];
-                size_t mem_array_len = mem_array_lens_[region_id];
+        for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
+            uint32_t mem_node = mem_array_node_[region_id];
+            void* mem_array = mem_arrays_[region_id];
+            size_t mem_array_len = mem_array_lens_[region_id];
+            uint32_t mem_region = region_id;
+            if (! config_.memoryRegionsInPhysAddr()) {
+                mem_region = region_id % config_.getMemoryRegionsPerNUMANode();
+            }
 
-                for (uint32_t chunk_index = 0; chunk_index < chunks.size(); chunk_index++) { //iterate different chunk sizes
-                    chunk_size_t chunk = chunks[chunk_index];
+            for (uint32_t chunk_index = 0; chunk_index < chunks.size(); chunk_index++) { //iterate different chunk sizes
+                chunk_size_t chunk = chunks[chunk_index];
 
-                    for (uint32_t stride_index = 0; stride_index < strides.size(); stride_index++) {  //iterate different stride lengths
-                        int32_t stride = strides[stride_index];
+                for (uint32_t stride_index = 0; stride_index < strides.size(); stride_index++) {  //iterate different stride lengths
+                    int32_t stride = strides[stride_index];
 
-                        // Latency benchmark from every core to every memory region
-                        benchmark_name = static_cast<std::ostringstream*>(&(std::ostringstream()
-                                            << "Test #" << g_test_index << "LM (LatencyMatrix)"))->str();
-                        lat_mat_benchmarks_.push_back(new LatencyMatrixBenchmark(mem_array,
-                                                                                   mem_array_len,
-                                                                                   config_.getIterationsPerTest(),
-                                                                                   config_.getNumWorkerThreads(),
-                                                                                   mem_node,
-                                                                                   mem_region,
-                                                                                   cpu_node,
-                                                                                   cpu,
-                                                                                   use_cpu_nodes,
-                                                                                   SEQUENTIAL,
-                                                                                   READ,
-                                                                                   chunk,
-                                                                                   stride,
-                                                                                   dram_power_readers_,
-                                                                                   benchmark_name));
-                        if (lat_mat_benchmarks_[lat_mat_benchmarks_.size()-1] == NULL) {
-                            std::cerr << "ERROR: Failed to build a LatencyMatrixBenchmark!" << std::endl;
-                            return false;
-                        }
-                        g_test_index++;
+                    // Latency benchmark from every core to every memory region
+                    benchmark_name = static_cast<std::ostringstream*>(&(std::ostringstream() << "Test #"
+                                        << g_test_index << "LM (LatencyMatrix)"))->str();
+                    lat_mat_benchmarks_.push_back(new LatencyMatrixBenchmark(mem_array,
+                                                                             mem_array_len,
+                                                                             config_.getIterationsPerTest(),
+                                                                             config_.getNumWorkerThreads(),
+                                                                             mem_node,
+                                                                             mem_region,
+                                                                             cpu_node,
+                                                                             cpu,
+                                                                             use_cpu_nodes,
+                                                                             SEQUENTIAL,
+                                                                             READ,
+                                                                             chunk,
+                                                                             stride,
+                                                                             dram_power_readers_,
+                                                                             benchmark_name));
+                    if (lat_mat_benchmarks_[lat_mat_benchmarks_.size()-1] == NULL) {
+                        std::cerr << "ERROR: Failed to build a LatencyMatrixBenchmark!" << std::endl;
+                        return false;
                     }
+                    g_test_index++;
                 }
             }
         }
@@ -1168,44 +1205,45 @@ bool BenchmarkManager::buildBenchmarks() {
             cpu_node = *pu;
         }
 
-        for (auto mem_node_it = memory_numa_node_affinities_.cbegin(); mem_node_it != memory_numa_node_affinities_.cend(); mem_node_it++) { //iterate each memory NUMA node
-            for (uint32_t mem_region = 0; mem_region < config_.getMemoryRegionsPerNUMANode(); mem_region++) {
-                uint32_t mem_node = *mem_node_it;
-                uint32_t region_id = mem_node * config_.getMemoryRegionsPerNUMANode() + mem_region;
-                void* mem_array = mem_arrays_[region_id];
-                size_t mem_array_len = mem_array_lens_[region_id];
+        for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
+            uint32_t mem_node = mem_array_node_[region_id];
+            void* mem_array = mem_arrays_[region_id];
+            size_t mem_array_len = mem_array_lens_[region_id];
+            uint32_t mem_region = region_id;
+            if (! config_.memoryRegionsInPhysAddr()) {
+                mem_region = region_id % config_.getMemoryRegionsPerNUMANode();
+            }
 
-                for (uint32_t chunk_index = 0; chunk_index < chunks.size(); chunk_index++) { //iterate different chunk sizes
-                    chunk_size_t chunk = chunks[chunk_index];
+            for (uint32_t chunk_index = 0; chunk_index < chunks.size(); chunk_index++) { //iterate different chunk sizes
+                chunk_size_t chunk = chunks[chunk_index];
 
-                    for (uint32_t stride_index = 0; stride_index < strides.size(); stride_index++) {  //iterate different stride lengths
-                        int32_t stride = strides[stride_index];
+                for (uint32_t stride_index = 0; stride_index < strides.size(); stride_index++) {  //iterate different stride lengths
+                    int32_t stride = strides[stride_index];
 
-                        // Throughput benchmark from every core to every memory region
-                        benchmark_name = static_cast<std::ostringstream*>(&(std::ostringstream()
-                                            << "Test #" << g_test_index << "TM (ThroughputMatrix)"))->str();
-                        thr_mat_benchmarks_.push_back(
-                            new ThroughputMatrixBenchmark(mem_array,
-                                mem_array_len,
-                                config_.getIterationsPerTest(),
-                                g_num_logical_cpus, // get all cores requesting data from memory in order to achieve higher b/w
-                                mem_node,
-                                mem_region,
-                                cpu_node,
-                                cpu,
-                                use_cpu_nodes,
-                                SEQUENTIAL,
-                                READ,
-                                chunk,
-                                stride,
-                                dram_power_readers_,
-                                benchmark_name));
-                        if (thr_mat_benchmarks_[thr_mat_benchmarks_.size()-1] == NULL) {
-                            std::cerr << "ERROR: Failed to build a ThroughputMatrixBenchmark!" << std::endl;
-                            return false;
-                        }
-                        g_test_index++;
+                    // Throughput benchmark from every core to every memory region
+                    benchmark_name = static_cast<std::ostringstream*>(&(std::ostringstream()
+                                        << "Test #" << g_test_index << "TM (ThroughputMatrix)"))->str();
+                    thr_mat_benchmarks_.push_back(
+                        new ThroughputMatrixBenchmark(mem_array,
+                            mem_array_len,
+                            config_.getIterationsPerTest(),
+                            g_num_logical_cpus, // get all cores requesting data from memory in order to achieve higher b/w
+                            mem_node,
+                            mem_region,
+                            cpu_node,
+                            cpu,
+                            use_cpu_nodes,
+                            SEQUENTIAL,
+                            READ,
+                            chunk,
+                            stride,
+                            dram_power_readers_,
+                            benchmark_name));
+                    if (thr_mat_benchmarks_[thr_mat_benchmarks_.size()-1] == NULL) {
+                        std::cerr << "ERROR: Failed to build a ThroughputMatrixBenchmark!" << std::endl;
+                        return false;
                     }
+                    g_test_index++;
                 }
             }
         }

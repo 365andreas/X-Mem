@@ -290,6 +290,12 @@ namespace xmem {
         uint32_t getMemoryRegionsPerNUMANode() const { return mem_regions_; }
 
         /**
+         * @brief Determines if the matrix benchmarks uses physical addresses to specify the regions to be tested.
+         * @returns True if physical addresses are given for matrix benchmarks.
+         */
+        bool memoryRegionsInPhysAddr() const { return mem_regions_in_phys_addr_; }
+
+        /**
          * @brief Gets the memory regions' physical addresses for the matrix benchmarks.
          * @returns The vector of physical addresses.
          */
@@ -469,6 +475,7 @@ namespace xmem {
         std::list<uint32_t> cpu_numa_node_affinities_; /**< List of CPU NUMA nodes to affinitize on all benchmark experiments. */
         std::list<uint32_t> memory_numa_node_affinities_; /**< List of memory NUMA nodes to affinitize on all benchmark experiments. */
         uint32_t mem_regions_; /**< Number of memory regions per NUMA node for the matrix benchmark tests. */
+        bool mem_regions_in_phys_addr_; /**< True if physical addresses of memory regions are passed as arguments for matrix becnhmarks. */
         std::vector<uint64_t> mem_regions_phys_addr_; /**< Vector of physical addresses of memory regions to be used for matrix benchmark experiments. */
         uint32_t iterations_; /**< Number of iterations to run for each benchmark test. */
         bool use_random_access_pattern_; /**< If true, run throughput benchmarks with random access pattern. */

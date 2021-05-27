@@ -133,6 +133,7 @@ namespace xmem {
         void* orig_malloc_addr_; /**< Points to the original address returned by the malloc() for __mem_arrays on non-NUMA machines. Special case. FIXME: do we need this? seems awkward */
 #endif
         std::vector<size_t> mem_array_lens_; /**< Length of each memory region to use in benchmarks. */
+        std::vector<size_t> mem_array_node_; /**< NUMA node of each memory region to use in benchmarks. */
         std::vector<ThroughputBenchmark*> tp_benchmarks_; /**< Set of throughput benchmarks. */
         std::vector<LatencyBenchmark*> lat_benchmarks_; /**< Set of latency benchmarks. */
         std::vector<LatencyMatrixBenchmark*> lat_mat_benchmarks_; /**< Set of latency matrix benchmarks. */
