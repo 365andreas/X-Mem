@@ -54,6 +54,7 @@
 #include <cstdint>
 #include <errno.h>
 #include <fcntl.h>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <numaif.h>
@@ -98,6 +99,8 @@ BenchmarkManager::BenchmarkManager(
         thr_mat_benchmarks_(),
         dram_power_readers_(),
         results_file_(),
+        lat_mat_logfile_(),
+        thr_mat_logfile_(),
         built_benchmarks_(false)
     {
     //Set up DRAM power measurement
@@ -148,6 +151,36 @@ BenchmarkManager::BenchmarkManager(
         results_file_ << "Notes,";
         results_file_ << std::endl;
     }
+
+    // If extended measurements are enabled for latency matrix benchmark open logfile
+    if (g_log_extended && config_.latencyMatrixTestSelected()) {
+	    lat_mat_logfile_.open("latency_mat.logs");
+        if (! lat_mat_logfile_) {
+            std::cerr << "WARNING: Logfile latency_mat.logs was not created." << std::endl;
+        }
+
+        lat_mat_logfile_ << (config_.allCoresSelected() ? "cpu" : "cpu_node") << ","
+                         << "numa_node"                                       << ","
+                         << "region"                                          << ","
+                         << "iteration"                                       << ","
+                         << "metric"                                          << ","
+                         << "units"                                           << std::endl;
+    }
+
+    // If extended measurements are enabled for throughput matrix benchmark open logfile
+    if (g_log_extended && config_.throughputMatrixTestSelected()) {
+	    thr_mat_logfile_.open("throughput_mat.logs");
+        if (! thr_mat_logfile_) {
+            std::cerr << "WARNING: Logfile throughput_mat.logs was not created." << std::endl;
+        }
+
+        thr_mat_logfile_ << (config_.allCoresSelected() ? "cpu" : "cpu_node") << ","
+                         << "numa_node"                                       << ","
+                         << "region"                                          << ","
+                         << "iteration"                                       << ","
+                         << "metric"                                          << ","
+                         << "units"                                           << std::endl;
+    }
 }
 
 BenchmarkManager::~BenchmarkManager() {
@@ -185,6 +218,14 @@ BenchmarkManager::~BenchmarkManager() {
     //Close results file
     if (results_file_.is_open())
         results_file_.close();
+
+    //Close latency matrix extended measurements logfile
+    if (lat_mat_logfile_.is_open())
+        lat_mat_logfile_.close();
+
+    //Close thorughput matrix extended measurements logfile
+    if (thr_mat_logfile_.is_open())
+        thr_mat_logfile_.close();
 }
 
 bool BenchmarkManager::runAll() {
@@ -913,7 +954,7 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
                     pages[i] = &((char *) virt_addr)[i*4096];
                 }
                 if (0 != move_pages(0 /*self memory */, 1, pages, NULL, status, MPOL_MF_MOVE_ALL)) {
-                    perror("WARNING! In move_page() willing to learn on which NUMA node belongs a physical address");\
+                    perror("WARNING! In move_page() willing to learn on which NUMA node belongs a physical address");
                 }
                 for(uint32_t i = 0; i < num_pages; i++) {
                     if (status[i] < 0) {
@@ -1187,7 +1228,8 @@ bool BenchmarkManager::buildBenchmarks() {
                                                                              chunk,
                                                                              stride,
                                                                              dram_power_readers_,
-                                                                             benchmark_name));
+                                                                             benchmark_name,
+                                                                             lat_mat_logfile_));
                     if (lat_mat_benchmarks_[lat_mat_benchmarks_.size()-1] == NULL) {
                         std::cerr << "ERROR: Failed to build a LatencyMatrixBenchmark!" << std::endl;
                         return false;
@@ -1240,7 +1282,8 @@ bool BenchmarkManager::buildBenchmarks() {
                             chunk,
                             stride,
                             dram_power_readers_,
-                            benchmark_name));
+                            benchmark_name,
+                            thr_mat_logfile_));
                     if (thr_mat_benchmarks_[thr_mat_benchmarks_.size()-1] == NULL) {
                         std::cerr << "ERROR: Failed to build a ThroughputMatrixBenchmark!" << std::endl;
                         return false;

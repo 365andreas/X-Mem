@@ -41,7 +41,8 @@ namespace xmem {
             chunk_size_t chunk_size,
             int32_t stride_size,
             std::vector<PowerReader*> dram_power_readers,
-            std::string name
+            std::string name,
+            std::ofstream &logfile
         );
 
         /**
@@ -79,8 +80,10 @@ namespace xmem {
         virtual bool runCore();
 
         uint32_t cpu_;
-        bool use_cpu_nodes_;
-        uint32_t iterations_needed_;
+        bool use_cpu_nodes_; /**< True if benchmarks must run on the first core of each cpu node. Otherwise they must
+                                  on all the system's cpus. */
+
+        std::ofstream &logfile_; /**< The logfile to be used for logging each iteration of the experiments. */
 
     };
 };

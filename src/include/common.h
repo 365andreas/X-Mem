@@ -362,6 +362,7 @@ namespace xmem {
 //#endif
 
     extern bool g_verbose;
+    extern bool g_log_extended;
     extern size_t g_page_size;
     extern size_t g_large_page_size;
     extern uint32_t g_num_numa_nodes;

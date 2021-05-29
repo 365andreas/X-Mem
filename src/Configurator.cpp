@@ -148,6 +148,11 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
         g_verbose = true; //What rest of X-Mem actually uses.
     }
 
+    //Enable logging of extended benchmarks
+    if (options[LOG_EXTENDED]) {
+        g_log_extended = true;
+    }
+
     //Check runtime modes
     if (options[MEAS_LATENCY] || options[MEAS_THROUGHPUT] || options[EXTENSION] || options[MEAS_LATENCY_MATRIX] ||
         options[MEAS_THROUGHPUT_MATRIX]) { //User explicitly picked at least one mode, so override default selection

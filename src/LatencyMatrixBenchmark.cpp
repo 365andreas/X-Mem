@@ -15,6 +15,7 @@
 //Libraries
 #include <algorithm>
 #include <assert.h>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <random>
@@ -43,7 +44,8 @@ LatencyMatrixBenchmark::LatencyMatrixBenchmark(
         chunk_size_t chunk_size,
         int32_t stride_size,
         std::vector<PowerReader*> dram_power_readers,
-        std::string name
+        std::string name,
+        std::ofstream &logfile
     ) :
         Benchmark(
             mem_array,
@@ -63,9 +65,9 @@ LatencyMatrixBenchmark::LatencyMatrixBenchmark(
         ),
         cpu_(cpu),
         use_cpu_nodes_(use_cpu_nodes),
-        iterations_needed_(0),
         load_metric_on_iter_(),
-        mean_load_metric_(0)
+        mean_load_metric_(0),
+        logfile_(logfile)
     {
 
     for (uint32_t i = 0; i < iterations_; i++)
@@ -448,15 +450,12 @@ bool LatencyMatrixBenchmark::runCore() {
         if (i >= 5) {
             // 95% CI must not be computed for lower than 6 iterations of the experiment
             computeMedian(metric_on_iter_, i + 1);
-            // std::cout << "median_metric_: "      << median_metric_      << std::endl;
-            // std::cout << "lower_95_CI_median_: " << lower_95_CI_median_ << std::endl;
-            // std::cout << "upper_95_CI_median_: " << upper_95_CI_median_ << std::endl;
-
 
             if (   (lower_95_CI_median_ >= (1 - DEV_FROM_MEDIAN) * median_metric_)
-                && (upper_95_CI_median_ <= (1 + DEV_FROM_MEDIAN) * median_metric_)) {
+                && (upper_95_CI_median_ <= (1 + DEV_FROM_MEDIAN) * median_metric_)
+                && (! g_log_extended)                                             ) {
                 // 95% CI is within DEV_FROM_MEDIAN % of the median
-                iterations_needed_ = i + 1;
+                uint32_t iterations_needed_ = i + 1;
                 // Resizing vector for keeping the results of the measurements since they are fewer than the max.
                 iterations_ = iterations_needed_;
                 metric_on_iter_.resize(iterations_needed_);
@@ -483,6 +482,17 @@ bool LatencyMatrixBenchmark::runCore() {
         std::cerr << "WARNING: Failed to stop power measurement threads." << std::endl;
     } else if (g_verbose)
         std::cout << "done" << std::endl;
+
+    if (g_log_extended) {
+        for (uint32_t i = 0; i < iterations_; i++) {
+            logfile_ << (use_cpu_nodes_ ? cpu_node_ : cpu_) << ","
+                     << mem_node_                           << ","
+                     << mem_region_                         << ","
+                     << i                                   << ","
+                     << metric_on_iter_[i]                  << ","
+                     << metric_units_                       << std::endl;
+        }
+    }
 
     //Run metadata
     has_run_ = true;

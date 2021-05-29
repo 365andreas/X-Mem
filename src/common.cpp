@@ -70,6 +70,7 @@ extern "C" {
 
 namespace xmem {
     bool g_verbose = false; /**< If true, be more verbose with console reporting. */
+    bool g_log_extended = false; /**< If true, disable early stopping (when CI does not deviate too much) and log measured values to enable statistical processing of the experiments. */
     size_t g_page_size; /**< Default page size on the system, in bytes. */
     size_t g_large_page_size; /**< Large page size on the system, in bytes. */
     uint32_t g_num_numa_nodes; /**< Number of NUMA nodes in the system. */
@@ -451,6 +452,7 @@ int32_t xmem::cpu_id_in_numa_node(uint32_t numa_node, uint32_t cpu_in_node) {
 void xmem::init_globals() {
     //Initialize global variables to defaults.
     g_verbose = false;
+    g_log_extended = false;
     g_num_numa_nodes = DEFAULT_NUM_NODES;
     g_num_physical_packages = DEFAULT_NUM_PHYSICAL_PACKAGES;
     g_physical_package_of_cpu = DEFAULT_PHYSICAL_PACKAGE_OF_CPU;
