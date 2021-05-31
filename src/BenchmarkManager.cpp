@@ -223,7 +223,7 @@ BenchmarkManager::~BenchmarkManager() {
     if (lat_mat_logfile_.is_open())
         lat_mat_logfile_.close();
 
-    //Close thorughput matrix extended measurements logfile
+    //Close throughput matrix extended measurements logfile
     if (thr_mat_logfile_.is_open())
         thr_mat_logfile_.close();
 }
