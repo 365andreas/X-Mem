@@ -452,16 +452,17 @@ bool LatencyMatrixBenchmark::runCore() {
             computeMedian(metric_on_iter_, i + 1);
 
             if (   (lower_95_CI_median_ >= (1 - DEV_FROM_MEDIAN) * median_metric_)
-                && (upper_95_CI_median_ <= (1 + DEV_FROM_MEDIAN) * median_metric_)
-                && (! g_log_extended)                                             ) {
-                // 95% CI is within DEV_FROM_MEDIAN % of the median
-                uint32_t iterations_needed_ = i + 1;
-                // Resizing vector for keeping the results of the measurements since they are fewer than the max.
-                iterations_ = iterations_needed_;
-                metric_on_iter_.resize(iterations_needed_);
-                enumerator_metric_on_iter_.resize(iterations_needed_);
-                denominator_metric_on_iter_.resize(iterations_needed_);
-                break;
+                && (upper_95_CI_median_ <= (1 + DEV_FROM_MEDIAN) * median_metric_)) {
+                if (! g_log_extended) {
+                    // 95% CI is within DEV_FROM_MEDIAN % of the median
+                    uint32_t iterations_needed_ = i + 1;
+                    // Resizing vector for keeping the results of the measurements since they are fewer than the max.
+                    iterations_ = iterations_needed_;
+                    metric_on_iter_.resize(iterations_needed_);
+                    enumerator_metric_on_iter_.resize(iterations_needed_);
+                    denominator_metric_on_iter_.resize(iterations_needed_);
+                    break;
+                }
             } else if (i == iterations_ - 1) {
                 std::cerr << "WARNING: 95% CI did not converge within " << DEV_FROM_MEDIAN * 100 << "% of median value!" << std::endl;
             }

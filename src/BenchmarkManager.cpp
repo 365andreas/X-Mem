@@ -1242,6 +1242,7 @@ bool BenchmarkManager::buildBenchmarks() {
         }
     }
 
+    uint32_t num_of_cpus_in_cpu_node = 0;
     //Build throughput matrix benchmarks
     for (auto pu = processor_units.cbegin(); pu != processor_units.cend(); pu++) { //iterate each cpu NUMA node
         if (config_.allCoresSelected()) {
@@ -1249,6 +1250,13 @@ bool BenchmarkManager::buildBenchmarks() {
         }
         else {
             cpu_node = *pu;
+            // find out how many cores has the cpu NUMA node
+            num_of_cpus_in_cpu_node = 0;
+            for (uint32_t i = 0; i < g_num_logical_cpus; i++) {
+                if (g_physical_package_of_cpu[i] == cpu_node) {
+                    num_of_cpus_in_cpu_node++;
+                }
+            }
         }
 
         for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
@@ -1273,7 +1281,7 @@ bool BenchmarkManager::buildBenchmarks() {
                         new ThroughputMatrixBenchmark(mem_array,
                             mem_array_len,
                             config_.getIterationsPerTest(),
-                            g_num_logical_cpus, // get all cores requesting data from memory in order to achieve higher b/w
+                            use_cpu_nodes ? num_of_cpus_in_cpu_node : 1,
                             mem_node,
                             mem_region,
                             cpu_node,

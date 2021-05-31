@@ -267,7 +267,7 @@ bool ThroughputMatrixBenchmark::runCore() {
         //Create workers and worker threads
         for (uint32_t t = 0; t < num_worker_threads_; t++) {
             void* thread_mem_array = reinterpret_cast<void*>(reinterpret_cast<uint8_t*>(mem_array_) + t*len_per_thread);
-            int32_t cpu_id = t; // cpu_id_in_numa_node(g_physical_package_of_cpu[t], t);
+            int32_t cpu_id = use_cpu_nodes_ ? cpu_id_in_numa_node(cpu_node_, t) : cpu_;
             if (cpu_id < 0) {
                 std::cerr << "WARNING: Failed to find logical CPU " << t << " in NUMA node " << cpu_node_ << std::endl;
             }
@@ -358,16 +358,17 @@ bool ThroughputMatrixBenchmark::runCore() {
             computeMedian(metric_on_iter_, i + 1);
 
             if (   (lower_95_CI_median_ >= (1 - DEV_FROM_MEDIAN) * median_metric_)
-                && (upper_95_CI_median_ <= (1 + DEV_FROM_MEDIAN) * median_metric_)
-                && (! g_log_extended)                                             ) {
-                // 95% CI is within DEV_FROM_MEDIAN % of the median
-                uint32_t iterations_needed_ = i + 1;
-                // Resizing vector for keeping the results of the measurements since they are fewer than the max.
-                iterations_ = iterations_needed_;
-                metric_on_iter_.resize(iterations_needed_);
-                enumerator_metric_on_iter_.resize(iterations_needed_);
-                denominator_metric_on_iter_.resize(iterations_needed_);
-                break;
+                && (upper_95_CI_median_ <= (1 + DEV_FROM_MEDIAN) * median_metric_)) {
+                if (! g_log_extended) {
+                    // 95% CI is within DEV_FROM_MEDIAN % of the median
+                    uint32_t iterations_needed_ = i + 1;
+                    // Resizing vector for keeping the results of the measurements since they are fewer than the max.
+                    iterations_ = iterations_needed_;
+                    metric_on_iter_.resize(iterations_needed_);
+                    enumerator_metric_on_iter_.resize(iterations_needed_);
+                    denominator_metric_on_iter_.resize(iterations_needed_);
+                    break;
+                }
             } else if (i == iterations_ - 1) {
                 std::cerr << "WARNING: 95% CI did not converge within " << DEV_FROM_MEDIAN * 100 << "% of median value!" << std::endl;
             }
