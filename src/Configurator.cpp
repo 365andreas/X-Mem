@@ -58,6 +58,7 @@ Configurator::Configurator(
     run_all_cores_(false),
     run_latency_matrix_(false),
     run_throughput_matrix_(false),
+    sync_mem_(false),
     working_set_size_per_thread_(DEFAULT_WORKING_SET_SIZE_PER_THREAD),
     num_worker_threads_(DEFAULT_NUM_WORKER_THREADS),
 #ifdef HAS_WORD_64
@@ -174,6 +175,9 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
 
     if (options[MEAS_THROUGHPUT_MATRIX])
         run_throughput_matrix_ = true;
+
+    if (options[SYNC_MEM])
+        sync_mem_ = true;
 
     //Check extensions
     if (options[EXTENSION]) {

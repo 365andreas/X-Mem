@@ -910,7 +910,9 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
             }
         }
     } else {
-        int fd = open("/dev/mem", O_SYNC);
+        int flags = 0;
+        if (config_.syncMemory()) flags |= O_SYNC;
+        int fd = open("/dev/mem", flags);
         if (fd < 0) {
             perror("ERROR! Failed to open /dev/mem");
             exit(-1);

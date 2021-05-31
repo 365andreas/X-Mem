@@ -58,6 +58,7 @@ namespace xmem {
         NUM_WORKER_THREADS,
         MEAS_LATENCY,
         MEAS_LATENCY_MATRIX,
+        SYNC_MEM,
         MEM_REGIONS,
         ITERATIONS,
         RANDOM_ACCESS_PATTERN,
@@ -108,6 +109,7 @@ namespace xmem {
         { STRIDE_SIZE, 0, "S", "stride_size", MyArg::Integer, "    -S, --stride_size    \tA stride size to use for load traffic-generating threads, specified in powers-of-two multiples of the chunk size(s). Allowed values: 1, -1, 2, -2, 4, -4, 8, -8, 16, -16. Positive indicates the forward direction (increasing addresses), while negative indicates the reverse direction." },
         { ALL_CORES, 0, "", "all_cores", Arg::None, "    --all_cores    \tRun matrix benchmarks for every core of the system." },
         { MEAS_LATENCY_MATRIX, 0, "", "latency_matrix", Arg::None, "    --latency_matrix    \tUnloaded latency for all CPU NUMA nodes of the system benchmarking mode."},
+        { SYNC_MEM, 0, "", "sync", Arg::None, "    --sync    \tRun matrix benchmarks with physical addresses by using synchronous operations (O_SYNC enabled)." },
         { MEM_REGIONS_PHYS, 0, "", "regions", MyArg::HexAddresses, "    --regions    \tPhysical addresses of memory regions to be tested. (only for matrix benchmarks)" },
         { MEAS_THROUGHPUT_MATRIX, 0, "", "throughput_matrix", Arg::None, "    --throughput_matrix    \tRun throughput benchmark for every core of the system." },
         { UNKNOWN, 0, "", "", Arg::None,
@@ -222,6 +224,12 @@ namespace xmem {
          * @returns True if the throughput matrix test has been selected to run.
          */
         bool throughputMatrixTestSelected() const { return run_throughput_matrix_; }
+
+        /**
+         * @brief Indicates if the accesses to memory for matrix tests will be processed synchronously.
+         * @returns True if the accesses to memory for matrix tests will be processed synchronously.
+         */
+        bool syncMemory() const { return sync_mem_; }
 
         /**
          * @brief Gets the working set size in bytes for each worker thread, if applicable.
@@ -458,6 +466,7 @@ namespace xmem {
         bool run_all_cores_; /**< True if matrix benchmarks should run for all cores. */
         bool run_latency_matrix_; /**< True if latency matrix tests should be run. */
         bool run_throughput_matrix_; /**< True if throughput matrix tests should be run. */
+        bool sync_mem_; /**< True if accesses to memory should happen synchronously. If true every access will be uncached. */
         size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */
         uint32_t num_worker_threads_; /**< Number of load threads to use for throughput benchmarks, loaded latency benchmarks, and stress tests. */
         bool use_chunk_32b_; /**< If true, use chunk sizes of 32-bits where applicable. */
