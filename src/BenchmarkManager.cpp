@@ -910,7 +910,7 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
             }
         }
     } else {
-        int flags = 0;
+        int flags = O_RDWR;
         if (config_.syncMemory()) flags |= O_SYNC;
         int fd = open("/dev/mem", flags);
         if (fd < 0) {
@@ -930,7 +930,7 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
             size_t len = page_offset + allocation_size;
 
 
-            void *virt_addr = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, page_base);
+            void *virt_addr = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, page_base);
             if (virt_addr == MAP_FAILED) {
                 perror("ERROR! Failed to mmap /dev/mem");
                 exit(-1);
@@ -958,7 +958,7 @@ void BenchmarkManager::setupWorkingSets(size_t working_set_size) {
                 if (0 != move_pages(0 /*self memory */, 1, pages, NULL, status, MPOL_MF_MOVE_ALL)) {
                     perror("WARNING! In move_page() willing to learn on which NUMA node belongs a physical address");
                 }
-                for(uint32_t i = 0; i < num_pages; i++) {
+                for (uint32_t i = 0; i < num_pages; i++) {
                     if (status[i] < 0) {
                         errno = -status[i];
                         perror("WARNING! In move_page() status returned error");
