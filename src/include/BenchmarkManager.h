@@ -125,6 +125,11 @@ namespace xmem {
          */
         bool buildBenchmarks();
 
+        /**
+         * @brief Prints the results aggregated in a matrix form (for latencyMatrix and throughputMatrix benchmarks).
+         */
+        void printMatrix(std::vector<MatrixBenchmark *> mat_benchmarks_, std::string what);
+
         Configurator config_;
 
         std::list<uint32_t> cpu_numa_node_affinities_; /**< List of CPU nodes to affinitize for benchmark experiments. */

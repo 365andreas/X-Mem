@@ -243,6 +243,51 @@ bool BenchmarkManager::runAll() {
     return success;
 }
 
+// void BenchmarkManager::printMatrix(xmem::MatrixBenchmark * mat_benchmarks_) {
+void BenchmarkManager::printMatrix(std::vector<xmem::MatrixBenchmark *> mat_benchmarks_, std::string what) {
+    uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
+
+    std::cout <<  "Measured " << what << " (in " << mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
+    std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
+
+    std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
+
+    int width = config_.allCoresSelected() ? 3 : 13;
+    std::cout << std::setw(width) << " ";
+    for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
+        std::cout << " (Node, Reg)";
+    }
+    std::cout << std::endl;
+
+    uint32_t regions_per_pu = config_.memoryRegionsInPhysAddr() ? mem_regions_phys_addr.size()
+                                                                : mem_regions_per_numa * g_num_numa_nodes;
+
+    std::cout << (config_.allCoresSelected() ? "CPU" : "CPU NUMA Node");
+    for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
+        uint32_t mem_node = mem_array_node_[region_id];
+        uint32_t mem_region = region_id;
+        if (! config_.memoryRegionsInPhysAddr()) {
+            mem_region = region_id % config_.getMemoryRegionsPerNUMANode();
+        }
+
+        std::string node_str = (mem_node == static_cast<uint32_t>(-1)) ? "?" : std::to_string(mem_node);
+        std::cout  << std::setw(12) << "(" + node_str + ", " + std::to_string(mem_region) + ")";
+    }
+
+    for (uint32_t i = 0; i < mat_benchmarks_.size(); i++) {
+        if (i % regions_per_pu == 0) {
+            std::cout << std::endl;
+            uint32_t pu = config_.allCoresSelected() ? mat_benchmarks_[i]->getCPUId() : mat_benchmarks_[i]->getCPUNode();
+            std::cout << std::setw(width) << pu;
+        }
+
+        double median_metric = mat_benchmarks_[i]->getMedianMetric();
+        // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
+        std::cout << std::setw(12) << median_metric;
+    }
+    std::cout << std::endl;
+}
+
 bool BenchmarkManager::runThroughputBenchmarks() {
     if (!built_benchmarks_) {
         if (!buildBenchmarks()) {
@@ -597,47 +642,8 @@ bool BenchmarkManager::runLatencyMatrixBenchmarks() {
     std::cout << std::endl;
 
     // aggregated report of latency matrix benchmarks
-    uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
-
-    std::cout <<  "Measured idle latencies (in " << lat_mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
-    std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
-
-    std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
-
-    int width = config_.allCoresSelected() ? 3 : 13;
-    std::cout << std::setw(width) << " ";
-    for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
-        std::cout << " (Node, Reg)";
-    }
-    std::cout << std::endl;
-
-    uint32_t regions_per_pu = config_.memoryRegionsInPhysAddr() ? mem_regions_phys_addr.size()
-                                                                : mem_regions_per_numa * g_num_numa_nodes;
-
-    std::cout << (config_.allCoresSelected() ? "CPU" : "CPU NUMA Node");
-    for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
-        uint32_t mem_node = mem_array_node_[region_id];
-        uint32_t mem_region = region_id;
-        if (! config_.memoryRegionsInPhysAddr()) {
-            mem_region = region_id % config_.getMemoryRegionsPerNUMANode();
-        }
-
-        std::string node_str = (mem_node == static_cast<uint32_t>(-1)) ? "?" : std::to_string(mem_node);
-        std::cout  << std::setw(12) << "(" + node_str + ", " + std::to_string(mem_region) + ")";
-    }
-
-    for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++) {
-        if (i % regions_per_pu == 0) {
-            std::cout << std::endl;
-            uint32_t pu = config_.allCoresSelected() ? lat_mat_benchmarks_[i]->getCPUId() : lat_mat_benchmarks_[i]->getCPUNode();
-            std::cout << std::setw(width) << pu;
-        }
-
-        double median_metric = lat_mat_benchmarks_[i]->getMedianMetric();
-        // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
-        std::cout << std::setw(12) << median_metric;
-    }
-    std::cout << std::endl;
+    std::vector<xmem::MatrixBenchmark *> mat_benchmarks_(lat_mat_benchmarks_.begin(), lat_mat_benchmarks_.end());
+    printMatrix(mat_benchmarks_, "idle latencies");
 
     if (g_verbose)
         std::cout << std::endl << "Done running latency matrix benchmarks." << std::endl;
@@ -762,36 +768,8 @@ bool BenchmarkManager::runThroughputMatrixBenchmarks() {
     std::cout << std::endl;
 
     // aggregated report of throughput matrix benchmarks
-    uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
-
-    std::cout <<  "Measured unloaded throughputs (in " << thr_mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
-    std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl; //Change the output and for latency.
-
-    int width = config_.allCoresSelected() ? 3 : 13;
-    std::cout << std::setw(width) << " ";
-    for (auto &it : mem_arrays_) {
-        std::cout << " (Node, Reg)";
-    }
-    std::cout << std::endl;
-
-    std::cout << (config_.allCoresSelected() ? "CPU" : "CPU NUMA Node");
-    for (auto it = memory_numa_node_affinities_.cbegin(); it != memory_numa_node_affinities_.cend(); it++) {
-        for (uint32_t mem_region = 0; mem_region < mem_regions_per_numa; mem_region++) {
-            std::cout  << std::setw(12) << "(" + std::to_string(*it) + ", " + std::to_string(mem_region) + ")";
-        }
-    }
-
-    for (uint32_t i = 0; i < thr_mat_benchmarks_.size(); i++) {
-        if (i % (mem_regions_per_numa * g_num_numa_nodes) == 0) {
-            std::cout << std::endl;
-            uint32_t pu = config_.allCoresSelected() ? thr_mat_benchmarks_[i]->getCPUId() : thr_mat_benchmarks_[i]->getCPUNode();
-            std::cout << std::setw(width) << pu;
-        }
-
-        double median_metric = thr_mat_benchmarks_[i]->getMedianMetric();
-        std::cout << std::setw(12) << median_metric;
-    }
-    std::cout << std::endl;
+    std::vector<xmem::MatrixBenchmark *> mat_benchmarks_(thr_mat_benchmarks_.begin(), thr_mat_benchmarks_.end());
+    printMatrix(mat_benchmarks_, "unloaded throughputs");
 
     if (g_verbose)
         std::cout << std::endl << "Done running throughput matrix benchmarks." << std::endl;

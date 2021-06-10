@@ -88,7 +88,7 @@ void MatrixBenchmark::printBenchmarkHeader() const {
 
 void MatrixBenchmark::reportBenchmarkInfo() const {
 
-    if (num_worker_threads_ > 1) {
+    if (num_worker_threads_ > 1 && g_verbose) {
         std::cout << "Load Chunk Size: ";
         switch (chunk_size_) {
             case CHUNK_32b:
