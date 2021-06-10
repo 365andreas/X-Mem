@@ -37,6 +37,7 @@
 #include <Timer.h>
 #include <PowerReader.h>
 #include <Benchmark.h>
+#include <MatrixBenchmark.h>
 #include <ThroughputBenchmark.h>
 #include <LatencyBenchmark.h>
 #include <LatencyMatrixBenchmark.h>

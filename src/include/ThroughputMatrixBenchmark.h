@@ -8,7 +8,7 @@
 #define THROUGHPUT_MATRIX_BENCHMARK_H
 
 //Headers
-#include <Benchmark.h>
+#include <MatrixBenchmark.h>
 #include <common.h>
 
 //Libraries
@@ -20,7 +20,7 @@ namespace xmem {
     /**
      * @brief A type of benchmark that measures memory throughput. Loading may be provided with separate threads which access memory as quickly as possible using given access patterns.
      */
-    class ThroughputMatrixBenchmark : public Benchmark {
+    class ThroughputMatrixBenchmark : public MatrixBenchmark {
     public:
 
         /**
@@ -50,40 +50,8 @@ namespace xmem {
          */
         virtual ~ThroughputMatrixBenchmark() {}
 
-        /**
-         * @brief Gets the CPU id node used in this benchmark.
-         * @returns The CPU used in this benchmark.
-         */
-        uint32_t getCPUId() const;
-
-        /**
-         * @brief Prints a header piece of information describing the benchmark to the console.
-         */
-        virtual void printBenchmarkHeader() const;
-
-        /**
-         * @brief Reports benchmark configuration details to the console.
-         */
-        virtual void reportBenchmarkInfo() const;
-
-        /**
-         * @brief Reports results to the console.
-         */
-        virtual void reportResults() const;
-
-        /**
-         * @brief Computes the metrics across iterations.
-         */
-        virtual void computeMetrics();
-
     protected:
         virtual bool runCore();
-
-        uint32_t cpu_;
-        bool use_cpu_nodes_; /**< True if benchmarks must run on the first core of each cpu node. Otherwise they must
-                                  on all the system's cpus. */
-
-        std::ofstream &logfile_; /**< The logfile to be used for logging each iteration of the experiments. */
 
     };
 };

@@ -1,7 +1,7 @@
 /**
  * @file
  *
- * @brief Implementation file for the LatencyMatrixBenchmark class.
+ * @brief Implementation file for the ThroughputMatrixBenchmark class.
  */
 
 //Headers
@@ -39,7 +39,7 @@ ThroughputMatrixBenchmark::ThroughputMatrixBenchmark(
         std::string name,
         std::ofstream &logfile
     ) :
-        Benchmark(
+        MatrixBenchmark(
             mem_array,
             len,
             iterations,
@@ -47,167 +47,19 @@ ThroughputMatrixBenchmark::ThroughputMatrixBenchmark(
             mem_node,
             mem_region,
             cpu_node,
+            cpu,
+            use_cpu_nodes,
             pattern_mode,
             rw_mode,
             chunk_size,
             stride_size,
             dram_power_readers,
             "MB/s",
-            name
-        ),
-        cpu_(cpu),
-        use_cpu_nodes_(use_cpu_nodes),
-        logfile_(logfile)
-    {
-}
+            name,
+            logfile
+        )
+    {}
 
-uint32_t ThroughputMatrixBenchmark::getCPUId() const {
-    return cpu_;
-}
-
-void ThroughputMatrixBenchmark::printBenchmarkHeader() const {
-    //Spit out useful info
-    // std::cout << std::endl;
-    // std::cout << "-------- Running Benchmark: " << name_;
-    // std::cout << " ----------" << std::endl;
-}
-
-void ThroughputMatrixBenchmark::reportBenchmarkInfo() const {
-
-    if ((num_worker_threads_ > 1) && g_verbose) {
-        std::cout << "Load Chunk Size: ";
-        switch (chunk_size_) {
-            case CHUNK_32b:
-                std::cout << "32-bit";
-                break;
-#ifdef HAS_WORD_64
-            case CHUNK_64b:
-                std::cout << "64-bit";
-                break;
-#endif
-#ifdef HAS_WORD_128
-            case CHUNK_128b:
-                std::cout << "128-bit";
-                break;
-#endif
-#ifdef HAS_WORD_256
-            case CHUNK_256b:
-                std::cout << "256-bit";
-                break;
-#endif
-            default:
-                std::cout << "UNKNOWN";
-                break;
-        }
-        std::cout << std::endl;
-
-        std::cout << "Load Access Pattern: ";
-        switch (pattern_mode_) {
-            case SEQUENTIAL:
-                if (stride_size_ > 0)
-                    std::cout << "forward ";
-                else if (stride_size_ < 0)
-                    std::cout << "reverse ";
-                else
-                    std::cout << "UNKNOWN ";
-
-                if (stride_size_ == 1 || stride_size_ == -1)
-                    std::cout << "sequential";
-                else
-                    std::cout << "strides of " << stride_size_ << " chunks";
-                break;
-            case RANDOM:
-                std::cout << "random";
-                break;
-            default:
-                std::cout << "UNKNOWN";
-                break;
-        }
-        std::cout << std::endl;
-
-
-        std::cout << "Load Read/Write Mode: ";
-        switch (rw_mode_) {
-            case READ:
-                std::cout << "read";
-                break;
-            case WRITE:
-                std::cout << "write";
-                break;
-            default:
-                std::cout << "UNKNOWN";
-                break;
-        }
-        std::cout << std::endl;
-
-        std::cout << "Load number of worker threads: " << num_worker_threads_-1;
-        std::cout << std::endl;
-    }
-}
-
-
-void ThroughputMatrixBenchmark::reportResults() const {
-
-    if (use_cpu_nodes_) {
-        std::cout << "CPU NUMA Node: " << cpu_node_ << " ";
-    } else {
-        std::cout << "CPU: " << cpu_ << " ";
-    }
-    std::cout << "Memory NUMA Node: " << mem_node_ << " ";
-    std::cout << "Region: " << mem_region_ << " ";
-
-    if (has_run_) {
-        std::cout << "Mean: "       << mean_metric_        << " " << metric_units_ << " "; // << " and " << mean_load_metric_ << " MB/s mean imposed load (not necessarily matched)";
-        std::cout << "Median: "     << median_metric_      << " " << metric_units_ << " ";
-        std::cout << "LB 95% CI: "  << lower_95_CI_median_ << " " << metric_units_ << " ";
-        std::cout << "UB 95% CI: "  << upper_95_CI_median_ << " " << metric_units_ << " ";
-        std::cout << "iterations: " << iterations_;
-        if (warning_)
-            std::cout << " (WARNING)";
-        std::cout << std::endl;
-    }
-    else
-        std::cerr << "WARNING: Benchmark has not run yet. No reported results." << std::endl;
-}
-
-void ThroughputMatrixBenchmark::computeMetrics() {
-    if (has_run_) {
-
-        // Resize vector according to iterations executed.
-        metric_on_iter_.resize(iterations_);
-        enumerator_metric_on_iter_.resize(iterations_);
-
-        //Compute mean
-        mean_metric_ = 0;
-        for (uint32_t i = 0; i < iterations_; i++)
-            mean_metric_ += metric_on_iter_[i];
-        mean_metric_ /= iterations_;
-
-        //Build sorted array of metrics from each iteration
-        std::vector<double> sortedMetrics = metric_on_iter_;
-        std::sort(sortedMetrics.begin(), sortedMetrics.end());
-
-        //Compute percentiles
-        min_metric_ = sortedMetrics.front();
-        percentile_25_metric_ = sortedMetrics[sortedMetrics.size()/4];
-        percentile_75_metric_ = sortedMetrics[sortedMetrics.size()*3/4];
-        median_metric_ = compute_median(metric_on_iter_);
-        percentile_95_metric_ = sortedMetrics[sortedMetrics.size()*95/100];
-        percentile_99_metric_ = sortedMetrics[sortedMetrics.size()*99/100];
-        max_metric_ = sortedMetrics.back();
-
-        //Compute mode
-        std::map<double,uint32_t> metricCounts;
-        for (uint32_t i = 0; i < iterations_; i++)
-            metricCounts[metric_on_iter_[i]]++;
-        mode_metric_ = 0;
-        uint32_t greatest_count = 0;
-        for (auto it = metricCounts.cbegin(); it != metricCounts.cend(); it++) {
-            if (it->second > greatest_count)
-                mode_metric_ = it->first;
-        }
-    }
-}
 
 bool ThroughputMatrixBenchmark::runCore() {
     size_t len_per_thread = len_ / num_worker_threads_; //Carve up memory space so each worker has its own area to play in
@@ -379,6 +231,7 @@ bool ThroughputMatrixBenchmark::runCore() {
 
     //Stop power measurement
     if (g_verbose) {
+        std::cout << std::endl;
         std::cout << "Stopping power measurement threads...";
     }
 
