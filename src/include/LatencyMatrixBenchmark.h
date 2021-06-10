@@ -54,8 +54,8 @@ namespace xmem {
     protected:
         virtual bool runCore();
 
-        std::vector<double> load_metric_on_iter_; /**< Load metrics for each iteration of the benchmark. This is in MB/s. */
-        double mean_load_metric_; /**< The average load throughput in MB/sec that was imposed on the latency measurement. */
+        // std::vector<double> load_metric_on_iter_; /**< Load metrics for each iteration of the benchmark. This is in MB/s. */
+        // double mean_load_metric_; /**< The average load throughput in MB/sec that was imposed on the latency measurement. */
     };
 };
 
