@@ -204,14 +204,23 @@ BenchmarkManager::~BenchmarkManager() {
 #endif
 #ifdef __gnu_linux__
 #ifdef HAS_LARGE_PAGES
-            if (config_.useLargePages())
+            if (config_.useLargePages()) {
                 free_huge_pages(mem_arrays_[i]);
-            else
+            } else {
 #endif
+                if (! config_.memoryRegionsInPhysAddr()) {
 #ifdef HAS_NUMA
-                numa_free(mem_arrays_[i], mem_array_lens_[i]);
+                    numa_free(mem_arrays_[i], mem_array_lens_[i]);
 #else
-                free(orig_malloc_addr_); //this is somewhat of a band-aid
+                    free(orig_malloc_addr_); //this is somewhat of a band-aid
+#endif
+                } else {
+                    if (munmap(mem_arrays_[i], mem_array_lens_[i]) < 0) {
+                        perror("Failed to munmap() memory regions:");
+                    }
+                }
+#ifdef HAS_LARGE_PAGES
+            }
 #endif
 #endif
         }
