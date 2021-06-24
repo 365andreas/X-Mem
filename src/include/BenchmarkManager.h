@@ -146,6 +146,7 @@ namespace xmem {
         std::vector<ThroughputMatrixBenchmark*> thr_mat_benchmarks_; /**< Set of throughput matrix benchmarks. */
         std::vector<PowerReader*> dram_power_readers_; /**< Set of power measurement objects for DRAM on each NUMA node. */
         std::fstream results_file_; /**< The results CSV file. */
+        std::fstream dec_net_results_file_; /**< The results file for use by a decoding network. */
         std::ofstream lat_mat_logfile_; /**< Logfile for latency matrix measurements. */
         std::ofstream thr_mat_logfile_; /**< Logfile for throughput matrix measurements. */
         bool built_benchmarks_; /**< If true, finished building all benchmarks. */

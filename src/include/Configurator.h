@@ -71,6 +71,7 @@ namespace xmem {
         LOG_EXTENDED,
         CPU_NUMA_NODE_AFFINITY,
         USE_LARGE_PAGES,
+        DEC_NET_FILE,
         MEMORY_NUMA_NODE_AFFINITY,
         MEM_REGIONS_PHYS,
         USE_READS,
@@ -108,6 +109,7 @@ namespace xmem {
         { USE_WRITES, 0, "W", "writes", Arg::None, "    -W, --writes    \tUse memory write-based patterns in load traffic-generating threads." },
         { STRIDE_SIZE, 0, "S", "stride_size", MyArg::Integer, "    -S, --stride_size    \tA stride size to use for load traffic-generating threads, specified in powers-of-two multiples of the chunk size(s). Allowed values: 1, -1, 2, -2, 4, -4, 8, -8, 16, -16. Positive indicates the forward direction (increasing addresses), while negative indicates the reverse direction." },
         { ALL_CORES, 0, "", "all_cores", Arg::None, "    --all_cores    \tRun matrix benchmarks for every core of the system." },
+        { DEC_NET_FILE, 0, "", "dec_net_file", MyArg::Required, "    --dec_net_file    \tDefine the output file for the matrix benchmarks that follow a format suitable for decoding networks." },
         { MEAS_LATENCY_MATRIX, 0, "", "latency_matrix", Arg::None, "    --latency_matrix    \tUnloaded latency for all CPU NUMA nodes of the system benchmarking mode."},
         { SYNC_MEM, 0, "", "sync", Arg::None, "    --sync    \tRun matrix benchmarks with physical addresses by using synchronous operations (O_SYNC enabled)." },
         { MEM_REGIONS_PHYS, 0, "", "regions", MyArg::HexAddresses, "    --regions    \tPhysical addresses of memory regions to be tested. (only for matrix benchmarks)" },
@@ -360,6 +362,24 @@ namespace xmem {
         void setUseOutputFile(bool use) { use_output_file_ = use; }
 
         /**
+         * @brief Gets the output filename suitable for decoding network to use, if applicable.
+         * @returns The output filename to use if useDecNetFile() returns true. Otherwise return value is "".
+         */
+        std::string getDecNetFilename() const { return dec_net_filename_; }
+
+        /**
+         * @brief Determines whether to generate an output file with a format suitbale for decoding networks.
+         * @returns True if a decoding network file should be used.
+         */
+        bool useDecNetFile() const { return use_dec_net_file_; }
+
+        /**
+         * @brief Changes whether an output file written for decoding networks should be used.
+         * @param use If true, then use the output file.
+         */
+        void setUseDecNetFile(bool use) { use_dec_net_file_ = use; }
+
+        /**
          * @brief Determines whether X-Mem is in verbose mode.
          * @returns True if verbose mode is enabled.
          */
@@ -498,6 +518,8 @@ namespace xmem {
         bool use_large_pages_; /**< If true, then large pages should be used. */
         bool use_reads_; /**< If true, throughput benchmarks should use reads. */
         bool use_writes_; /**< If true, throughput benchmarks should use writes. */
+        std::string dec_net_filename_; /**< The decoding network friendly output filename if applicable. */
+        bool use_dec_net_file_; /**< If true, generate a decoding net friendly output file for results. */
         bool use_stride_p1_; /**< If true, use a stride of +1 in relevant benchmarks. */
         bool use_stride_n1_; /**< If true, use a stride of -1 in relevant benchmarks. */
         bool use_stride_p2_; /**< If true, use a stride of +2 in relevant benchmarks. */

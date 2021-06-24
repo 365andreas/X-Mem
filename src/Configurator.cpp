@@ -96,6 +96,8 @@ Configurator::Configurator(
     use_large_pages_(false),
     use_reads_(true),
     use_writes_(true),
+    dec_net_filename_(),
+    use_dec_net_file_(false),
     use_stride_p1_(true),
     use_stride_n1_(false),
     use_stride_p2_(false),
@@ -471,6 +473,14 @@ int32_t Configurator::configureFromInput(int argc, char* argv[]) {
 
     if (options[USE_WRITES])
         use_writes_ = true;
+
+    if (options[DEC_NET_FILE]) { //override defaults
+        if (!check_single_option_occurrence(&options[DEC_NET_FILE]))
+            goto error;
+
+        dec_net_filename_ = options[DEC_NET_FILE].arg;
+        use_dec_net_file_ = true;
+    }
 
     //Check stride sizes
     if (options[STRIDE_SIZE]) { //override defaults

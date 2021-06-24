@@ -99,6 +99,7 @@ BenchmarkManager::BenchmarkManager(
         thr_mat_benchmarks_(),
         dram_power_readers_(),
         results_file_(),
+        dec_net_results_file_(),
         lat_mat_logfile_(),
         thr_mat_logfile_(),
         built_benchmarks_(false)
@@ -150,6 +151,20 @@ BenchmarkManager::BenchmarkManager(
         results_file_ << "Extension Info,";
         results_file_ << "Notes,";
         results_file_ << std::endl;
+    }
+
+    //Open results file
+    if (config_.useDecNetFile()) {
+        dec_net_results_file_.open(config_.getDecNetFilename().c_str(), std::fstream::out);
+        if (!dec_net_results_file_.is_open()) {
+            config_.setUseDecNetFile(false);
+            std::cerr << "WARNING: Failed to open " << config_.getDecNetFilename()
+            << " for writing! No results file for decoding networks will be generated." << std::endl;
+        }
+
+        //Generate file headers
+        dec_net_results_file_ << "Core,MemoryAddress,MeasurementType,MedianValue,Units";
+        dec_net_results_file_ << std::endl;
     }
 
     // If extended measurements are enabled for latency matrix benchmark open logfile
@@ -252,7 +267,6 @@ bool BenchmarkManager::runAll() {
     return success;
 }
 
-// void BenchmarkManager::printMatrix(xmem::MatrixBenchmark * mat_benchmarks_) {
 void BenchmarkManager::printMatrix(std::vector<xmem::MatrixBenchmark *> mat_benchmarks_, std::string what) {
     uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
 
@@ -541,6 +555,11 @@ bool BenchmarkManager::runLatencyMatrixBenchmarks() {
         }
     }
 
+    std::vector<uint64_t> mem_regions_phys_addr;
+    if (config_.useDecNetFile()) {
+        mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
+    }
+
     for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++) {
         lat_mat_benchmarks_[i]->run();
         lat_mat_benchmarks_[i]->reportResults(); //to console
@@ -647,6 +666,16 @@ bool BenchmarkManager::runLatencyMatrixBenchmarks() {
             results_file_ << "" << ",";
             results_file_ << std::endl;
         }
+
+        if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
+            dec_net_results_file_ << lat_mat_benchmarks_[i]->getCPUId() << ",";
+            uint32_t region_id = lat_mat_benchmarks_[i]->getMemRegion();
+            dec_net_results_file_ << std::hex << "0x" << mem_regions_phys_addr[region_id] << std::dec << ",";
+            dec_net_results_file_ << "latency" << ",";
+            dec_net_results_file_ << lat_mat_benchmarks_[i]->getMedianMetric() << ",";
+            dec_net_results_file_ << lat_mat_benchmarks_[i]->getMetricUnits() << ",";
+            dec_net_results_file_ << std::endl;
+        }
     }
     std::cout << std::endl;
 
@@ -666,6 +695,11 @@ bool BenchmarkManager::runThroughputMatrixBenchmarks() {
             std::cerr << "ERROR: Failed to build benchmarks." << std::endl;
             return false;
         }
+    }
+
+    std::vector<uint64_t> mem_regions_phys_addr;
+    if (config_.useDecNetFile()) {
+        mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
     }
 
     for (uint32_t i = 0; i < thr_mat_benchmarks_.size(); i++) {
@@ -772,6 +806,16 @@ bool BenchmarkManager::runThroughputMatrixBenchmarks() {
             results_file_ << "N/A" << ",";
             results_file_ << "" << ",";
             results_file_ << std::endl;
+        }
+
+        if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
+            dec_net_results_file_ << thr_mat_benchmarks_[i]->getCPUId() << ",";
+            uint32_t region_id = thr_mat_benchmarks_[i]->getMemRegion();
+            dec_net_results_file_ << std::hex << "0x" << mem_regions_phys_addr[region_id] << std::dec << ",";
+            dec_net_results_file_ << "throughput" << ",";
+            dec_net_results_file_ << thr_mat_benchmarks_[i]->getMedianMetric() << ",";
+            dec_net_results_file_ << thr_mat_benchmarks_[i]->getMetricUnits() << ",";
+            dec_net_results_file_ << std::endl;
         }
     }
     std::cout << std::endl;

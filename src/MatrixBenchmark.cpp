@@ -80,7 +80,7 @@ MatrixBenchmark::~MatrixBenchmark() {
 }
 
 uint32_t MatrixBenchmark::getCPUId() const {
-    return cpu_;
+    return  use_cpu_nodes_ ? cpu_id_in_numa_node(getCPUNode(), 0) : cpu_;
 }
 
 void MatrixBenchmark::printBenchmarkHeader() const {
