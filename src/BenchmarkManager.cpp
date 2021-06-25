@@ -161,10 +161,6 @@ BenchmarkManager::BenchmarkManager(
             std::cerr << "WARNING: Failed to open " << config_.getDecNetFilename()
             << " for writing! No results file for decoding networks will be generated." << std::endl;
         }
-
-        //Generate file headers
-        dec_net_results_file_ << "Core,MemoryAddress,MeasurementType,MedianValue,Units";
-        dec_net_results_file_ << std::endl;
     }
 
     // If extended measurements are enabled for latency matrix benchmark open logfile
@@ -668,12 +664,13 @@ bool BenchmarkManager::runLatencyMatrixBenchmarks() {
         }
 
         if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
-            dec_net_results_file_ << lat_mat_benchmarks_[i]->getCPUId() << ",";
+            dec_net_results_file_ << "bench_result(";
+            dec_net_results_file_ << lat_mat_benchmarks_[i]->getCPUId() << ", ";
             uint32_t region_id = lat_mat_benchmarks_[i]->getMemRegion();
-            dec_net_results_file_ << std::hex << "0x" << mem_regions_phys_addr[region_id] << std::dec << ",";
-            dec_net_results_file_ << "latency" << ",";
-            dec_net_results_file_ << lat_mat_benchmarks_[i]->getMedianMetric() << ",";
-            dec_net_results_file_ << lat_mat_benchmarks_[i]->getMetricUnits() << ",";
+            dec_net_results_file_ << mem_regions_phys_addr[region_id] << ", ";
+            dec_net_results_file_ << "'latency'" << ", ";
+            dec_net_results_file_ << lat_mat_benchmarks_[i]->getMedianMetric() << ", ";
+            dec_net_results_file_ << "'" << lat_mat_benchmarks_[i]->getMetricUnits() << "'" << ").";
             dec_net_results_file_ << std::endl;
         }
     }
@@ -809,12 +806,13 @@ bool BenchmarkManager::runThroughputMatrixBenchmarks() {
         }
 
         if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
-            dec_net_results_file_ << thr_mat_benchmarks_[i]->getCPUId() << ",";
+            dec_net_results_file_ << "bench_result(";
+            dec_net_results_file_ << thr_mat_benchmarks_[i]->getCPUId() << ", ";
             uint32_t region_id = thr_mat_benchmarks_[i]->getMemRegion();
-            dec_net_results_file_ << std::hex << "0x" << mem_regions_phys_addr[region_id] << std::dec << ",";
-            dec_net_results_file_ << "throughput" << ",";
-            dec_net_results_file_ << thr_mat_benchmarks_[i]->getMedianMetric() << ",";
-            dec_net_results_file_ << thr_mat_benchmarks_[i]->getMetricUnits() << ",";
+            dec_net_results_file_ << mem_regions_phys_addr[region_id] << ", ";
+            dec_net_results_file_ << "'throughput'" << ", ";
+            dec_net_results_file_ << thr_mat_benchmarks_[i]->getMedianMetric() << ", ";
+            dec_net_results_file_ << "'" << thr_mat_benchmarks_[i]->getMetricUnits() << "'" << ").";
             dec_net_results_file_ << std::endl;
         }
     }
