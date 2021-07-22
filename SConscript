@@ -1,17 +1,17 @@
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2014 Microsoft
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,12 +39,18 @@ if hostos == 'linux': # gcc
     env.Append(CPPFLAGS = ' -Wall -Wno-unused-but-set-variable -Wno-unused-variable -g -O3 -std=c++11 -fabi-version=6')
     env.Append(LIBS = ['pthread'])
 
-    if arch == 'x64_avx': 
+    # List all C++ source files
+    sources = [
+        Glob('src/*.cpp'),
+        Glob('src/ext/*/*.cpp'), # All extensions
+    ]
+
+    if arch == 'x64_avx':
         env.Append(CPPFLAGS = ' -mavx')
         env.Append(LIBS = ['numa', 'hugetlbfs'])
     elif arch == 'x64':
         env.Append(LIBS = ['numa', 'hugetlbfs'])
-    elif arch == 'mic': 
+    elif arch == 'mic':
         env.Replace(PATH = os.environ['PATH'])
         env.Replace(CXX = 'icc') # Use Intel compiler
         env.Append(CPPFLAGS = ' -mmic')
@@ -71,15 +77,24 @@ if hostos == 'linux': # gcc
     elif arch == 'arm64': # Cross-compile for 64-bit ARM on 64-bit x86-64 platform
         env.Replace(CXX = 'arm-linux-gnueabihf-g++-4.8') # Cross-compiler
         env.Append(CPPFLAGS = ' -mfloat-abi=hard -mfpu=vfpv3 -mfpu=neon -march=armv8-a')
+    elif arch == 'gcc_mic':
+        env.Replace(PATH = os.environ['PATH'])
+        env.Replace(CC = 'gcc')
+        env.Replace(CPPFLAGS = '')
+        env.Replace(CPPPATH = [])
+        env.Replace(LIBS = [])
+
+        env.Append(CPPPATH = ['src/c-version/include'])
+        env.Replace(CCFLAGS = ' -Wall -Wno-unused-but-set-variable -Wno-unused-variable -g -O3')
+        # env.Append(LIBS = ['numa', 'hugetlbfs'])
+        # List all C source files
+        sources = [
+            Glob('src/c-version/*.c'),
+        ]
     else:
         print 'Error: architecture ' + arch + ' not supported on ' + hostos + ', cannot build.'
         exit(1)
 
-    # List all C++ source files
-    sources = [
-        Glob('src/*.cpp'), 
-        Glob('src/ext/*/*.cpp'), # All extensions
-    ]
 
 elif hostos == 'windows': # Windows OS
     # We use Visual C++ compiler
@@ -97,7 +112,7 @@ elif hostos == 'windows': # Windows OS
         env.Append(CPPFLAGS = ' /arch:AVX')
         # List all C++ source files
         sources = [
-            Glob('src/*.cpp'), 
+            Glob('src/*.cpp'),
             Glob('src/ext/*/*.cpp'), # All extensions
             Glob('src/win/*.cpp'), # Windows-specific C++ code
             Glob('src/win/x86_64/*.asm'), # Have some hand-coded assembler files for Windows x86-64 AVX only
@@ -107,7 +122,7 @@ elif hostos == 'windows': # Windows OS
         env.Replace(MSVC_USE_SCRIPT = 'C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\vcvars64.bat') # Path to the VC++ setup script. Assumes VS 2015
         # List all C++ source files
         sources = [
-            Glob('src/*.cpp'), 
+            Glob('src/*.cpp'),
             Glob('src/ext/*/*.cpp'), # All extensions
             Glob('src/win/*.cpp'), # Windows-specific C++ code
         ]
@@ -117,7 +132,7 @@ elif hostos == 'windows': # Windows OS
         env.Append(CPPFLAGS = ' /arch:IA32')
         # List all C++ source files
         sources = [
-            Glob('src/*.cpp'), 
+            Glob('src/*.cpp'),
             Glob('src/ext/*/*.cpp'), # All extensions
             Glob('src/win/*.cpp'), # Windows-specific C++ code
         ]
@@ -129,7 +144,7 @@ elif hostos == 'windows': # Windows OS
         env.Append(CPPFLAGS = ' /Gy')
         # List all C++ source files
         sources = [
-            Glob('src/*.cpp'), 
+            Glob('src/*.cpp'),
             Glob('src/ext/*/*.cpp'), # All extensions
             Glob('src/win/win_common_third_party.cpp'),
         ]
@@ -142,7 +157,7 @@ elif hostos == 'windows': # Windows OS
         env.Append(CPPFLAGS = ' /Gy')
         # List all C++ source files
         sources = [
-            Glob('src/*.cpp'), 
+            Glob('src/*.cpp'),
             Glob('src/ext/*/*.cpp'), # All extensions
             Glob('src/win/win_common_third_party.cpp'),
         ]
