@@ -1,5 +1,5 @@
 //Headers
-// #include <common.h>
+#include <common.h>
 #include <Configurator.h>
 // #include <BenchmarkManager.h>
 
@@ -14,7 +14,7 @@
 int main(int argc, char* argv[]) {
     bool config_success = false;
 
-    // init_globals();
+    init_globals();
 
     // //Get info about the runtime system
     // if (query_sys_info()) {
@@ -26,7 +26,6 @@ int main(int argc, char* argv[]) {
     config_success = !configureFromInput(&config, argc, argv);
 
     if (config_success) {
-        printf("run_latency_matrix: %s\n", latencyMatrixTestSelected(&config) ? "YES" : "NO");
 
         // if (g_verbose) {
         //     print_compile_time_options();
@@ -41,10 +40,12 @@ int main(int argc, char* argv[]) {
 
         // BenchmarkManager benchmgr(config);
         // if (config.latencyMatrixTestSelected()) {
+            // printf("run_latency_matrix: %s\n", latencyMatrixTestSelected(&config) ? "YES" : "NO");
         //     benchmgr.runLatencyMatrixBenchmarks();
         // }
 
         // if (config.throughputMatrixTestSelected()) {
+            // printf("run_throughput_matrix: %s\n", latencyThroughputTestSelected(&config) ? "YES" : "NO");
         //     benchmgr.runThroughputMatrixBenchmarks();
         // }
         // }
