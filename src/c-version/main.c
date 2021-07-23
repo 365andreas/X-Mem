@@ -16,11 +16,11 @@ int main(int argc, char* argv[]) {
 
     init_globals();
 
-    // //Get info about the runtime system
-    // if (query_sys_info()) {
-    //     std::cerr << "ERROR occurred while querying CPU information." << std::endl;
-    //     return -1;
-    // }
+    //Get info about the runtime system
+    if (query_sys_info()) {
+        fprintf(stderr, "ERROR occurred while querying CPU information.\n");
+        return -1;
+    }
 
     //Configure runtime based on user inputs
     config_success = !configureFromInput(&config, argc, argv);

@@ -86,7 +86,7 @@ if hostos == 'linux': # gcc
 
         env.Append(CPPPATH = ['src/c-version/include'])
         env.Replace(CCFLAGS = ' -Wall -Wno-unused-but-set-variable -Wno-unused-variable -g -O3')
-        # env.Append(LIBS = ['numa', 'hugetlbfs'])
+        env.Append(LIBS = ['numa', 'hugetlbfs'])
         # List all C source files
         sources = [
             Glob('src/c-version/*.c'),

@@ -10,6 +10,8 @@
 // #include <Timer.h>
 
 //Libraries
+#include <errno.h>
+#include <stdio.h>
 
 
 #ifdef __gnu_linux__
@@ -34,6 +36,9 @@
 #endif
 #endif
 
+#define MAX_PHYS_PACKAGE_IDS 10
+#define MAX_CORE_IDS 200
+
 bool g_verbose = false; /**< If true, be more verbose with console reporting. */
 bool g_log_extended = false; /**< If true, disable early stopping (when CI does not deviate too much) and log measured values to enable statistical processing of the experiments. */
 size_t g_page_size; /**< Default page size on the system, in bytes. */
@@ -43,14 +48,12 @@ uint32_t g_num_logical_cpus; /**< Number of logical CPU cores in the system. Thi
 uint32_t g_num_physical_cpus; /**< Number of physical CPU cores in the system. */
 uint32_t g_num_physical_packages; /**< Number of physical CPU packages in the system. Generally this is the same as number of NUMA nodes, unless UMA emulation is done in hardware. */
 uint32_t *g_physical_package_of_cpu; /**< Mapping of logical CPU cores in the system to the according physical package that they belong. */
-uint32_t g_total_l1_caches; /**< Total number of L1 caches in the system. */
-uint32_t g_total_l2_caches; /**< Total number of L2 caches in the system. */
-uint32_t g_total_l3_caches; /**< Total number of L3 caches in the system. */
-uint32_t g_total_l4_caches; /**< Total number of L4 caches in the system. */
 uint32_t g_starting_test_index; /**< Numeric identifier for the first benchmark test. */
 uint32_t g_test_index; /**< Numeric identifier for the current benchmark test. */
 tick_t g_ticks_per_ms; /**< Timer ticks per ms. */
 float g_ns_per_tick; /**< Nanoseconds per timer tick. */
+
+uint32_t num_core_ids = 0;
 
 // void xmem::print_compile_time_options() {
 //     std::cout << std::endl;
@@ -375,10 +378,6 @@ void init_globals() {
     g_physical_package_of_cpu = DEFAULT_PHYSICAL_PACKAGE_OF_CPU;
     g_num_physical_cpus = DEFAULT_NUM_PHYSICAL_CPUS;
     g_num_logical_cpus = DEFAULT_NUM_LOGICAL_CPUS;
-    g_total_l1_caches = DEFAULT_NUM_L1_CACHES;
-    g_total_l2_caches = DEFAULT_NUM_L2_CACHES;
-    g_total_l3_caches = DEFAULT_NUM_L3_CACHES;
-    g_total_l4_caches = DEFAULT_NUM_L4_CACHES;
     g_page_size = DEFAULT_PAGE_SIZE;
     g_large_page_size = DEFAULT_LARGE_PAGE_SIZE;
 
@@ -386,233 +385,160 @@ void init_globals() {
     g_ns_per_tick = 0;
 }
 
-// int32_t xmem::query_sys_info() {
-//     //Windows only: get logical processor information data structures from OS
-// #ifdef _WIN32
-//     PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer = NULL;
-//     PSYSTEM_LOGICAL_PROCESSOR_INFORMATION curr = NULL;
-//     DWORD len = 0;
-//     DWORD offset = 0;
-//     DWORD retval = 0;
-//     bool done = false;
-//     retval = GetLogicalProcessorInformation(buffer, &len); //this will fail because buffer is not yet allocated.
-//     buffer = static_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION>(malloc(len));
-//     if (!buffer) {
-//         std::cerr << "WARNING: Failed to allocate memory for querying system information." << std::endl;
-//         return -1;
-//     }
-//     retval = GetLogicalProcessorInformation(buffer, &len); //try again
-// #endif
+int32_t query_sys_info() {
 
-// #ifdef __gnu_linux__
-//     std::ifstream in;
-//     in.open("/proc/cpuinfo");
-//     char line[512];
-//     uint32_t id = 0;
-// #endif
+    FILE *in;
 
-//     //Get NUMA info
-// #ifdef _WIN32
-//     curr = buffer;
-//     offset = 0;
-//     while (offset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= len) {
-//         if (curr->Relationship == RelationNumaNode)
-//             g_num_numa_nodes++;
-//         else if (curr->Relationship == RelationProcessorPackage)
-//             g_num_physical_packages++;
-//         curr++;
-//         offset += sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
-//     }
-// #endif
-// #ifdef __gnu_linux__
-// #ifdef HAS_NUMA
-//     if (numa_available() == -1) { //Check that NUMA is available.
-//         std::cerr << "WARNING: NUMA API is not available on this system." << std::endl;
-//         return -1;
-//     }
+    in = fopen("/proc/cpuinfo", "r");
 
-//     //Get number of nodes. This is easy.
-//     g_num_numa_nodes = numa_max_node()+1;
-// #endif
-// #ifndef HAS_NUMA //special case
-//     g_num_numa_nodes = 1;
-// #endif
+    size_t line_size = 512;
+    char *line = (char *) malloc(line_size * sizeof(double));
+    char *line_str;
+    uint32_t id = 0;
 
-//     //Get number of physical packages. This is somewhat convoluted, but not sure of a better way on Linux. Technically there could be on-chip NUMA, so...
-//     std::vector<uint32_t> phys_package_ids;
-//     while (!in.eof()) {
-//         in.getline(line, 512, '\n');
 
-//         // the line with CPU feature flags may exceed 512 B, leaving the stream in an error state and the remainder of the line unread
-//         if(in.fail() && in.gcount() == 511) {
-//             // clean up the stream
-//             in.clear();
-//             // eat the remaining line
-//             in.ignore(std::numeric_limits<std::streamsize>::max(),
-//                 '\n');
-//         }
+    //Get NUMA info
+#ifdef HAS_NUMA
+    if (numa_available() == -1) { //Check that NUMA is available.
+        fprintf(stderr, "WARNING: NUMA API is not available on this system.\n");
+        return -1;
+    }
 
-//         std::string line_string(line);
-//         if (line_string.find("physical id") != std::string::npos) {
-//             sscanf(line, "physical id\t\t\t: %u", &id);
-//             if (std::find(phys_package_ids.begin(), phys_package_ids.end(), id) == phys_package_ids.end()) //have not seen this physical processor yet
-//                 phys_package_ids.push_back(id); //add to list
-//         }
-//     }
-//     g_num_physical_packages = phys_package_ids.size();
-// #endif
+    //Get number of nodes. This is easy.
+    g_num_numa_nodes = numa_max_node() + 1;
+#endif
+#ifndef HAS_NUMA //special case
+    g_num_numa_nodes = 1;
+#endif
 
-//     //Get number of CPUs
-// #ifdef _WIN32
-//     curr = buffer;
-//     offset = 0;
-//     while (offset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= len) {
-//         if (curr->Relationship == RelationProcessorCore) {
-//             DWORD LSHIFT = sizeof(ULONG_PTR)*8 - 1;
-//             DWORD bitSetCount = 0;
-//             ULONG_PTR bitMask = curr->ProcessorMask;
-//             ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
-//             DWORD i;
+    //Get number of physical packages. This is somewhat convoluted, but not sure of a better way on Linux. Technically there could be on-chip NUMA, so...
+    uint32_t phys_package_ids[MAX_PHYS_PACKAGE_IDS];
+    while (!feof(in)) {
 
-//             for (i = 0; i <= LSHIFT; ++i)
-//             {
-//                 bitSetCount += ((bitMask & bitTest)?1:0);
-//                 bitTest/=2;
-//             }
+        if (getline(&line, &line_size, in) < 0)
+            if (errno != 0)
+                fprintf(stderr, "WARNING: Failed reading line of /proc/cpuinfo.\n");
 
-//             g_num_logical_cpus += bitSetCount;
-//             g_num_physical_cpus++;
-//         }
-//         curr++;
-//         offset += sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
-//     }
-// #endif
-// #ifdef __gnu_linux__
-//     //Get number of logical CPUs
-//     g_num_logical_cpus = sysconf(_SC_NPROCESSORS_ONLN); //This isn't really portable -- requires glibc extensions to sysconf()
+        if((line_str = strstr(line, "physical id")) != NULL) {
+            sscanf(line_str, "physical id\t\t\t: %u", &id);
 
-//     //Get number of physical CPUs. This is somewhat convoluted, but not sure of a better way on Linux. I don't want to assume anything about HyperThreading-like things.
-//     std::vector<uint32_t> core_ids;
-//     while (!in.eof()) {
-//         in.getline(line, 512, '\n');
+            bool found = false;
+            for (int i = 0; i < g_num_physical_packages; i++) {
+                if (phys_package_ids[i] == id) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                //have not seen this physical processor yet
+                phys_package_ids[g_num_physical_packages] = id; //add to list
+                g_num_physical_packages++;
+                if (g_num_physical_packages > MAX_PHYS_PACKAGE_IDS) {
+                    fprintf(stderr, "ERROR: Define a larger MAX_PHYS_PACKAGE_IDS since they are more than %d.\n", MAX_PHYS_PACKAGE_IDS);
+                    return -1;
+                }
+            }
+        }
+    }
 
-//         // the line with CPU feature flags may exceed 512 B, leaving the stream in an error state and the remainder of the line unread
-//         if(in.fail() && in.gcount() == 511) {
-//             // clean up the stream
-//             in.clear();
-//             // eat the remaining line
-//             in.ignore(std::numeric_limits<std::streamsize>::max(),
-//                 '\n');
-//         }
+    printf("phys_package_ids: ");
+    for (int i = 0; i < g_num_physical_packages; i++) {
+        printf("%d ", phys_package_ids[i]);
+    }
+    printf("\n");
 
-//         std::string line_string(line);
-//         if (line_string.find("core id") != std::string::npos) {
-//             sscanf(line, "core id\t\t\t: %u", &id); //FIXME: this does not seem to work on Linux /proc/cpuinfo
-//             if (std::find(core_ids.begin(), core_ids.end(), id) == core_ids.end()) //have not seen this physical core yet
-//                 core_ids.push_back(id); //add to list
-//         }
-//     }
-//     g_num_physical_cpus = core_ids.size() * g_num_physical_packages; //FIXME: currently this assumes each processor package has an equal number of cores. This may not be true in general! Need more complicated /proc/cpuinfo parsing.
-// #endif
+    //Get number of CPUs
+    //Get number of logical CPUs
+    g_num_logical_cpus = sysconf(_SC_NPROCESSORS_ONLN); //This isn't really portable -- requires glibc extensions to sysconf()
+    if (g_num_logical_cpus == -1) {
+        perror("ERROR: sysconf(_SC_NPROCESSORS_ONLN) failed");
+        return -1;
+    }
 
-//     //Get mapping of physical CPUs to packages
-// #ifdef _WIN32
-//     //TODO: add implementation for WIN32
-// #endif
-// #ifdef __gnu_linux__
-//     //Get number of logical CPUs
-//     g_num_logical_cpus = sysconf(_SC_NPROCESSORS_ONLN); //This isn't really portable -- requires glibc extensions to sysconf()
-//     g_physical_package_of_cpu.resize(g_num_logical_cpus);
+    printf("g_num_logical_cpus: %d\n", g_num_logical_cpus);
 
-//     in.clear();
-//     in.seekg(0);
-//     uint32_t cpu = 0;
-//     uint32_t physical_id = 0;
-//     while (!in.eof()) {
+    fseek(in, 0, SEEK_SET);
+    //Get number of physical CPUs. This is somewhat convoluted, but not sure of a better way on Linux. I don't want to assume anything about HyperThreading-like things.
+    uint32_t core_ids[MAX_CORE_IDS];
+    while (!feof(in)) {
 
-//         in.getline(line, 512, '\n');
+        if (getline(&line, &line_size, in) < 0)
+            if (errno != 0)
+                fprintf(stderr, "WARNING: Failed reading line of /proc/cpuinfo.\n");
 
-//         // the line with CPU feature flags may exceed 512 B, leaving the stream in an error state and the remainder of the line unread
-//         if(in.fail() && in.gcount() == 511) {
-//             // clean up the stream
-//             in.clear();
-//             // eat the remaining line
-//             in.ignore(std::numeric_limits<std::streamsize>::max(),
-//                 '\n');
-//         }
+        if((line_str = strstr(line, "core id")) != NULL) {
+            sscanf(line_str, "core id\t\t\t: %u", &id);
 
-//         std::string line_string(line);
-//         if (line_string.find("processor") != std::string::npos) {
-//             sscanf(line, "processor\t\t\t: %u", &cpu);
-//         } else if (line_string.find("physical id") != std::string::npos) {
-//             sscanf(line, "physical id\t\t\t: %u", &physical_id);
-//             g_physical_package_of_cpu[cpu] = physical_id;
-//         }
+            bool found = false;
+            for (int i = 0; i < num_core_ids; i++) {
+                if (core_ids[i] == id) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                //have not seen this physical processor yet
+                core_ids[num_core_ids] = id; //add to list
+                num_core_ids++;
+                if (num_core_ids > MAX_PHYS_PACKAGE_IDS) {
+                    fprintf(stderr, "ERROR: Define a larger MAX_PHYS_PACKAGE_IDS since they are more than %d.\n", MAX_PHYS_PACKAGE_IDS);
+                    return -1;
+                }
+            }
+        }
+    }
+    g_num_physical_cpus = num_core_ids * g_num_physical_packages; //FIXME: currently this assumes each processor package has an equal number of cores. This may not be true in general! Need more complicated /proc/cpuinfo parsing.
 
-//     }
-// #endif
+    printf("core_ids: ");
+    for (int i = 0; i < num_core_ids; i++) {
+        printf("%d ", core_ids[i]);
+    }
+    printf("\n");
 
-//     //Get number of caches
-// #ifdef _WIN32
-//     curr = buffer;
-//     offset = 0;
-//     while (offset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= len) {
-//         if (curr->Relationship == RelationCache) {
-//             switch (curr->Cache.Level) {
-//                 case 1:
-//                     g_total_l1_caches++;
-//                     break;
-//                 case 2:
-//                     g_total_l2_caches++;
-//                     break;
-//                 case 3:
-//                     g_total_l3_caches++;
-//                     break;
-//                 case 4:
-//                     g_total_l4_caches++;
-//                     break;
-//                 default:
-//                     std::cerr << "WARNING: Unknown cache level detected in system information." << std::endl;
-//                     break;
-//             }
-//         }
-//         curr++;
-//         offset += sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
-//     }
-// #endif
-// #ifdef __gnu_linux__
-//     //FIXME: guessing number of caches on GNU/Linux, not sure how to get correct answer. This does not affect X-Mem functionality, however.
-//     g_total_l1_caches = g_num_physical_cpus;
-//     g_total_l2_caches = g_num_physical_cpus;
-//     g_total_l3_caches = g_num_physical_packages;
-//     g_total_l4_caches = 0;
-// #endif
+    //Get mapping of physical CPUs to packages
+    g_physical_package_of_cpu = (uint32_t *) malloc(g_num_logical_cpus * sizeof(uint32_t));
 
-//     //Get page size
-// #ifdef _WIN32
-//     SYSTEM_INFO sysinfo;
-//     GetSystemInfo(&sysinfo);
-//     DWORD pgsz = sysinfo.dwPageSize;
-//     g_page_size = pgsz;
-// #ifdef HAS_LARGE_PAGES
-//     g_large_page_size = GetLargePageMinimum();
-// #endif
-// #endif
-// #ifdef __gnu_linux__
-//     g_page_size = static_cast<size_t>(sysconf(_SC_PAGESIZE));
-// #ifdef HAS_LARGE_PAGES
-//     g_large_page_size = gethugepagesize();
-// #endif
-//     in.close();
-// #endif
+    fseek(in, 0, SEEK_SET);
+    uint32_t cpu = 0;
+    uint32_t physical_id = 0;
+    while (!feof(in)) {
 
-// #ifdef _WIN32
-//     if (buffer)
-//         free(buffer);
-// #endif
+        if (getline(&line, &line_size, in) < 0)
+            if (errno != 0)
+                fprintf(stderr, "WARNING: Failed reading line of /proc/cpuinfo.\n");
 
-//     return 0;
-// }
+        if ((line_str = strstr(line, "processor")) != NULL) {
+            sscanf(line_str, "processor\t\t\t: %u", &cpu);
+        } else if ((line_str = strstr(line, "physical id")) != NULL) {
+            sscanf(line_str, "physical id\t\t\t: %u", &physical_id);
+            g_physical_package_of_cpu[cpu] = physical_id;
+        }
+    }
+
+    printf("g_physical_package_of_cpu: \n");
+    for (int i = 0; i < g_num_logical_cpus; i++) {
+        printf("g_physical_package_of_cpu[%d] = %d\n", i, g_physical_package_of_cpu[i]);
+    }
+    printf("\n");
+
+    //Get page size
+    g_page_size = (size_t) (sysconf(_SC_PAGESIZE));
+    if (sysconf(_SC_PAGESIZE) == -1) {
+        perror("ERROR: sysconf(_SC_PAGESIZE) failed");
+        return -1;
+    }
+
+#ifdef HAS_LARGE_PAGES
+    g_large_page_size = gethugepagesize();
+#endif
+
+    printf("g_page_size: %ld\n", g_page_size);
+
+
+    fclose(in);
+
+    return 0;
+}
 
 // void xmem::report_sys_info() {
 //     std::cout << std::endl;
@@ -635,25 +561,6 @@ void init_globals() {
 //     if (g_num_logical_cpus == DEFAULT_NUM_LOGICAL_CPUS)
 //         std::cout << "?";
 //     std::cout << std::endl;
-//     std::cout << "Number of processor L1/L2/L3/L4 caches: ";
-//     std::cout << g_total_l1_caches;
-//     if (g_total_l1_caches == DEFAULT_NUM_L1_CACHES)
-//         std::cout << "?";
-//     std::cout << "/";
-//     std::cout << g_total_l2_caches;
-//     if (g_total_l2_caches == DEFAULT_NUM_L2_CACHES)
-//         std::cout << "?";
-//     std::cout << "/";
-//     std::cout << g_total_l3_caches;
-//     if (g_total_l3_caches == DEFAULT_NUM_L3_CACHES)
-//         std::cout << "?";
-//     std::cout << "/";
-//     std::cout << g_total_l4_caches;
-//     if (g_total_l4_caches == DEFAULT_NUM_L4_CACHES)
-//         std::cout << "?";
-// #ifdef __gnu_linux__
-//     std::cout << " (guesses)";
-// #endif
 //     std::cout << std::endl;
 //     std::cout << "Regular page size: " << g_page_size << " B" << std::endl;
 // #ifdef HAS_LARGE_PAGES
