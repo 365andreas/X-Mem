@@ -16,11 +16,36 @@
 
 
 typedef struct {
-    bool configured_;
-    bool run_all_cores_;
-    bool run_latency_matrix_;
-    bool run_throughput_matrix_;
-    bool verbose_;
+    bool configured_; /**< If true, this object has been configured. configureFromInput() will only work if this is false. */
+    bool run_all_cores_; /**< True if matrix benchmarks should run for all cores. */
+    bool run_latency_matrix_; /**< True if latency matrix tests should be run. */
+    bool run_throughput_matrix_; /**< True if throughput matrix tests should be run. */
+    bool verbose_; /**< If true, then console reporting should be more detailed. */
+    size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */
+
+//         bool run_extensions_; /**< If true, run extensions. */
+//         bool run_latency_; /**< True if latency tests should be run. */
+//         bool run_throughput_; /**< True if throughput tests should be run. */
+//         bool sync_mem_; /**< True if accesses to memory should happen synchronously. If true every access will be uncached. */
+//         uint32_t num_worker_threads_; /**< Number of load threads to use for throughput benchmarks, loaded latency benchmarks, and stress tests. */
+//         bool numa_enabled_; /**< If false, only CPU/memory NUMA nodes 0 may be used. */
+//         std::list<uint32_t> cpu_numa_node_affinities_; /**< List of CPU NUMA nodes to affinitize on all benchmark experiments. */
+//         std::list<uint32_t> memory_numa_node_affinities_; /**< List of memory NUMA nodes to affinitize on all benchmark experiments. */
+//         uint32_t mem_regions_; /**< Number of memory regions per NUMA node for the matrix benchmark tests. */
+//         bool mem_regions_in_phys_addr_; /**< True if physical addresses of memory regions are passed as arguments for matrix becnhmarks. */
+//         std::vector<uint64_t> mem_regions_phys_addr_; /**< Vector of physical addresses of memory regions to be used for matrix benchmark experiments. */
+//         uint32_t iterations_; /**< Number of iterations to run for each benchmark test. */
+//         bool use_random_access_pattern_; /**< If true, run throughput benchmarks with random access pattern. */
+//         bool use_sequential_access_pattern_; /**< If true, run throughput benchmarks with sequential access pattern. */
+//         uint32_t starting_test_index_; /**< Numerical index to use for the first test. This is an aid for end-user interpreting and post-processing of result CSV file, if relevant. */
+//         std::string filename_; /**< The output filename if applicable. */
+//         bool use_output_file_; /**< If true, generate a CSV output file for results. */
+//         bool use_large_pages_; /**< If true, then large pages should be used. */
+//         bool use_reads_; /**< If true, throughput benchmarks should use reads. */
+//         bool use_writes_; /**< If true, throughput benchmarks should use writes. */
+//         std::string dec_net_filename_; /**< The decoding network friendly output filename if applicable. */
+//         bool use_dec_net_file_; /**< If true, generate a decoding net friendly output file for results. */
+
 } Configurator;
 
 Configurator config;
@@ -51,6 +76,13 @@ bool latencyMatrixTestSelected(Configurator *conf);
  * @returns True if the throughput matrix test has been selected to run.
  */
 bool throughputMatrixTestSelected(Configurator *conf);
+
+/**
+ * @brief Gets the working set size in bytes for each worker thread, if applicable.
+ * @returns The working set size in bytes.
+ */
+size_t getWorkingSetSizePerThread(Configurator *conf) const { return conf->working_set_size_per_thread_; }
+
 
 //         /**
 //          * @brief Determines if the benchmarks should test for all CPU/memory NUMA combinations.
@@ -245,37 +277,6 @@ bool throughputMatrixTestSelected(Configurator *conf);
 //          * @returns True if the option only occurred once.
 //          */
 //         bool check_single_option_occurrence(Option* opt) const;
-
-//         bool configured_; /**< If true, this object has been configured. configureFromInput() will only work if this is false. */
-
-//         bool run_extensions_; /**< If true, run extensions. */
-
-//         bool run_latency_; /**< True if latency tests should be run. */
-//         bool run_throughput_; /**< True if throughput tests should be run. */
-//         bool run_all_cores_; /**< True if matrix benchmarks should run for all cores. */
-//         bool run_latency_matrix_; /**< True if latency matrix tests should be run. */
-//         bool run_throughput_matrix_; /**< True if throughput matrix tests should be run. */
-//         bool sync_mem_; /**< True if accesses to memory should happen synchronously. If true every access will be uncached. */
-//         size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */
-//         uint32_t num_worker_threads_; /**< Number of load threads to use for throughput benchmarks, loaded latency benchmarks, and stress tests. */
-//         bool numa_enabled_; /**< If false, only CPU/memory NUMA nodes 0 may be used. */
-//         std::list<uint32_t> cpu_numa_node_affinities_; /**< List of CPU NUMA nodes to affinitize on all benchmark experiments. */
-//         std::list<uint32_t> memory_numa_node_affinities_; /**< List of memory NUMA nodes to affinitize on all benchmark experiments. */
-//         uint32_t mem_regions_; /**< Number of memory regions per NUMA node for the matrix benchmark tests. */
-//         bool mem_regions_in_phys_addr_; /**< True if physical addresses of memory regions are passed as arguments for matrix becnhmarks. */
-//         std::vector<uint64_t> mem_regions_phys_addr_; /**< Vector of physical addresses of memory regions to be used for matrix benchmark experiments. */
-//         uint32_t iterations_; /**< Number of iterations to run for each benchmark test. */
-//         bool use_random_access_pattern_; /**< If true, run throughput benchmarks with random access pattern. */
-//         bool use_sequential_access_pattern_; /**< If true, run throughput benchmarks with sequential access pattern. */
-//         uint32_t starting_test_index_; /**< Numerical index to use for the first test. This is an aid for end-user interpreting and post-processing of result CSV file, if relevant. */
-//         std::string filename_; /**< The output filename if applicable. */
-//         bool use_output_file_; /**< If true, generate a CSV output file for results. */
-//         bool verbose_; /**< If true, then console reporting should be more detailed. */
-//         bool use_large_pages_; /**< If true, then large pages should be used. */
-//         bool use_reads_; /**< If true, throughput benchmarks should use reads. */
-//         bool use_writes_; /**< If true, throughput benchmarks should use writes. */
-//         std::string dec_net_filename_; /**< The decoding network friendly output filename if applicable. */
-//         bool use_dec_net_file_; /**< If true, generate a decoding net friendly output file for results. */
 //     };
 // };
 

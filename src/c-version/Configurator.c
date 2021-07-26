@@ -101,6 +101,8 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
         }
     }
 
+    conf->working_set_size_per_thread_ = DEFAULT_WORKING_SET_SIZE_PER_THREAD;
+
     conf->configured_ = true;
 
     if (conf->verbose_)
