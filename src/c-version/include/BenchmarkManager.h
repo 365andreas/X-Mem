@@ -57,12 +57,6 @@ BenchmarkManager *initBenchMgr(Configurator *config);
 // destructBenchmarkManager();
 
 // /**
-//  * @brief Runs all benchmark configurations (does not include extensions).
-//  * @returns True on success.
-//  */
-// bool runAll(BenchmarkManager *benchmgr);
-
-// /**
 //  * @brief Runs the latency matrix benchmark.
 //  * @returns True on benchmarking success.
 //  */

@@ -141,21 +141,6 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
 //         thr_mat_logfile_.close();
 // }
 
-// bool BenchmarkManager::runAll() {
-//     bool success = true;
-
-//     if (config_.throughputTestSelected())
-//         success = success && runThroughputBenchmarks();
-//     if (config_.latencyTestSelected())
-//         success = success && runLatencyBenchmarks();
-//     if (config_.latencyMatrixTestSelected())
-//         success = success && runLatencyMatrixBenchmarks();
-//     if (config_.throughputMatrixTestSelected())
-//         success = success && runThroughputMatrixBenchmarks();
-
-//     return success;
-// }
-
 // void BenchmarkManager::printMatrix(std::vector<xmem::MatrixBenchmark *> mat_benchmarks_, std::string what) {
 //     uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
 
