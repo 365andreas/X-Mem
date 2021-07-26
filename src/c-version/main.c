@@ -1,7 +1,7 @@
 //Headers
 #include <common.h>
 #include <Configurator.h>
-// #include <BenchmarkManager.h>
+#include <BenchmarkManager.h>
 
 //Libraries
 #include <stdlib.h>
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
         // if (g_verbose)
         //     report_timer();
 
-        // BenchmarkManager benchmgr(config);
+        BenchmarkManager *benchmgr = initBenchMgr(&config);
         // if (config.latencyMatrixTestSelected()) {
             // printf("run_latency_matrix: %s\n", latencyMatrixTestSelected(&config) ? "YES" : "NO");
         //     benchmgr.runLatencyMatrixBenchmarks();

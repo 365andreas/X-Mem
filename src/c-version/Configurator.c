@@ -103,6 +103,12 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
 
     conf->working_set_size_per_thread_ = DEFAULT_WORKING_SET_SIZE_PER_THREAD;
 
+    // memory regions specified by physical addresses
+    conf->mem_regions_in_phys_addr_ = true;
+    conf->num_mem_regions_phys_addr_ = 1;
+    conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->num_mem_regions_phys_addr_ * sizeof(uint64_t));
+    conf->mem_regions_phys_addr_[0] = 0x1afffefff;
+
     conf->configured_ = true;
 
     if (conf->verbose_)
@@ -116,6 +122,14 @@ bool allCoresSelected(Configurator *conf) { return conf->run_all_cores_; }
 bool latencyMatrixTestSelected(Configurator *conf) { return conf->run_latency_matrix_; }
 
 bool throughputMatrixTestSelected(Configurator *conf) { return conf->run_throughput_matrix_; }
+
+bool memoryRegionsInPhysAddr(Configurator *conf) { return conf->mem_regions_in_phys_addr_; }
+
+uint32_t numberOfMemoryRegionsPhysAddresses(Configurator *conf) { return conf->num_mem_regions_phys_addr_; }
+
+uint64_t *getMemoryRegionsPhysAddresses(Configurator *conf) { return conf->mem_regions_phys_addr_; }
+
+size_t getWorkingSetSizePerThread(Configurator *conf) { return conf->working_set_size_per_thread_; }
 
 //     //Throw out first argument which is usually the program name.
 //     argc -= (argc > 0);
