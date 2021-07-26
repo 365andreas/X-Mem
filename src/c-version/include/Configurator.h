@@ -20,7 +20,7 @@ typedef struct {
     bool run_all_cores_;
     bool run_latency_matrix_;
     bool run_throughput_matrix_;
-}  Configurator;
+} Configurator;
 
 Configurator config;
 

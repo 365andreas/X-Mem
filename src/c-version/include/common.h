@@ -44,8 +44,8 @@
 #define ARCH_INTEL
 #define ARCH_INTEL_X86_64
 #define ARCH_64BIT
-#define HAS_NUMA
-#define HAS_LARGE_PAGES
+// #define HAS_NUMA
+// #define HAS_LARGE_PAGES
 #endif
 
 #endif
