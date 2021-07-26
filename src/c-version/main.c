@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
         //     test_thread_affinities();
         // }
 
-        // setup_timer();
+        setup_timer();
         // if (g_verbose)
         //     report_timer();
 

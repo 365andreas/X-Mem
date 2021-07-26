@@ -323,10 +323,10 @@ extern float g_ns_per_tick;
 //  */
 // void print_compile_time_options();
 
-// /**
-//  * @brief Initializes the timer and outputs results to the console for sanity checking.
-//  */
-// void setup_timer();
+/**
+ * @brief Initializes the timer and outputs results to the console for sanity checking.
+ */
+void setup_timer();
 
 // /**
 //  * @brief Reports timer info to the console.

@@ -7,7 +7,7 @@
 //Headers
 #include <Configurator.h>
 #include <common.h>
-// #include <Timer.h>
+#include <Timer.h>
 
 //Libraries
 #include <errno.h>
@@ -182,17 +182,19 @@ uint32_t num_core_ids = 0;
 //     std::cout << std::endl;
 // }
 
-// void xmem::setup_timer() {
-//     if (g_verbose)
-//         std::cout << "\nInitializing timer...";
+void setup_timer() {
+    if (g_verbose)
+        printf("\nInitializing timer...");
 
-//     Timer timer;
-//     g_ticks_per_ms = timer.getTicksPerMs();
-//     g_ns_per_tick = timer.getNsPerTick();
+    Timer *timer = (Timer *) malloc(sizeof(Timer));
+    g_ticks_per_ms = getTicksPerMs(timer);
+    g_ns_per_tick = getNsPerTick(timer);
 
-//     if (g_verbose)
-//         std::cout << "done" << std::endl;
-// }
+    if (g_verbose)
+        printf("done\n");
+
+    free(timer);
+}
 
 // void xmem::report_timer() {
 //     std::cout << "Calculated timer frequency: " << g_ticks_per_ms * 1000 << " Hz == " << (double)(g_ticks_per_ms*1000) / (1e6) << " MHz" << std::endl;
@@ -424,7 +426,7 @@ int32_t query_sys_info() {
             sscanf(line_str, "physical id\t\t\t: %u", &id);
 
             bool found = false;
-            for (int i = 0; i < g_num_physical_packages; i++) {
+            for (int i = 0; (i < g_num_physical_packages) && (i < MAX_PHYS_PACKAGE_IDS); i++) {
                 if (phys_package_ids[i] == id) {
                     found = true;
                     break;
@@ -569,97 +571,64 @@ int32_t query_sys_info() {
 // #endif
 // }
 
-// tick_t xmem::start_timer() {
-// #ifdef USE_TSC_TIMER
-// #ifdef _WIN32
-//     int32_t dontcare[4];
-//     __cpuid(dontcare, 0); //Serializing instruction. This forces all previous instructions to finish
-//     return __rdtsc(); //Get clock tick
-// #endif
-// #ifdef __gnu_linux__
-//     volatile int32_t dc0 = 0;
-//     volatile int32_t dc1, dc2, dc3, dc4;
-//     __cpuid(dc0, dc1, dc2, dc3, dc4); //Serializing instruction. This forces all previous instructions to finish
-//     return __rdtsc(); //Get clock tick
+tick_t start_timer() {
+#ifdef USE_TSC_TIMER
+    volatile int32_t dc0 = 0;
+    volatile int32_t dc1, dc2, dc3, dc4;
+    __cpuid(dc0, dc1, dc2, dc3, dc4); //Serializing instruction. This forces all previous instructions to finish
+    return __rdtsc(); //Get clock tick
 
-//     /*
-//     uint32_t low, high;
-//     __asm__ __volatile__ (
-//         "cpuid\n\t"
-//         "rdtsc\n\t"
-//         "mov %%eax, %0\n\t"
-//         "mov %%edx, %1\n\n"
-//         : "=r" (low), "=r" (high)
-//         : : "%rax", "%rbx", "%rcx", "%rdx");
+    /*
+    uint32_t low, high;
+    __asm__ __volatile__ (
+        "cpuid\n\t"
+        "rdtsc\n\t"
+        "mov %%eax, %0\n\t"
+        "mov %%edx, %1\n\n"
+        : "=r" (low), "=r" (high)
+        : : "%rax", "%rbx", "%rcx", "%rdx");
 
-//     return ((static_cast<uint64_t>(high) << 32) | low);
-//     */
-// #endif
-// #endif
+    return ((static_cast<uint64_t>(high) << 32) | low);
+    */
+#endif
 
-//     //TODO: ARM hardware timer
+#ifdef USE_POSIX_TIMER
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    return (tick_t) (tp.tv_sec * 1e9 + tp.tv_nsec); //Return time in nanoseconds
+#endif
+}
 
-// #ifdef USE_QPC_TIMER
-//     LARGE_INTEGER tmp;
-//     QueryPerformanceCounter(&tmp);
-//     return static_cast<tick_t>(tmp.QuadPart);
-// #endif
+tick_t stop_timer() {
+    //TODO: ARM hardware timer
+#ifdef USE_TSC_TIMER
+    tick_t tick;
+    uint32_t filler;
+    volatile int32_t dc0 = 0;
+    volatile int32_t dc1, dc2, dc3, dc4;
+    tick = __rdtscp(&filler); //Get clock tick. This is a partially serializing instruction. All previous instructions must finish
+    __cpuid(dc0, dc1, dc2, dc3, dc4); //Serializing instruction. This forces all previous instructions to finish
+    return tick;
 
-// #ifdef USE_POSIX_TIMER
-//     struct timespec tp;
-//     clock_gettime(CLOCK_MONOTONIC, &tp);
-//     return static_cast<tick_t>(tp.tv_sec*1e9+tp.tv_nsec); //Return time in nanoseconds
-// #endif
-// }
+    /*
+    uint32_t low, high;
+    __asm__ __volatile__ (
+        "rdtscp\n\t"
+        "mov %%eax, %0\n\t"
+        "mov %%edx, %1\n\t"
+        "cpuid\n\t"
+        : "=r" (low), "=r" (high)
+        : : "%rax", "%rbx", "%rcx", "%rdx");
+    return ((static_cast<uint64_t>(high) << 32) | low);
+    */
+#endif
 
-// tick_t xmem::stop_timer() {
-//     //TODO: ARM hardware timer
-// #ifdef USE_TSC_TIMER
-// #ifdef _WIN32
-//     tick_t tick;
-//     uint32_t filler;
-//     int32_t dontcare[4];
-//     tick = __rdtscp(&filler); //Get clock tick. This is a partially serializing instruction. All previous instructions must finish
-//     __cpuid(dontcare, 0); //Fully serializing instruction. We do this to prevent later instructions from being moved inside the timed section
-//     return tick;
-// #endif
-// #ifdef __gnu_linux__
-//     tick_t tick;
-//     uint32_t filler;
-//     volatile int32_t dc0 = 0;
-//     volatile int32_t dc1, dc2, dc3, dc4;
-//     tick = __rdtscp(&filler); //Get clock tick. This is a partially serializing instruction. All previous instructions must finish
-//     __cpuid(dc0, dc1, dc2, dc3, dc4); //Serializing instruction. This forces all previous instructions to finish
-//     return tick;
-
-//     /*
-//     uint32_t low, high;
-//     __asm__ __volatile__ (
-//         "rdtscp\n\t"
-//         "mov %%eax, %0\n\t"
-//         "mov %%edx, %1\n\t"
-//         "cpuid\n\t"
-//         : "=r" (low), "=r" (high)
-//         : : "%rax", "%rbx", "%rcx", "%rdx");
-//     return ((static_cast<uint64_t>(high) << 32) | low);
-//     */
-// #endif
-// #endif
-
-//     //TODO: ARM hardware timer
-
-// #ifdef USE_QPC_TIMER
-//     LARGE_INTEGER tmp;
-//     QueryPerformanceCounter(&tmp);
-//     return static_cast<tick_t>(tmp.QuadPart);
-// #endif
-
-// #ifdef USE_POSIX_TIMER
-//     struct timespec tp;
-//     clock_gettime(CLOCK_MONOTONIC, &tp);
-//     return static_cast<tick_t>(tp.tv_sec*1e9+tp.tv_nsec); //Return time in nanoseconds
-// #endif
-// }
+#ifdef USE_POSIX_TIMER
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    return (tick_t) (tp.tv_sec * 1e9 + tp.tv_nsec); //Return time in nanoseconds
+#endif
+}
 
 // #ifdef __gnu_linux__
 // bool xmem::boost_scheduling_priority() {
