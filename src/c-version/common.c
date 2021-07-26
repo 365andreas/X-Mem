@@ -518,7 +518,7 @@ int32_t query_sys_info() {
         }
     }
 
-    printf("g_physical_package_of_cpu: \n");
+    printf("g_physical_package_of_cpus: \n");
     for (int i = 0; i < g_num_logical_cpus; i++) {
         printf("g_physical_package_of_cpu[%d] = %d\n", i, g_physical_package_of_cpu[i]);
     }

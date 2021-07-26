@@ -257,7 +257,7 @@
     //typedef uint32_t tick_t; //FIXME: this will easily roll over on a ~GHz machine over a 4-second benchmark! On 32-bit systems, we either need to reduce benchmark duration to about 250 ms or find a way to hack 64-bit timer with rollover. So far the 250 ms approach seems to work OK.
 //#endif
 
-// extern bool g_verbose;
+extern bool g_verbose;
 extern bool g_log_extended;
 extern size_t g_page_size;
 extern size_t g_large_page_size;

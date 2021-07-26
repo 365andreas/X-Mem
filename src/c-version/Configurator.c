@@ -6,7 +6,7 @@
 
 //Headers
 #include <Configurator.h>
-// #include <common.h>
+#include <common.h>
 
 //Libraries
 #include <stdint.h>
@@ -72,6 +72,12 @@
 //     {
 // }
 
+void printHelpText() {
+
+    char *msg = "\n -a, run benchmarks on all cores\n -l, run latency matrix benchmarks\n -t, run throughput matrix benchmarks\n -v, verbose mode\n";
+    printf("%s", msg);
+}
+
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
 
     if (conf->configured_) { //If this object was already configured, cannot override from user inputs. This is to prevent an invalid state.
@@ -82,18 +88,24 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     bool isCaseInsensitive = false;
     int opt;
 
-    while ((opt = getopt(argc, argv, "alt")) != -1) {
+    while ((opt = getopt(argc, argv, "altv")) != -1) {
         switch (opt) {
         case 'a': conf->run_all_cores_ = true; break;
         case 'l': conf->run_latency_matrix_ = true; break;
         case 't': conf->run_throughput_matrix_ = true; break;
+        case 'v': conf->verbose_ = true; break;
         default:
-            fprintf(stderr, "Usage: %s [-alt] \n", argv[0]);
+            fprintf(stderr, "Usage: %s [-altv] \n", argv[0]);
+            printHelpText();
             return EXIT_FAILURE;
         }
     }
 
     conf->configured_ = true;
+
+    if (conf->verbose_)
+        g_verbose = true;
+
     return EXIT_SUCCESS;
 }
 
