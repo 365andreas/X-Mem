@@ -392,11 +392,11 @@ extern float g_ns_per_tick;
  */
 void init_globals();
 
-// /**
-//  * @brief Sets up global variables based on system information at runtime.
-//  * @returns 0 on success.
-//  */
-// int32_t query_sys_info();
+/**
+ * @brief Sets up global variables based on system information at runtime.
+ * @returns 0 on success.
+ */
+int32_t query_sys_info();
 
 // /**
 //  * @brief Reports the system configuration to the console as indicated by global variables.

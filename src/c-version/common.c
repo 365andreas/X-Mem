@@ -12,6 +12,7 @@
 //Libraries
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
 
 #ifdef __gnu_linux__
@@ -434,7 +435,7 @@ int32_t query_sys_info() {
                 phys_package_ids[g_num_physical_packages] = id; //add to list
                 g_num_physical_packages++;
                 if (g_num_physical_packages > MAX_PHYS_PACKAGE_IDS) {
-                    fprintf(stderr, "ERROR: Define a larger MAX_PHYS_PACKAGE_IDS since they are more than %d.\n", MAX_PHYS_PACKAGE_IDS);
+                    fprintf(stderr, "ERROR: Define a larger MAX_PHYS_PACKAGE_IDS since physical ids are more than %d.\n", MAX_PHYS_PACKAGE_IDS);
                     return -1;
                 }
             }
@@ -480,8 +481,8 @@ int32_t query_sys_info() {
                 //have not seen this physical processor yet
                 core_ids[num_core_ids] = id; //add to list
                 num_core_ids++;
-                if (num_core_ids > MAX_PHYS_PACKAGE_IDS) {
-                    fprintf(stderr, "ERROR: Define a larger MAX_PHYS_PACKAGE_IDS since they are more than %d.\n", MAX_PHYS_PACKAGE_IDS);
+                if (num_core_ids > MAX_CORE_IDS) {
+                    fprintf(stderr, "ERROR: Define a larger MAX_CORE_IDS since core ids are more than %d.\n", MAX_CORE_IDS);
                     return -1;
                 }
             }
