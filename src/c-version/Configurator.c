@@ -14,63 +14,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-// Configurator::Configurator(
-//     ) :
-//     configured_(false),
-//     run_extensions_(false),
-// #ifdef EXT_DELAY_INJECTED_LOADED_LATENCY_BENCHMARK
-//     run_ext_delay_injected_loaded_latency_benchmark_(false),
-// #endif
-// #ifdef EXT_STREAM_BENCHMARK
-//     run_ext_stream_benchmark_(false),
-// #endif
-//     run_latency_(true),
-//     run_throughput_(true),
-//     run_all_cores_(false),
-//     run_latency_matrix_(false),
-//     run_throughput_matrix_(false),
-//     sync_mem_(false),
-//     working_set_size_per_thread_(DEFAULT_WORKING_SET_SIZE_PER_THREAD),
-//     num_worker_threads_(DEFAULT_NUM_WORKER_THREADS),
-// #ifdef HAS_WORD_64
-//     use_chunk_32b_(false),
-//     use_chunk_64b_(true),
-// #else
-//     use_chunk_32b_(true),
-// #endif
-// #ifdef HAS_WORD_128
-//     use_chunk_128b_(false),
-// #endif
-// #ifdef HAS_WORD_256
-//     use_chunk_256b_(false),
-// #endif
-// #ifdef HAS_WORD_512
-//     use_chunk_512b(false),
-// #endif
-// #ifdef HAS_NUMA
-//     numa_enabled_(true),
-// #else
-//     numa_enabled_(false),
-// #endif
-//     cpu_numa_node_affinities_(),
-//     memory_numa_node_affinities_(),
-//     mem_regions_(1),
-//     mem_regions_in_phys_addr_(false),
-//     mem_regions_phys_addr_(),
-//     iterations_(1),
-//     use_random_access_pattern_(false),
-//     use_sequential_access_pattern_(true),
-//     starting_test_index_(1),
-//     filename_(),
-//     use_output_file_(false),
-//     verbose_(false),
-//     use_large_pages_(false),
-//     use_reads_(true),
-//     use_writes_(true),
-//     dec_net_filename_(),
-//     use_dec_net_file_(false),
-//     {
-// }
 
 void printHelpText() {
 
@@ -109,6 +52,8 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->num_mem_regions_phys_addr_ * sizeof(uint64_t));
     conf->mem_regions_phys_addr_[0] = 0x1afffefff;
 
+    conf->iterations_ = 10;
+
     conf->configured_ = true;
 
     if (conf->verbose_)
@@ -132,6 +77,8 @@ uint32_t numberOfMemoryRegionsPhysAddresses(Configurator *conf) { return conf->n
 uint64_t *getMemoryRegionsPhysAddresses(Configurator *conf) { return conf->mem_regions_phys_addr_; }
 
 size_t getWorkingSetSizePerThread(Configurator *conf) { return conf->working_set_size_per_thread_; }
+
+uint32_t getIterationsPerTest(Configurator *conf) { return conf->iterations_; }
 
 //     //Throw out first argument which is usually the program name.
 //     argc -= (argc > 0);

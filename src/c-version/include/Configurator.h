@@ -17,6 +17,7 @@
 
 typedef struct {
     bool configured_; /**< If true, this object has been configured. configureFromInput() will only work if this is false. */
+    uint32_t iterations_; /**< Number of iterations to run for each benchmark test. */
     bool mem_regions_in_phys_addr_; /**< True if physical addresses of memory regions are passed as arguments for matrix becnhmarks. */
     uint64_t *mem_regions_phys_addr_; /**< Array of physical addresses of memory regions to be used for matrix benchmark experiments. */
     uint32_t num_mem_regions_phys_addr_; /**< Number of memory regions to be used for matrix benchmark experiments. */
@@ -35,7 +36,6 @@ typedef struct {
 //         std::list<uint32_t> cpu_numa_node_affinities_; /**< List of CPU NUMA nodes to affinitize on all benchmark experiments. */
 //         std::list<uint32_t> memory_numa_node_affinities_; /**< List of memory NUMA nodes to affinitize on all benchmark experiments. */
 //         uint32_t mem_regions_; /**< Number of memory regions per NUMA node for the matrix benchmark tests. */
-//         uint32_t iterations_; /**< Number of iterations to run for each benchmark test. */
 //         bool use_random_access_pattern_; /**< If true, run throughput benchmarks with random access pattern. */
 //         bool use_sequential_access_pattern_; /**< If true, run throughput benchmarks with sequential access pattern. */
 //         uint32_t starting_test_index_; /**< Numerical index to use for the first test. This is an aid for end-user interpreting and post-processing of result CSV file, if relevant. */
@@ -127,11 +127,11 @@ uint32_t numberOfMemoryRegionsPhysAddresses(Configurator *conf);
  */
 uint64_t *getMemoryRegionsPhysAddresses(Configurator *conf);
 
-//         /**
-//          * @brief Gets the number of iterations that should be run of each benchmark.
-//          * @returns The iterations for each test.
-//          */
-//         uint32_t getIterationsPerTest() const { return iterations_; }
+/**
+ * @brief Gets the number of iterations that should be run of each benchmark.
+ * @returns The iterations for each test.
+ */
+uint32_t getIterationsPerTest(Configurator *conf);
 
 //         /**
 //          * @brief Determines if throughput benchmarks should use a random access pattern.

@@ -314,6 +314,15 @@ extern float g_ns_per_tick;
 #endif
 
 /**
+ * @brief Memory access patterns are broadly categorized by sequential or random-access.
+ */
+typedef enum {
+    SEQUENTIAL,
+    RANDOM,
+    NUM_PATTERN_MODES
+} pattern_mode_t;
+
+/**
  * @brief Memory access batterns are broadly categorized by reads and writes.
  */
 typedef enum {
