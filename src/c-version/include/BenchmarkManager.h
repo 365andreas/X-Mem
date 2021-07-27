@@ -25,6 +25,7 @@ typedef struct {
 
     Configurator *config_;
 
+    uint32_t num_cpu_numa_node_affinities_; /**< List of CPU nodes to affinitize for benchmark experiments. */
     uint32_t *cpu_numa_node_affinities_; /**< List of CPU nodes to affinitize for benchmark experiments. */
     uint32_t *memory_numa_node_affinities_; /**< List of memory nodes to affinitize for benchmark experiments. */
     uint32_t num_mem_regions_;
@@ -56,11 +57,11 @@ BenchmarkManager *initBenchMgr(Configurator *config);
 //  */
 // destructBenchmarkManager();
 
-// /**
-//  * @brief Runs the latency matrix benchmark.
-//  * @returns True on benchmarking success.
-//  */
-// bool runLatencyMatrixBenchmarks(BenchmarkManager *benchmgr);
+/**
+ * @brief Runs the latency matrix benchmark.
+ * @returns True on benchmarking success.
+ */
+bool runLatencyMatrixBenchmarks(BenchmarkManager *benchmgr);
 
 // /**
 //  * @brief Runs the throughput matrix benchmark.
@@ -74,11 +75,11 @@ BenchmarkManager *initBenchMgr(Configurator *config);
  */
 void setupWorkingSets(BenchmarkManager *benchmgr, size_t working_set_size);
 
-// /**
-//  * @brief Constructs and initializes all configured benchmarks.
-//  * @returns True on success.
-//  */
-// bool buildBenchmarks(BenchmarkManager *benchmgr);
+/**
+ * @brief Constructs and initializes all configured benchmarks.
+ * @returns True on success.
+ */
+bool buildBenchmarks(BenchmarkManager *benchmgr);
 
 // /**
 //  * @brief Prints the results aggregated in a matrix form (for latencyMatrix and throughputMatrix benchmarks).

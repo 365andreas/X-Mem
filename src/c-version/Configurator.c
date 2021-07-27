@@ -114,6 +114,8 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     if (conf->verbose_)
         g_verbose = true;
 
+    g_test_index = 0;
+
     return EXIT_SUCCESS;
 }
 

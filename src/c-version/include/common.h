@@ -313,6 +313,35 @@ extern float g_ns_per_tick;
 #endif
 #endif
 
+/**
+ * @brief Memory access batterns are broadly categorized by reads and writes.
+ */
+typedef enum {
+    READ,
+    WRITE,
+    NUM_RW_MODES
+} rw_mode_t;
+
+/**
+ * @brief Legal memory read/write chunk sizes in bits.
+ */
+typedef enum {
+    CHUNK_32b,
+#ifdef HAS_WORD_64
+    CHUNK_64b,
+#endif
+#ifdef HAS_WORD_128
+    CHUNK_128b,
+#endif
+#ifdef HAS_WORD_256
+    CHUNK_256b,
+#endif
+#ifdef HAS_WORD_512
+    CHUNK_512b,
+#endif
+    NUM_CHUNK_SIZES
+} chunk_size_t;
+
 // /**
 //  * @brief Prints the various C/C++ types to the console for this machine.
 //  */

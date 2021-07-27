@@ -39,13 +39,11 @@ int main(int argc, char* argv[]) {
         //     report_timer();
 
         BenchmarkManager *benchmgr = initBenchMgr(&config);
-        // if (config.latencyMatrixTestSelected()) {
-            // printf("run_latency_matrix: %s\n", latencyMatrixTestSelected(&config) ? "YES" : "NO");
-        //     benchmgr.runLatencyMatrixBenchmarks();
-        // }
+        if (latencyMatrixTestSelected(&config)) {
+            runLatencyMatrixBenchmarks(benchmgr);
+        }
 
         // if (config.throughputMatrixTestSelected()) {
-            // printf("run_throughput_matrix: %s\n", latencyThroughputTestSelected(&config) ? "YES" : "NO");
         //     benchmgr.runThroughputMatrixBenchmarks();
         // }
         // }
