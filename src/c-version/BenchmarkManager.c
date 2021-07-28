@@ -440,132 +440,29 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *benchmgr) {
 //         mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
 //     }
 
-//     for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++) {
-//         lat_mat_benchmarks_[i]->run();
-//         lat_mat_benchmarks_[i]->reportResults(); //to console
+    for (uint32_t i = 0; i < benchmgr->lat_mat_benchmarks_size_; i++) {
+        // lat_mat_benchmarks_[i] run();
+        // lat_mat_benchmarks_[i] reportResults(); //to console
 
-//         //Write to results file if necessary
-//         if (config_.useOutputFile()) {
-//             results_file_ << lat_mat_benchmarks_[i]->getName() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getIterations() << ",";
-//             results_file_ << static_cast<size_t>(lat_mat_benchmarks_[i]->getLen() / lat_mat_benchmarks_[i]->getNumThreads() / KB) << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getNumThreads() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getNumThreads()-1 << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getMemNode() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getCPUNode() << ",";
-//             if (lat_mat_benchmarks_[i]->getNumThreads() < 2) {
-//                 results_file_ << "N/A" << ",";
-//                 results_file_ << "N/A" << ",";
-//                 results_file_ << "N/A" << ",";
-//                 results_file_ << "N/A" << ",";
-//             } else {
-//                 pattern_mode_t pattern = lat_mat_benchmarks_[i]->getPatternMode();
-//                 switch (pattern) {
-//                     case SEQUENTIAL:
-//                         results_file_ << "SEQUENTIAL" << ",";
-//                         break;
-//                     case RANDOM:
-//                         results_file_ << "RANDOM" << ",";
-//                         break;
-//                     default:
-//                         results_file_ << "UNKNOWN" << ",";
-//                         break;
-//                 }
-
-//                 rw_mode_t rw_mode = lat_mat_benchmarks_[i]->getRWMode();
-//                 switch (rw_mode) {
-//                     case READ:
-//                         results_file_ << "READ" << ",";
-//                         break;
-//                     case WRITE:
-//                         results_file_ << "WRITE" << ",";
-//                         break;
-//                     default:
-//                         results_file_ << "UNKNOWN" << ",";
-//                         break;
-//                 }
-
-//                 chunk_size_t chunk_size = lat_mat_benchmarks_[i]->getChunkSize();
-//                 switch (chunk_size) {
-//                     case CHUNK_32b:
-//                         results_file_ << "32" << ",";
-//                         break;
-// #ifdef HAS_WORD_64
-//                     case CHUNK_64b:
-//                         results_file_ << "64" << ",";
-//                         break;
-// #endif
-// #ifdef HAS_WORD_128
-//                     case CHUNK_128b:
-//                         results_file_ << "128" << ",";
-//                         break;
-// #endif
-// #ifdef HAS_WORD_256
-//                     case CHUNK_256b:
-//                         results_file_ << "256" << ",";
-//                         break;
-// #endif
-// #ifdef HAS_WORD_512
-//                     case CHUNK_512b:
-//                         results_file_ << "512" << ",";
-//                         break;
-// #endif
-//                     default:
-//                         results_file_ << "UNKNOWN" << ",";
-//                         break;
-//                 }
-
-//                 results_file_ << lat_mat_benchmarks_[i]->getStrideSize() << ",";
-//             }
-
-//             results_file_ << lat_mat_benchmarks_[i]->getMeanLoadMetric() << ",";
-//             results_file_ << "N/A" << ",";
-//             results_file_ << "N/A" << ",";
-//             results_file_ << "N/A" << ",";
-//             results_file_ << "N/A" << ",";
-//             results_file_ << "N/A" << ",";
-//             results_file_ << "N/A" << ",";
-//             results_file_ << "N/A" << ",";
-//             results_file_ << "N/A" << ",";
-//             results_file_ << "MB/s" << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getMeanMetric() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getMinMetric() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->get25PercentileMetric() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getMedianMetric() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->get75PercentileMetric() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->get95PercentileMetric() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->get99PercentileMetric() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getMaxMetric() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getModeMetric() << ",";
-//             results_file_ << lat_mat_benchmarks_[i]->getMetricUnits() << ",";
-//             for (uint32_t j = 0; j < g_num_physical_packages; j++) {
-//                 results_file_ << lat_mat_benchmarks_[i]->getMeanDRAMPower(j) << ",";
-//                 results_file_ << lat_mat_benchmarks_[i]->getPeakDRAMPower(j) << ",";
-//             }
-//             results_file_ << "N/A" << ",";
-//             results_file_ << "" << ",";
-//             results_file_ << std::endl;
-//         }
-
-//         if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
-//             dec_net_results_file_ << "bench_result(";
-//             dec_net_results_file_ << lat_mat_benchmarks_[i]->getCPUId() << ", ";
-//             uint32_t region_id = lat_mat_benchmarks_[i]->getMemRegion();
-//             dec_net_results_file_ << mem_regions_phys_addr[region_id] << ", ";
-//             dec_net_results_file_ << "'latency'" << ", ";
-//             dec_net_results_file_ << lat_mat_benchmarks_[i]->getMedianMetric() << ", ";
-//             dec_net_results_file_ << "'" << lat_mat_benchmarks_[i]->getMetricUnits() << "'" << ").";
-//             dec_net_results_file_ << std::endl;
-//         }
-//     }
-//     std::cout << std::endl;
+        // if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
+        //     dec_net_results_file_ << "bench_result(";
+        //     dec_net_results_file_ << lat_mat_benchmarks_[i]->getCPUId() << ", ";
+        //     uint32_t region_id = lat_mat_benchmarks_[i]->getMemRegion();
+        //     dec_net_results_file_ << mem_regions_phys_addr[region_id] << ", ";
+        //     dec_net_results_file_ << "'latency'" << ", ";
+        //     dec_net_results_file_ << lat_mat_benchmarks_[i]->getMedianMetric() << ", ";
+        //     dec_net_results_file_ << "'" << lat_mat_benchmarks_[i]->getMetricUnits() << "'" << ").";
+        //     dec_net_results_file_ << std::endl;
+        // }
+    }
+    printf("\n");
 
 //     // aggregated report of latency matrix benchmarks
 //     std::vector<xmem::MatrixBenchmark *> mat_benchmarks_(lat_mat_benchmarks_.begin(), lat_mat_benchmarks_.end());
 //     printMatrix(mat_benchmarks_, "idle latencies");
 
-//     if (g_verbose)
-//         std::cout << std::endl << "Done running latency matrix benchmarks." << std::endl;
+    if (g_verbose)
+        printf("\nDone running latency matrix benchmarks.\n");
 
     return true;
 }
@@ -858,7 +755,7 @@ bool buildBenchmarks(BenchmarkManager *benchmgr) {
     if (g_verbose)
         printf("\n");
 
-    char benchmark_name[100];
+    char benchmark_name[50];
 
     uint32_t num_processor_units; // Number of CPU nodes or CPUs to affinitize for benchmark experiments.
     uint32_t *processor_units; // List of CPU nodes or CPUs to affinitize for benchmark experiments.
@@ -882,9 +779,11 @@ bool buildBenchmarks(BenchmarkManager *benchmgr) {
 
     uint32_t cpu      = -1;
     uint32_t cpu_node = -1;
-    //Build latency matrix benchmarks
-    printf("benchmark_name:\n");
 
+    benchmgr->lat_mat_benchmarks_size_ = num_processor_units * numberOfMemoryRegionsPhysAddresses(cfg);
+    benchmgr->lat_mat_benchmarks_ = (LatencyMatrixBenchmark **) malloc(benchmgr->lat_mat_benchmarks_size_ * sizeof(LatencyMatrixBenchmark *));
+    int l = 0;
+    //Build latency matrix benchmarks
     for (int pu = 0; pu < num_processor_units; pu++) { //iterate each cpu NUMA node
         if (allCoresSelected(cfg)) {
             cpu = processor_units[pu];
@@ -905,26 +804,25 @@ bool buildBenchmarks(BenchmarkManager *benchmgr) {
             // Latency benchmark from every core to every memory region
             sprintf(benchmark_name, "Test #%d LM (LatencyMatrix)", g_test_index);
 
-            // lat_mat_benchmarks_.push_back(new LatencyMatrixBenchmark(mem_array,
-            //                                                             mem_array_len,
-            //                                                             config_.getIterationsPerTest(),
-            //                                                             config_.getNumWorkerThreads(),
-            //                                                             mem_node,
-            //                                                             mem_region,
-            //                                                             cpu_node,
-            //                                                             cpu,
-            //                                                             use_cpu_nodes,
-            //                                                             SEQUENTIAL,
-            //                                                             READ,
-            //                                                             chunk,
-            //                                                             stride,
-            //                                                             dram_power_readers_,
-            //                                                             benchmark_name,
-            //                                                             lat_mat_logfile_));
+            benchmgr->lat_mat_benchmarks_[l] = initLatencyMatrixBenchmark(mem_array,
+                                                                          mem_array_len,
+                                                                          getIterationsPerTest(cfg),
+                                                                          DEFAULT_NUM_WORKER_THREADS,
+                                                                          mem_node,
+                                                                          mem_region,
+                                                                          cpu_node,
+                                                                          cpu,
+                                                                          use_cpu_nodes,
+                                                                          SEQUENTIAL,
+                                                                          READ,
+                                                                          chunk,
+                                                                          stride,
+                                                                          benchmark_name);
             // if (lat_mat_benchmarks_[lat_mat_benchmarks_.size()-1] == NULL) {
             //     std::cerr << "ERROR: Failed to build a LatencyMatrixBenchmark!" << std::endl;
             //     return false;
             // }
+            l++;
             g_test_index++;
         }
     }

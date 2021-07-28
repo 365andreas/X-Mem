@@ -11,7 +11,7 @@
 #include <common.h>
 #include <Timer.h>
 // #include <Benchmark.h>
-// #include <LatencyMatrixBenchmark.h>
+#include <LatencyMatrixBenchmark.h>
 // #include <ThroughputMatrixBenchmark.h>
 #include <Configurator.h>
 
@@ -37,8 +37,12 @@ typedef struct {
     size_t *mem_array_node_; /**< NUMA node of each memory region to use in benchmarks. */
     uint32_t num_lat_mat_benchmarks_;
     uint32_t num_thr_mat_benchmarks_;
-    // LatencyMatrixBenchmark* *lat_mat_benchmarks_; /**< Set of latency matrix benchmarks. */
+
+    LatencyMatrixBenchmark* *lat_mat_benchmarks_; /**< Set of latency matrix benchmarks. */
+    uint32_t lat_mat_benchmarks_size_; /**< Size of latency matrix benchmarks. */
     // ThroughputMatrixBenchmark* *thr_mat_benchmarks_; /**< Set of throughput matrix benchmarks. */
+    // uint32_t thr_mat_benchmarks_size_; /**< Size of throughput matrix benchmarks. */
+
     // std::fstream results_file_; /**< The results CSV file. */
     // std::fstream dec_net_results_file_; /**< The results file for use by a decoding network. */
     // std::ofstream lat_mat_logfile_; /**< Logfile for latency matrix measurements. */
