@@ -7,13 +7,14 @@
 //Headers
 #include <LatencyMatrixBenchmark.h>
 #include <common.h>
-// #include <benchmark_kernels.h>
+#include <benchmark_kernels.h>
 // #include <MemoryWorker.h>
 // #include <LatencyWorker.h>
 // #include <LoadWorker.h>
 
 //Libraries
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 // #include <time.h>
 // #include <util.h>
@@ -48,6 +49,28 @@ LatencyMatrixBenchmark *initLatencyMatrixBenchmark(void *mem_array, size_t mem_a
     return lat_mat_bench;
 }
 
+bool run(LatencyMatrixBenchmark *lat_mat_bench) {
+
+    // if (lat_mat_bench->mat_bench->has_run_) //A benchmark should only be run once per object
+    //     return false;
+
+    // printBenchmarkHeader(lat_mat_bench->mat_bench);
+    // reportBenchmarkInfo(lat_mat_bench->mat_bench);
+
+    //Write to all of the memory region of interest to make sure
+    //pages are resident in physical memory and are not shared
+    forwSequentialWrite_Word32(lat_mat_bench->mat_bench->mem_array,
+                               (void *) ((uint8_t *) (lat_mat_bench->mat_bench->mem_array) + lat_mat_bench->mat_bench->len));
+
+    bool success = runCore(lat_mat_bench);
+    if (success) {
+        return true;
+    } else {
+        fprintf(stderr, "WARNING: Benchmark %s failed!\n", lat_mat_bench->mat_bench->name);
+        return false;
+    }
+
+}
 
 // bool LatencyMatrixBenchmark::runCore() {
 //     size_t len_per_thread = len_ / num_worker_threads_; //Carve up memory space so each worker has its own area to play in

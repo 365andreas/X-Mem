@@ -441,8 +441,8 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *benchmgr) {
 //     }
 
     for (uint32_t i = 0; i < benchmgr->lat_mat_benchmarks_size_; i++) {
-        // lat_mat_benchmarks_[i] run();
-        // lat_mat_benchmarks_[i] reportResults(); //to console
+        run(benchmgr->lat_mat_benchmarks_[i]);
+        // reportResults(benchmgr->lat_mat_benchmarks_[i]);
 
         // if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
         //     dec_net_results_file_ << "bench_result(";

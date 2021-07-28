@@ -42,6 +42,8 @@ LatencyMatrixBenchmark *initLatencyMatrixBenchmark(void *mem_array,
 //  */
 // virtual ~LatencyMatrixBenchmark() {}
 
-bool runCore(LatencyMatrixBenchmark *);
+bool run(LatencyMatrixBenchmark *lat_mat_bench);
+
+bool runCore(LatencyMatrixBenchmark *lat_mat_bench);
 
 #endif
