@@ -856,19 +856,19 @@ bool build_random_pointer_permutation(void* start_address, void* end_address, ch
 
 /* --------------------- DUMMY BENCHMARK ROUTINES --------------------------- */
 
-// int32_t xmem::dummy_chasePointers(uintptr_t*, uintptr_t**, size_t len) {
-//     volatile uintptr_t placeholder = 0; //Try to defeat compiler optimizations removing this method
-//     return 0;
-// }
+int32_t dummy_chasePointers(uintptr_t *first_address, uintptr_t **last_touched_address, size_t len) {
+    volatile uintptr_t placeholder = 0; //Try to defeat compiler optimizations removing this method
+    return 0;
+}
 
-// /* -------------------- CORE BENCHMARK ROUTINES -------------------------- */
+/* -------------------- CORE BENCHMARK ROUTINES -------------------------- */
 
-// int32_t xmem::chasePointers(uintptr_t* first_address, uintptr_t** last_touched_address, size_t len) {
-//     volatile uintptr_t* p = first_address;
-//     UNROLL512(p = reinterpret_cast<uintptr_t*>(*p);)
-//     *last_touched_address = const_cast<uintptr_t*>(p);
-//     return 0;
-// }
+int32_t chasePointers(uintptr_t *first_address, uintptr_t **last_touched_address, size_t len) {
+    volatile uintptr_t *p = first_address;
+    UNROLL512(p = (uintptr_t *) (*p);)
+    *last_touched_address = (uintptr_t *) (p);
+    return 0;
+}
 
 
 // /***********************************************************************
