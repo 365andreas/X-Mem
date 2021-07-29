@@ -17,10 +17,10 @@
 #include <common.h>
 
 //Libraries
-// #include <iostream>
-// #include <random>
-// #include <algorithm>
+#include <stdio.h>
 #include <time.h>
+#include "mtwist.h"
+// #include <algorithm>
 #if defined(ARCH_INTEL) && (defined(HAS_WORD_128) || defined(HAS_WORD_256) || defined(HAS_WORD_512))
 //Intel intrinsics
 #include <emmintrin.h>
@@ -791,162 +791,62 @@ extern "C" int32_t win_x86_64_asm_dummy_revStride16Loop_Word256(Word256_t* first
 //     return false;
 // }
 
-// bool xmem::build_random_pointer_permutation(void* start_address, void* end_address, chunk_size_t chunk_size) {
-//     if (g_verbose)
-//         std::cout << "Preparing a memory region under test. This might take a while...";
+void shuffle(Word64_t *first, Word64_t *last) {
 
-//     size_t length = reinterpret_cast<uint8_t*>(end_address) - reinterpret_cast<uint8_t*>(start_address); //length of region in bytes
-//     size_t num_pointers = 0; //Number of pointers that fit into the memory region of interest
-//     switch (chunk_size) {
-//         //special case on 32-bit architectures only.
-// #ifndef HAS_WORD_64
-//         case CHUNK_32b:
-//             num_pointers = length / sizeof(Word32_t);
-//             break;
-// #endif
-// #ifdef HAS_WORD_64
-//         case CHUNK_64b:
-//             num_pointers = length / sizeof(Word64_t);
-//             break;
-// #endif
-// #ifdef HAS_WORD_128
-//         case CHUNK_128b:
-//             num_pointers = length / sizeof(Word128_t);
-//             break;
-// #endif
-// #ifdef HAS_WORD_256
-//         case CHUNK_256b:
-//             num_pointers = length / sizeof(Word256_t);
-//             break;
-// #endif
-// #ifdef HAS_WORD_512
-//         case CHUNK_512b:
-//             num_pointers = length / sizeof(Word512_t);
-//             break;
-// #endif
-//         default:
-//             std::cerr << "ERROR: Chunk size must be at least "
-//             //special case for 32-bit architectures
-// #ifndef HAS_WORD_64
-//             <<"32"
-// #endif
-// #ifdef HAS_WORD_64
-//             <<"64"
-// #endif
-//             << "bits for building a random pointer permutation. This should not have happened." << std::endl;
-//             return false;
-//     }
+    int size = (last - first) / sizeof(Word64_t);
 
-//     std::mt19937_64 gen(time(NULL)); //Mersenne Twister random number generator, seeded at current time
+    for (int i = size - 1; i > 0; --i) {
+        uint32_t r = mt_lrand();
+        int ind = r % (size + 1);
+        // std::uniform_int_distribution<decltype(i)> d(0,i);
+        Word64_t a = first[i];
+        first[i] = first[ind];
+        first[ind] = a;
+    }
+}
 
-//     //Do a random shuffle of memory pointers.
-//     //I had originally used a random Hamiltonian Cycle generator, but this was much slower and aside from
-//     //rare instances, did not make any difference in random-access performance measurement.
-// #ifdef HAS_WORD_64
-//     Word64_t* mem_region_base = reinterpret_cast<Word64_t*>(start_address);
-// #else //special case for 32-bit architectures
-//     Word32_t* mem_region_base = reinterpret_cast<Word32_t*>(start_address);
-// #endif
-//     switch (chunk_size) {
-// #ifdef HAS_WORD_64
-//         case CHUNK_64b:
-//             for (size_t i = 0; i < num_pointers; i++) { //Initialize pointers to point at themselves (identity mapping)
-//                 mem_region_base[i] = reinterpret_cast<Word64_t>(mem_region_base+i);
-//             }
-//             std::shuffle(mem_region_base, mem_region_base + num_pointers, gen);
-//             break;
-// #else //special case for 32-bit architectures
-//         case CHUNK_32b:
-//             for (size_t i = 0; i < num_pointers; i++) { //Initialize pointers to point at themselves (identity mapping)
-//                 mem_region_base[i] = reinterpret_cast<Word32_t>(mem_region_base+i);
-//             }
-//             std::shuffle(mem_region_base, mem_region_base + num_pointers, gen);
-//             break;
-// #endif
-// #ifdef HAS_WORD_128
-//         case CHUNK_128b:
-//             for (size_t i = 0; i < num_pointers; i++) { //Initialize pointers to point at themselves (identity mapping)
-// #ifdef HAS_WORD_64
-//                 mem_region_base[i*2] = reinterpret_cast<Word64_t>(mem_region_base+(i*2));
-//                 mem_region_base[(i*2)+1] = 0xFFFFFFFFFFFFFFFF; //1-fill upper 64 bits
-// #else //special case for 32-bit architectures
-//                 mem_region_base[i*4] = reinterpret_cast<Word32_t>(mem_region_base+(i*4));
-//                 mem_region_base[(i*4)+1] = 0xFFFFFFFF; //1-fill upper 96 bits
-//                 mem_region_base[(i*4)+2] = 0xFFFFFFFF;
-//                 mem_region_base[(i*4)+3] = 0xFFFFFFFF;
-// #endif
-//             }
-//             std::shuffle(reinterpret_cast<Word128_t*>(mem_region_base), reinterpret_cast<Word128_t*>(mem_region_base) + num_pointers, gen);
-//             break;
-// #endif
-// #ifdef HAS_WORD_256
-//         case CHUNK_256b:
-//             for (size_t i = 0; i < num_pointers; i++) { //Initialize pointers to point at themselves (identity mapping)
-// #ifdef HAS_WORD_64
-//                 mem_region_base[i*4] = reinterpret_cast<Word64_t>(mem_region_base+(i*4));
-//                 mem_region_base[(i*4)+1] = 0xFFFFFFFFFFFFFFFF; //1-fill upper 192 bits
-//                 mem_region_base[(i*4)+2] = 0xFFFFFFFFFFFFFFFF;
-//                 mem_region_base[(i*4)+3] = 0xFFFFFFFFFFFFFFFF;
-// #else //special case for 32-bit architectures
-//                 mem_region_base[i*8] = reinterpret_cast<Word32_t>(mem_region_base+(i*8));
-//                 mem_region_base[(i*8)+1] = 0xFFFFFFFF; //1-fill upper 224 bits
-//                 mem_region_base[(i*8)+2] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+3] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+4] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+5] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+6] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+7] = 0xFFFFFFFF;
-// #endif
-//             }
-//             std::shuffle(reinterpret_cast<Word256_t*>(mem_region_base), reinterpret_cast<Word256_t*>(mem_region_base) + num_pointers, gen);
-//             break;
-// #endif
-// #ifdef HAS_WORD_512
-//         case CHUNK_512b:
-//             for (size_t i = 0; i < num_pointers; i++) { //Initialize pointers to point at themselves (identity mapping)
-// #ifdef HAS_WORD_64
-//                 mem_region_base[i*4] = reinterpret_cast<Word64_t>(mem_region_base+(i*4));
-//                 mem_region_base[(i*4)+1] = 0xFFFFFFFFFFFFFFFF; //1-fill upper 448 bits
-//                 mem_region_base[(i*4)+2] = 0xFFFFFFFFFFFFFFFF;
-//                 mem_region_base[(i*4)+3] = 0xFFFFFFFFFFFFFFFF;
-//                 mem_region_base[(i*4)+4] = 0xFFFFFFFFFFFFFFFF;
-//                 mem_region_base[(i*4)+5] = 0xFFFFFFFFFFFFFFFF;
-//                 mem_region_base[(i*4)+6] = 0xFFFFFFFFFFFFFFFF;
-//                 mem_region_base[(i*4)+7] = 0xFFFFFFFFFFFFFFFF;
-// #else //special case for 32-bit architectures
-//                 mem_region_base[i*8] = reinterpret_cast<Word32_t>(mem_region_base+(i*8));
-//                 mem_region_base[(i*8)+1] = 0xFFFFFFFF; //1-fill upper 480 bits
-//                 mem_region_base[(i*8)+2] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+3] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+4] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+5] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+6] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+7] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+8] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+9] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+10] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+11] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+12] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+13] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+14] = 0xFFFFFFFF;
-//                 mem_region_base[(i*8)+15] = 0xFFFFFFFF;
-// #endif
-//             }
-//             std::shuffle(reinterpret_cast<Word512_t*>(mem_region_base), reinterpret_cast<Word512_t*>(mem_region_base) + num_pointers, gen);
-//             break;
-// #endif
-//         default:
-//             std::cerr << "ERROR: Got an invalid chunk size. This should not have happened." << std::endl;
-//             return false;
-//     }
+bool build_random_pointer_permutation(void* start_address, void* end_address, chunk_size_t chunk_size) {
+    if (g_verbose)
+        printf("Preparing a memory region under test. This might take a while...");
 
-//     if (g_verbose) {
-//         std::cout << "done" << std::endl;
-//         std::cout << std::endl;
-//     }
+    size_t length = (uint8_t *) end_address - (uint8_t *) start_address; //length of region in bytes
+    size_t num_pointers = 0; //Number of pointers that fit into the memory region of interest
+    switch (chunk_size) {
+        //special case on 32-bit architectures only.
+        case CHUNK_64b:
+            num_pointers = length / sizeof(Word64_t);
+            break;
+        default:
+            fprintf(stderr, "ERROR: Chunk size %d not available\n", chunk_size);
+            return false;
+    }
 
-//     return true;
-// }
+    mt_seed();
+    // std::mt19937_614 gen(time(NULL)); //Mersenne Twister random number generator, seeded at current time
+
+    //Do a random shuffle of memory pointers.
+    //I had originally used a random Hamiltonian Cycle generator, but this was much slower and aside from
+    //rare instances, did not make any difference in random-access performance measurement.
+    Word64_t* mem_region_base = (Word64_t *) (start_address);
+
+    switch (chunk_size) {
+        case CHUNK_64b:
+            for (size_t i = 0; i < num_pointers; i++) { //Initialize pointers to point at themselves (identity mapping)
+                mem_region_base[i] = (Word64_t) (mem_region_base + i);
+            }
+            shuffle(mem_region_base, mem_region_base + num_pointers);
+            break;
+        default:
+            fprintf(stderr, "ERROR: Got an invalid chunk size. This should not have happened.\n");
+            return false;
+    }
+
+    if (g_verbose) {
+        printf("done\n\n");
+    }
+
+    return true;
+}
 
 /***********************************************************************
  ***********************************************************************

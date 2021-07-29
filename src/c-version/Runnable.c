@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -18,7 +19,7 @@ Runnable *initRunnable() {
 
     Runnable *runnable = (Runnable *) malloc(sizeof(Runnable));
 
-    runnable->mutex_ = PTHREAD_MUTEX_INITIALIZER;
+    runnable->mutex_ = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
 
     return runnable;
 }

@@ -87,7 +87,7 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
     if (! build_random_pointer_permutation(lat_mat_bench->mat_bench->mem_array,
                                            (void *) ((uint8_t *) (lat_mat_bench->mat_bench->mem_array) + len_per_thread), //static casts to silence compiler warnings
                                            CHUNK_64b)) {
-        fprintf(stderr, "ERROR: Failed to build a random pointer permutation for the latency measurement thread!\n";
+        fprintf(stderr, "ERROR: Failed to build a random pointer permutation for the latency measurement thread!\n");
         return false;
     }
 
