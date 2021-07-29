@@ -53,38 +53,23 @@ bool create_and_start(Thread *t) {
     return false;
 }
 
-// bool Thread::join() {
-//     if (!created_ || !started_)
-//         return false;
+bool join(Thread *t) {
+    if (!t->created_ || !t->started_)
+        return false;
 
-// #ifdef _WIN32
-//     DWORD reason = WaitForSingleObject(thread_handle_, INFINITE);
+    void* exit_pointer = NULL;
+    int32_t failure = pthread_join(t->thread_handle_, &exit_pointer);
+    if (exit_pointer)
+        t->thread_exit_code_ = *((int32_t *) exit_pointer);
 
-//     if (reason == WAIT_OBJECT_0) { //only succeed if the object was signaled. If timeout elapsed, or some error occurred, we will consider that a failure.
-//         running_ = false;
-//         suspended_ = false;
-//         completed_ = true;
-//         return true;
-//     }
-
-//     return false;
-// #endif
-
-// #ifdef __gnu_linux__
-//     void* exit_pointer = NULL;
-//     int32_t failure = pthread_join(thread_handle_, &exit_pointer);
-//     if (exit_pointer)
-//         thread_exit_code_ = *(static_cast<int32_t*>(exit_pointer));
-
-//     if (!failure) {
-//         running_ = false;
-//         suspended_ = false;
-//         completed_ = true;
-//         return true;
-//     }
-//     return false;
-// #endif
-// }
+    if (!failure) {
+        t->running_ = false;
+        t->suspended_ = false;
+        t->completed_ = true;
+        return true;
+    }
+    return false;
+}
 
 // bool Thread::cancel() {
 // #ifdef _WIN32

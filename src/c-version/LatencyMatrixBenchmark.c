@@ -142,7 +142,7 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
 
         //Wait for all threads to complete
         for (uint32_t t = 0; t < num_worker_threads; t++)
-            if (!worker_threads[t]->join())
+            if (! join(worker_threads[t]))
                 fprintf(stderr, "WARNING: A worker thread failed to complete correctly!\n");
 
         //Compute metrics for this iteration

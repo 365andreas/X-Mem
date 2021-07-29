@@ -47,13 +47,13 @@ Thread *newThread(LatencyWorker *target);
  */
 bool create_and_start(Thread *t);
 
-// /**
-//  * Blocks the calling thread until the worker thread managed by this object terminates. For simplicity, this does not support a timeout due to pthreads incompatibility with the Windows threading API.
-//  * If the worker thread has already terminated, returns immediately.
-//  * If the worker has not yet started, returns immediately.
-//  * @returns true if the worker thread terminated successfully, false otherwise.
-//  */
-// bool join();
+/**
+ * Blocks the calling thread until the worker thread managed by this object terminates. For simplicity, this does not support a timeout due to pthreads incompatibility with the Windows threading API.
+ * If the worker thread has already terminated, returns immediately.
+ * If the worker has not yet started, returns immediately.
+ * @returns true if the worker thread terminated successfully, false otherwise.
+ */
+bool join(Thread *t);
 
 // /**
 //  * Cancels the worker thread immediately. This should only be done in emergencies, as it is effectively killed and undefined behavior might occur.
