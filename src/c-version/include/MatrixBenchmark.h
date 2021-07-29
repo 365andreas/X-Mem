@@ -8,7 +8,7 @@
 #define MATRIX_BENCHMARK_H
 
 //Headers
-// #include <Benchmark.h>
+#include <Thread.h>
 #include <common.h>
 
 //Libraries
@@ -35,10 +35,6 @@ typedef struct {
     char metric_units[20];
     char name[50];
 
-    uint32_t cpu_;
-    bool use_cpu_nodes_; /**< True if benchmarks must run on the first core of each cpu node. Otherwise they must
-                                on all the system's cpus. */
-
     // std::vector<double> load_metric_on_iter_; /**< Load metrics for each iteration of the benchmark. This is in MB/s. */
     // double mean_load_metric_; /**< The average load throughput in MB/sec that was imposed on the latency measurement. */
     // std::ofstream &logfile_; /**< The logfile to be used for logging each iteration of the experiments. */
@@ -63,11 +59,11 @@ typedef struct {
 //  */
 // double getMeanLoadMetric(MatrixBenchmark *bench);
 
-// /**
-//  * @brief Gets the CPU id node used in this benchmark.
-//  * @returns The CPU used in this benchmark.
-//  */
-// uint32_t getCPUId(MatrixBenchmark *bench);
+/**
+ * @brief Gets the CPU id node used in this benchmark.
+ * @returns The CPU used in this benchmark.
+ */
+uint32_t getCPUId(MatrixBenchmark *bench);
 
 // /**
 //  * @brief Prints a header piece of information describing the benchmark to the console.

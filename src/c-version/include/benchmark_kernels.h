@@ -11,8 +11,6 @@
 #include <common.h>
 
 //Libraries
-// #include <cstdint>
-// #include <cstddef>
 
 
 typedef int32_t(*SequentialFunction)(void*, void*);
