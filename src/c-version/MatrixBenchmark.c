@@ -26,7 +26,8 @@
 uint32_t getCPUId(MatrixBenchmark *mat_bench) {
 
     if (mat_bench->use_cpu_nodes)
-        return -1; //cpu_id_in_numa_node(getCPUNode(), 0)
+        // TODO: fix me
+        return 0; //cpu_id_in_numa_node(getCPUNode(), 0)
     else
         return mat_bench->cpu;
 }

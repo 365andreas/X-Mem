@@ -107,7 +107,7 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
 
     //Set up some stuff for worker threads
     LatencyWorker **workers = (LatencyWorker **) malloc(iterations * num_worker_threads * sizeof(LatencyWorker *));
-    Thread **worker_threads;
+    Thread **worker_threads = (Thread **) malloc(iterations * num_worker_threads * sizeof(Thread *));
 
     //Run benchmark
     if (g_verbose)
@@ -138,7 +138,7 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
 
         //Start worker threads! gogogo
         for (uint32_t t = 0; t < num_worker_threads; t++)
-            worker_threads[t]->create_and_start();
+            create_and_start(worker_threads[t]);
 
         //Wait for all threads to complete
         for (uint32_t t = 0; t < num_worker_threads; t++)

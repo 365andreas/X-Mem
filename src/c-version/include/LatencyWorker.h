@@ -30,10 +30,10 @@ LatencyWorker *newLatencyWorker(void* mem_array, size_t len, RandomFunction kern
 //  */
 // ~LatencyWorker();
 
-// /**
-//  * @brief Thread-safe worker method.
-//  */
-// void run();
+/**
+ * @brief Thread-safe worker method.
+ */
+void runLatWorker(LatencyWorker *lat_worker);
 
 
 #endif

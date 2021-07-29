@@ -1826,13 +1826,13 @@ int32_t chasePointers(uintptr_t *first_address, uintptr_t **last_touched_address
 
 // /* ------------ SEQUENTIAL READ --------------*/
 
-// int32_t xmem::forwSequentialRead_Word32(void* start_address, void* end_address) {
-//     register Word32_t val;
-//     for (volatile Word32_t* wordptr = static_cast<Word32_t*>(start_address), *endptr = static_cast<Word32_t*>(end_address); wordptr < endptr;) {
-//         UNROLL1024(val = *wordptr++;)
-//     }
-//     return 0;
-// }
+int32_t forwSequentialRead_Word32(void* start_address, void* end_address) {
+    register Word32_t val;
+    for (volatile Word32_t* wordptr = (Word32_t *) start_address, *endptr = (Word32_t *) end_address; wordptr < endptr;) {
+        UNROLL1024(val = *wordptr++;)
+    }
+    return 0;
+}
 
 // #ifdef HAS_WORD_64
 // int32_t xmem::forwSequentialRead_Word64(void* start_address, void* end_address) {
