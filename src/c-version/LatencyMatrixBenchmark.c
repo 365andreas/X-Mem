@@ -106,7 +106,7 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
     }
 
     //Set up some stuff for worker threads
-    MemoryWorker **workers = (MemoryWorker **) malloc(iterations * num_worker_threads * sizeof(MemoryWorker *));
+    LatencyWorker **workers = (LatencyWorker **) malloc(iterations * num_worker_threads * sizeof(LatencyWorker *));
     Thread **worker_threads;
 
     //Run benchmark
