@@ -18,11 +18,7 @@ LatencyWorker *newLatencyWorker(void* mem_array, size_t len, RandomFunction kern
 
     LatencyWorker *lat_worker = (LatencyWorker *) malloc(sizeof(LatencyWorker));
 
-    lat_worker->mem_worker = (MemoryWorker *) malloc(sizeof(MemoryWorker));
-
-    lat_worker->mem_worker->len_          = len;
-    lat_worker->mem_worker->mem_array_    = mem_array;
-    lat_worker->mem_worker->cpu_affinity_ = cpu_affinity;
+    lat_worker->mem_worker = newMemoryWorker(mem_array, len, cpu_affinity);
 
     lat_worker->kernel_fptr       = kernel_fptr;
     lat_worker->kernel_dummy_fptr = kernel_dummy_fptr;

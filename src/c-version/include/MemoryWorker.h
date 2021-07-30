@@ -39,58 +39,58 @@ typedef struct {
  * @param len Length of the memory region to use by this worker.
  * @param cpu_affinity Logical CPU identifier to lock this worker's thread to.
  */
-MemoryWorker *initMemoryWorker(void* mem_array, size_t len, int32_t cpu_affinity);
+MemoryWorker *newMemoryWorker(void* mem_array, size_t len, int32_t cpu_affinity);
 
-    // /**
-    //  * @brief Destructor.
-    //  */
-    // virtual ~MemoryWorker();
+// /**
+//  * @brief Destructor.
+//  */
+// virtual ~MemoryWorker();
 
-    // /**
-    //  * @brief Thread-safe worker method.
-    //  */
-    // virtual void run() = 0;
+// /**
+//  * @brief Thread-safe worker method.
+//  */
+// virtual void run() = 0;
 
-    // /**
-    //  * @brief Gets the length of the memory region used by this worker.
-    //  * @returns Length of memory region in bytes.
-    //  */
-    // size_t getLen();
+// /**
+//  * @brief Gets the length of the memory region used by this worker.
+//  * @returns Length of memory region in bytes.
+//  */
+// size_t getLen();
 
-    // /**
-    //  * @brief Gets the number of bytes used in each pass of the benchmark by this worker.
-    //  * @returns Number of bytes in each pass.
-    //  */
-    // uint32_t getBytesPerPass();
+/**
+ * @brief Gets the number of bytes used in each pass of the benchmark by this worker.
+ * @returns Number of bytes in each pass.
+ */
+uint32_t getBytesPerPass(MemoryWorker *mem_worker);
 
-    // /**
-    //  * @brief Gets the number of passes for this worker.
-    //  * @returns The number of passes.
-    //  */
-    // uint32_t getPasses();
+/**
+ * @brief Gets the number of passes for this worker.
+ * @returns The number of passes.
+ */
+uint32_t getPasses(MemoryWorker *mem_worker);
 
-    // /**
-    //  * @brief Gets the elapsed ticks for this worker on the core benchmark kernel.
-    //  * @returns The number of elapsed ticks.
-    //  */
-    // tick_t getElapsedTicks();
+/**
+ * @brief Gets the elapsed ticks for this worker on the core benchmark kernel.
+ * @returns The number of elapsed ticks.
+ */
+tick_t getElapsedTicks(MemoryWorker *mem_worker);
 
-    // /**
-    //  * @brief Gets the elapsed ticks for this worker on the dummy version of the core benchmark kernel.
-    //  * @returns The number of elapsed dummy ticks.
-    //  */
-    // tick_t getElapsedDummyTicks();
+/**
+ * @brief Gets the elapsed ticks for this worker on the dummy version of the core benchmark kernel.
+ * @returns The number of elapsed dummy ticks.
+ */
+tick_t getElapsedDummyTicks(MemoryWorker *mem_worker);
 
-    // /**
-    //  * @brief Gets the adjusted ticks for this worker. This is elapsed ticks minus elapsed dummy ticks.
-    //  * @returns The adjusted ticks for this worker.
-    //  */
-    // tick_t getAdjustedTicks();
+/**
+ * @brief Gets the adjusted ticks for this worker. This is elapsed ticks minus elapsed dummy ticks.
+ * @returns The adjusted ticks for this worker.
+ */
+tick_t getAdjustedTicks(MemoryWorker *mem_worker);
 
-    // /**
-    //  * @brief Indicates whether worker's results may be questionable/inaccurate/invalid.
-    //  * @returns True if the worker's results had a warning.
-    //  */
-    // bool hadWarning();
+/**
+ * @brief Indicates whether worker's results may be questionable/inaccurate/invalid.
+ * @returns True if the worker's results had a warning.
+ */
+bool hadWarning(MemoryWorker *mem_worker);
 
 #endif

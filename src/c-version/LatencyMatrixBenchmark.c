@@ -15,7 +15,6 @@
 //Libraries
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
 // #include <time.h>
 // #include <util.h>
 
@@ -28,23 +27,9 @@ LatencyMatrixBenchmark *initLatencyMatrixBenchmark(void *mem_array, size_t mem_a
 
     LatencyMatrixBenchmark *lat_mat_bench = (LatencyMatrixBenchmark *) malloc(sizeof(LatencyMatrixBenchmark));
 
-    lat_mat_bench->mat_bench = (MatrixBenchmark *) malloc(sizeof(MatrixBenchmark));
-
-    lat_mat_bench->mat_bench->mem_array          = mem_array;
-    lat_mat_bench->mat_bench->len                = mem_array_len;
-    lat_mat_bench->mat_bench->iterations         = iters;
-    lat_mat_bench->mat_bench->num_worker_threads = num_worker_threads;
-    lat_mat_bench->mat_bench->mem_node           = mem_node;
-    lat_mat_bench->mat_bench->mem_region         = mem_region;
-    lat_mat_bench->mat_bench->cpu_node           = cpu_node;
-    lat_mat_bench->mat_bench->cpu                = cpu;
-    lat_mat_bench->mat_bench->use_cpu_nodes      = use_cpu_nodes;
-    lat_mat_bench->mat_bench->pattern_mode       = pattern_mode;
-    lat_mat_bench->mat_bench->rw_mode            = rw_mode;
-    lat_mat_bench->mat_bench->chunk_size         = chunk_size;
-    lat_mat_bench->mat_bench->stride_size        = stride_size;
-    strcpy(lat_mat_bench->mat_bench->metric_units, "ns/access");
-    strcpy(lat_mat_bench->mat_bench->name, benchmark_name);
+    lat_mat_bench->mat_bench = newMatrixBenchmark(mem_array, mem_array_len, iters, num_worker_threads, mem_node,
+                                                  mem_region, cpu_node, cpu, use_cpu_nodes, pattern_mode, rw_mode,
+                                                  chunk_size, stride_size, benchmark_name);
 
     return lat_mat_bench;
 }
@@ -149,40 +134,40 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
         bool iterwarning = false;
 
         //Compute latency metric
-        uint32_t lat_passes = workers[0]->getPasses();
-        tick_t lat_adjusted_ticks = workers[0]->getAdjustedTicks();
-        tick_t lat_elapsed_dummy_ticks = workers[0]->getElapsedDummyTicks();
-        uint32_t lat_bytes_per_pass = workers[0]->getBytesPerPass();
+        uint32_t lat_passes = getPasses(workers[0]->mem_worker);
+        tick_t lat_adjusted_ticks = getAdjustedTicks(workers[0]->mem_worker);
+        tick_t lat_elapsed_dummy_ticks = getElapsedDummyTicks(workers[0]->mem_worker);
+        uint32_t lat_bytes_per_pass = getBytesPerPass(workers[0]->mem_worker);
         uint32_t lat_accesses_per_pass = lat_bytes_per_pass / 8;
-        // iterwarning |= workers[0]->hadWarning();
+        iterwarning |= hadWarning(workers[0]->mem_worker);
 
-        // if (iterwarning)
-        //     warning_ = true;
+        if (iterwarning)
+            lat_mat_bench->mat_bench->warning_ = true;
 
         if (g_verbose) { //Report metrics for this iteration
             //Latency thread
             printf("Iter %d had %d latency measurement passes, with %d accesses per pass:", i + 1, lat_passes, lat_accesses_per_pass);
-            // if (iterwarning) std::cout << " -- WARNING";
+            if (iterwarning) printf(" -- WARNING");
             printf("\n");
 
-            printf("...lat clock ticks == %d (adjusted by -%d)", lat_adjusted_ticks, lat_elapsed_dummy_ticks);
-            // if (iterwarning) std::cout << " -- WARNING";
+            printf("...lat clock ticks == %ld (adjusted by -%ld)", lat_adjusted_ticks, lat_elapsed_dummy_ticks);
+            if (iterwarning) printf(" -- WARNING");
             printf("\n");
 
-            printf("...lat ns == %d (adjusted by -%d)", lat_adjusted_ticks * g_ns_per_tick, lat_elapsed_dummy_ticks * g_ns_per_tick);
-            // if (iterwarning) std::cout << " -- WARNING";
+            printf("...lat ns == %f (adjusted by -%f)", lat_adjusted_ticks * g_ns_per_tick, lat_elapsed_dummy_ticks * g_ns_per_tick);
+            if (iterwarning) printf(" -- WARNING");
             printf("\n");
 
-            printf("...lat sec == %d (adjusted by -%d)", lat_adjusted_ticks * g_ns_per_tick / 1e9, lat_elapsed_dummy_ticks * g_ns_per_tick / 1e9);
-            // if (iterwarning) std::cout << " -- WARNING";
+            printf("...lat sec == %f (adjusted by -%f)", lat_adjusted_ticks * g_ns_per_tick / 1e9, lat_elapsed_dummy_ticks * g_ns_per_tick / 1e9);
+            if (iterwarning) printf(" -- WARNING");
             printf("\n");
 
         }
 
         //Compute overall metrics for this iteration
-        enumerator_metric_on_iter_[i]  = static_cast<double>(lat_adjusted_ticks * g_ns_per_tick);
-        denominator_metric_on_iter_[i] = static_cast<double>(lat_accesses_per_pass * lat_passes);
-        metric_on_iter_[i] = static_cast<double>(lat_adjusted_ticks * g_ns_per_tick)  /  static_cast<double>(lat_accesses_per_pass * lat_passes);
+        lat_mat_bench->mat_bench->enumerator_metric_on_iter_[i]  = (double) (lat_adjusted_ticks * g_ns_per_tick);
+        lat_mat_bench->mat_bench->denominator_metric_on_iter_[i] = (double) (lat_accesses_per_pass * lat_passes);
+        lat_mat_bench->mat_bench->metric_on_iter_[i] = (double) (lat_adjusted_ticks * g_ns_per_tick)  /  (double) (lat_accesses_per_pass * lat_passes);
         // std::cout << "latency_matrix: iter " << i << " " << enumerator_metric_on_iter_[i] << " " << enumerator_metric_units_
         //           << " per " << denominator_metric_on_iter_[i] << " " << denominator_metric_units_ << " -> " << metric_on_iter_[i]
         //           << " " << metric_units_ << std::endl;

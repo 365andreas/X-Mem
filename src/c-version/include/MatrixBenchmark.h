@@ -35,11 +35,37 @@ typedef struct {
     char metric_units[20];
     char name[50];
 
+    bool warning_; /**< Indicates whether the benchmarks results might be clearly questionable/inaccurate/incorrect due to a variety of factors. */
+    double *metric_on_iter_; /**< Metrics for each iteration of the benchmark. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    double *enumerator_metric_on_iter_; /**< Metrics for each iteration of the benchmark. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    double *denominator_metric_on_iter_; /**< Denominator metric for ratio metrics for each iteration of the benchmark. */
+    // double mean_metric_; /**< Average metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    // double min_metric_; /**< Minimum metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    // double percentile_25_metric_; /**< 25th percentile metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    // double median_metric_; /**< Median metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    // double percentile_75_metric_; /**< 75th percentile metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    // double percentile_95_metric_; /**< 95th percentile metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    // double percentile_99_metric_; /**< 99th percentile metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    // double max_metric_; /**< Maximum metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    // double mode_metric_; /**< Mode metric over all iterations. Unit-less because any benchmark can set this metric as needed. It is up to the descendant class to interpret units. */
+    // double lower_95_CI_median_; /**< Lower bound value of the 95% CI of the median. */
+    // double upper_95_CI_median_; /**< Upper bound value of the 95% CI of the median. */
+    // std::string metric_units_; /**< String representing the units of measurement for the metric. */
+    // std::string enumerator_metric_units_; /**< String representing the units of measurement for the enumerator of ratio metrics. */
+    // std::string denominator_metric_units_; /**< String representing the units of measurement for the denominator of ratio metrics. */
     // std::vector<double> load_metric_on_iter_; /**< Load metrics for each iteration of the benchmark. This is in MB/s. */
     // double mean_load_metric_; /**< The average load throughput in MB/sec that was imposed on the latency measurement. */
     // std::ofstream &logfile_; /**< The logfile to be used for logging each iteration of the experiments. */
 
 } MatrixBenchmark;
+
+/**
+ * @brief Constructor.
+ */
+MatrixBenchmark *newMatrixBenchmark(void* mem_array, size_t mem_array_len, uint32_t iters, uint32_t num_worker_threads,
+                                    uint32_t mem_node, uint32_t mem_region, uint32_t cpu_node, uint32_t cpu,
+                                    bool use_cpu_nodes, pattern_mode_t pattern_mode, rw_mode_t rw_mode,
+                                    chunk_size_t chunk_size, int32_t stride_size, char *benchmark_name);
 
 // /**
 //  * @brief Destructor.
