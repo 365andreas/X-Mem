@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <time.h>
 
-Runnable *initRunnable() {
+Runnable *newRunnable() {
 
     Runnable *runnable = (Runnable *) malloc(sizeof(Runnable));
 

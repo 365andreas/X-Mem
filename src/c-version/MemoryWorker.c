@@ -12,6 +12,8 @@ MemoryWorker *newMemoryWorker(void* mem_array, size_t len, int32_t cpu_affinity)
 
     MemoryWorker *mem_worker = (MemoryWorker *) malloc(sizeof(MemoryWorker));
 
+    mem_worker->runnable             = newRunnable();
+
     mem_worker->len_                 = len;
     mem_worker->mem_array_           = mem_array;
     mem_worker->cpu_affinity_        = cpu_affinity;

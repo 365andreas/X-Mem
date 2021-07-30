@@ -24,7 +24,7 @@ typedef struct {
 /**
  * @brief Constructor.
  */
-Runnable *initRunnable();
+Runnable *newRunnable();
 
 // /**
 //  * @brief Destructor.
