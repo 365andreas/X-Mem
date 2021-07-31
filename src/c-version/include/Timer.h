@@ -22,7 +22,7 @@ typedef struct {
 /**
  * @brief Initializes timer. This may take a noticeable amount of time.
  */
-void initTimer(Timer *timer);
+Timer *newTimer();
 
 /**
  * @brief Gets ticks per ms for this timer.

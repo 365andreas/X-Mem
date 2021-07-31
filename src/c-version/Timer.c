@@ -11,7 +11,9 @@
 //Libraries
 #include <time.h>
 
-void initTimer(Timer *timer) {
+Timer *newTimer() {
+
+    Timer *timer = malloc(sizeof(Timer));
 
     timer->ticks_per_ms_ = 0;
     timer->ns_per_tick_ = 0;
@@ -26,6 +28,8 @@ void initTimer(Timer *timer) {
 
     timer->ticks_per_ms_ = (tick_t) ((stop_tick - start_tick) / BENCHMARK_DURATION_MS);
     timer->ns_per_tick_ = 1 / ((float) (timer->ticks_per_ms_)) * (float) (1e6);
+
+    return timer;
 }
 
 tick_t getTicksPerMs(Timer *timer) {

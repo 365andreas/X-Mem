@@ -186,7 +186,8 @@ void setup_timer() {
     if (g_verbose)
         printf("\nInitializing timer...");
 
-    Timer *timer = (Timer *) malloc(sizeof(Timer));
+    Timer *timer = newTimer();
+
     g_ticks_per_ms = getTicksPerMs(timer);
     g_ns_per_tick = getNsPerTick(timer);
 
