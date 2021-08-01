@@ -29,8 +29,11 @@ MemoryWorker *newMemoryWorker(void* mem_array, size_t len, int32_t cpu_affinity)
 }
 
 
-// MemoryWorker::~MemoryWorker() {
-// }
+void deleteMemoryWorker(MemoryWorker *mem_worker) {
+
+    free(mem_worker->runnable);
+    free(mem_worker);
+}
 
 // size_t MemoryWorker::getLen() {
 //     size_t retval = 0;

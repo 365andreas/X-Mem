@@ -41,10 +41,10 @@ typedef struct {
  */
 MemoryWorker *newMemoryWorker(void* mem_array, size_t len, int32_t cpu_affinity);
 
-// /**
-//  * @brief Destructor.
-//  */
-// virtual ~MemoryWorker();
+/**
+ * @brief Destructor.
+ */
+void deleteMemoryWorker(MemoryWorker *mem_worker);
 
 // /**
 //  * @brief Thread-safe worker method.

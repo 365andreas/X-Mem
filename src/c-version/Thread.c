@@ -14,7 +14,7 @@
 
 Thread *newThread(LatencyWorker *lat_worker) {
 
-    Thread *t = malloc(sizeof(Thread));
+    Thread *t = (Thread *) malloc(sizeof(Thread));
 
     t->target_           = lat_worker;
     t->created_          = false;
@@ -57,7 +57,7 @@ bool join(Thread *t) {
     if (!t->created_ || !t->started_)
         return false;
 
-    void* exit_pointer = NULL;
+    void *exit_pointer = NULL;
     int32_t failure = pthread_join(t->thread_handle_, &exit_pointer);
     if (exit_pointer)
         t->thread_exit_code_ = *((int32_t *) exit_pointer);
@@ -154,7 +154,7 @@ bool join(Thread *t) {
 // }
 // #endif
 
-void *runLaunchpad(void* target_runnable_object) {
+void *runLaunchpad(void *target_runnable_object) {
     int32_t *thread_retval = (int32_t *) malloc(sizeof(int32_t));
     *thread_retval = 1;
     if (target_runnable_object != NULL) {

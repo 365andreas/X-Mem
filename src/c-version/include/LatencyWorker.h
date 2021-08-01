@@ -25,10 +25,10 @@ typedef struct {
 
 LatencyWorker *newLatencyWorker(void* mem_array, size_t len, RandomFunction kernel_fptr, RandomFunction kernel_dummy_fptr, int32_t cpu_affinity);
 
-// /**
-//  * @brief Destructor.
-//  */
-// ~LatencyWorker();
+/**
+ * @brief Destructor.
+ */
+void deleteLatencyWorker(LatencyWorker *lat_worker);
 
 /**
  * @brief Thread-safe worker method.

@@ -26,8 +26,10 @@ LatencyWorker *newLatencyWorker(void* mem_array, size_t len, RandomFunction kern
     return lat_worker;
 }
 
-// LatencyWorker::~LatencyWorker() {
-// }
+void deleteLatencyWorker(LatencyWorker *lat_worker) {
+    deleteMemoryWorker(lat_worker->mem_worker);
+    free(lat_worker);
+}
 
 void runLatWorker(LatencyWorker *lat_worker) {
     //Set up relevant state -- localized to this thread's stack

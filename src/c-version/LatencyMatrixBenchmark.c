@@ -91,8 +91,8 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
     }
 
     //Set up some stuff for worker threads
-    LatencyWorker **workers = (LatencyWorker **) malloc(iterations * num_worker_threads * sizeof(LatencyWorker *));
-    Thread **worker_threads = (Thread **) malloc(iterations * num_worker_threads * sizeof(Thread *));
+    LatencyWorker **workers = (LatencyWorker **) malloc(num_worker_threads * sizeof(LatencyWorker *));
+    Thread **worker_threads = (Thread **) malloc(num_worker_threads * sizeof(Thread *));
 
     //Run benchmark
     if (g_verbose)
@@ -109,16 +109,16 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
                 fprintf(stderr, "WARNING: Failed to find logical CPU %d\n", t);
             }
             if (t == 0) { //special case: thread 0 is always latency thread
-                workers[i * num_worker_threads + t] = newLatencyWorker(thread_mem_array,
-                                                                       len_per_thread,
-                                                                       lat_kernel_fptr,
-                                                                       lat_kernel_dummy_fptr,
-                                                                       cpu_id);
+                workers[t] = newLatencyWorker(thread_mem_array,
+                                              len_per_thread,
+                                              lat_kernel_fptr,
+                                              lat_kernel_dummy_fptr,
+                                              cpu_id);
             } else {
                 fprintf(stderr, "ERROR: Worker threads are more than 1 in latency matrix benchmark.\n");
                 return false;
             }
-            worker_threads[i * num_worker_threads + t] = newThread(workers[t]);
+            worker_threads[t] = newThread(workers[t]);
         }
 
         //Start worker threads! gogogo
@@ -173,12 +173,10 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
         //           << " " << metric_units_ << std::endl;
 
         //Clean up workers and threads for this iteration
-        for (uint32_t t = 0; t < num_worker_threads_; t++) {
-            delete worker_threads[t];
-            delete workers[t];
+        for (uint32_t t = 0; t < num_worker_threads; t++) {
+            deleteLatencyWorker(workers[t]);
+            free(worker_threads[t]);
         }
-        worker_threads.clear();
-        workers.clear();
 
         if (i >= 5) {
             // 95% CI must not be computed for lower than 6 iterations of the experiment
@@ -204,16 +202,9 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
         }
     }
 
-    if (g_log_extended) {
-        for (uint32_t i = 0; i < iterations_; i++) {
-            logfile_ << (use_cpu_nodes_ ? cpu_node_ : cpu_) << ","
-                     << mem_node_                           << ","
-                     << mem_region_                         << ","
-                     << i                                   << ","
-                     << metric_on_iter_[i]                  << ","
-                     << metric_units_                       << std::endl;
-        }
-    }
+    free(worker_threads);
+    free(workers);
+
 
     //Run metadata
     has_run_ = true;
