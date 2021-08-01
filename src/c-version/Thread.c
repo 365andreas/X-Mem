@@ -16,7 +16,7 @@ Thread *newThread(LatencyWorker *lat_worker) {
 
     Thread *t = malloc(sizeof(Thread));
 
-    t->target_           = lat_worker->mem_worker->runnable;
+    t->target_           = lat_worker;
     t->created_          = false;
     t->started_          = false;
     t->completed_        = false;

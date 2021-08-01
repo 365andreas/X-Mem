@@ -19,7 +19,7 @@
  */
 typedef struct {
 
-    Runnable *target_; /**< The object connecting a run() method which operates in a thread-safe manner. */
+    LatencyWorker *target_; /**< The object connecting a run() method which operates in a thread-safe manner. */
     bool created_; /**< If true, the OS thread has been created at some point, but does not indicate its current state. */
     bool started_; /**< If true, the OS thread has been started at some point, but does not indicate its current state. */
     bool completed_; /**< If true, the OS thread completed. */

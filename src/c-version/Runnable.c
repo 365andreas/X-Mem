@@ -43,7 +43,7 @@ Runnable *newRunnable() {
 // #endif
 // }
 
-bool acquireLock(Runnable * runnable, int32_t timeout) {
+bool acquireLock(Runnable *runnable, int32_t timeout) {
     int32_t reason;
 
     if (timeout < 0) {
