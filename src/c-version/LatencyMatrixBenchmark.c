@@ -180,35 +180,43 @@ bool runCore(LatencyMatrixBenchmark *lat_mat_bench) {
 
         if (i >= 5) {
             // 95% CI must not be computed for lower than 6 iterations of the experiment
-            computeMedian(metric_on_iter_, i + 1);
+            computeMedian(lat_mat_bench->mat_bench, i + 1);
 
-            if (   (lower_95_CI_median_ >= (1 - DEV_FROM_MEDIAN) * median_metric_)
-                && (upper_95_CI_median_ <= (1 + DEV_FROM_MEDIAN) * median_metric_)) {
-                if (! g_log_extended) {
-                    // 95% CI is within DEV_FROM_MEDIAN % of the median
-                    uint32_t iterations_needed_ = i + 1;
-                    // Resizing vector for keeping the results of the measurements since they are fewer than the max.
-                    iterations_ = iterations_needed_;
-                    metric_on_iter_.resize(iterations_needed_);
-                    enumerator_metric_on_iter_.resize(iterations_needed_);
-                    denominator_metric_on_iter_.resize(iterations_needed_);
-                    break;
-                }
-            } else if (i == iterations_ - 1) {
-                std::cerr << "WARNING: 95% CI did not converge within " << DEV_FROM_MEDIAN * 100 << "% of median value!" << std::endl;
+            double lowest_bound  = (1 - DEV_FROM_MEDIAN) * lat_mat_bench->mat_bench->median_metric_;
+            double highest_bound = (1 + DEV_FROM_MEDIAN) * lat_mat_bench->mat_bench->median_metric_;
+            bool lower_CI_in = (int) (lat_mat_bench->mat_bench->lower_95_CI_median_ - lowest_bound) >= 0; // float comparison (fucomip) is not supported on k1om
+            bool upper_CI_in = (int) (lat_mat_bench->mat_bench->upper_95_CI_median_ - highest_bound) <= 0;
+            if (!g_log_extended && lower_CI_in && upper_CI_in) {
+                // 95% CI is within DEV_FROM_MEDIAN % of the median
+                uint32_t iterations_needed_ = i + 1;
+                // Resizing vector for keeping the results of the measurements since they are fewer than the max.
+                lat_mat_bench->mat_bench->iterations = iterations_needed_;
+                break;
+            } else if (i == lat_mat_bench->mat_bench->iterations - 1) {
+                fprintf(stderr, "WARNING: 95%% CI did not converge within %f%% of median value!\n", DEV_FROM_MEDIAN * 100);
             }
-        } else if (i == iterations_ - 1) {
-            std::cerr << "WARNING: 95% CI cannot be computed for fewer than six iterations!" << std::endl;
+        } else if (i == iterations - 1) {
+            fprintf(stderr, "WARNING: 95%% CI cannot be computed for fewer than six iterations!\n");
         }
     }
+
+    // if (g_log_extended) {
+    //     for (uint32_t i = 0; i < iterations_; i++) {
+    //         logfile_ << (use_cpu_nodes_ ? cpu_node_ : cpu_) << ","
+    //                  << mem_node_                           << ","
+    //                  << mem_region_                         << ","
+    //                  << i                                   << ","
+    //                  << metric_on_iter_[i]                  << ","
+    //                  << metric_units_                       << std::endl;
+    //     }
 
     free(worker_threads);
     free(workers);
 
 
     //Run metadata
-    has_run_ = true;
-    computeMetrics();
+    lat_mat_bench->mat_bench->has_run_ = true;
+    computeMetrics(lat_mat_bench->mat_bench);
 
     return true;
 }

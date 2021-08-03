@@ -13,10 +13,11 @@
 // #include <LoadWorker.h>
 
 //Libraries
+#include <stdio.h>
 #include <string.h>
-// #include <assert.h>
+#include <math.h>
 // #include <time.h>
-// #include <util.h>
+#include <util.h>
 
 MatrixBenchmark *newMatrixBenchmark(void* mem_array, size_t mem_array_len, uint32_t iters, uint32_t num_worker_threads,
                                     uint32_t mem_node, uint32_t mem_region, uint32_t cpu_node, uint32_t cpu,
@@ -41,12 +42,48 @@ MatrixBenchmark *newMatrixBenchmark(void* mem_array, size_t mem_array_len, uint3
     strcpy(mat_bench->metric_units, "ns/access");
     strcpy(mat_bench->name, benchmark_name);
 
+    mat_bench->has_run_ = false;
     mat_bench->warning_ = false;
     mat_bench->metric_on_iter_             = (double *) malloc(iters * sizeof(double));
     mat_bench->enumerator_metric_on_iter_  = (double *) malloc(iters * sizeof(double));
     mat_bench->denominator_metric_on_iter_ = (double *) malloc(iters * sizeof(double));
 
     return mat_bench;
+}
+
+void computeMedian(MatrixBenchmark *mat_bench, uint32_t n) {
+
+    if ((n > mat_bench->iterations) || (n <= 0)) {
+        fprintf(stderr, "WARNING: Wrong arg in computeMedian().\n");
+        return;
+    }
+
+    // Keep only first n elems.
+    // // // metrics.resize(n);
+
+    mat_bench->median_metric_ = compute_median(mat_bench->metric_on_iter_, n);
+
+    if (n <= 5) {
+        fprintf(stderr, "WARNING: Number of metrics given is too small to compute the CI of the median.\n");
+        return;
+    }
+
+    // Build sorted array of metrics from each iteration
+    double *sortedMetrics = (double *) malloc(n * sizeof(double));
+    memcpy(sortedMetrics, mat_bench->metric_on_iter_, n * sizeof(double));
+
+    qsort(sortedMetrics, n, sizeof(double), comparatorDoubleAsc);
+
+    double sqroot = pseudosqrt(n);
+
+    uint32_t lower_95_CI_rank = (uint32_t) ((n - Z_CI_95 * sqroot) / 2.0);
+    if (lower_95_CI_rank < 1) lower_95_CI_rank = 1;
+    uint32_t upper_95_CI_rank = (uint32_t) (ceil((n + 2 + Z_CI_95 * sqroot) / 2.0));
+    bool exceeds_limits = upper_95_CI_rank - n > 0;
+    if (exceeds_limits) upper_95_CI_rank = n;
+
+    mat_bench->lower_95_CI_median_ = sortedMetrics[lower_95_CI_rank - 1]; //-1 since it is zero-indexed
+    mat_bench->upper_95_CI_median_ = sortedMetrics[upper_95_CI_rank - 1]; //-1 since it is zero-indexed
 }
 
 uint32_t getCPUId(MatrixBenchmark *mat_bench) {
@@ -58,3 +95,36 @@ uint32_t getCPUId(MatrixBenchmark *mat_bench) {
         return mat_bench->cpu;
 }
 
+void computeMetrics(MatrixBenchmark *bench) {
+    if (bench->has_run_) {
+        //Compute mean
+        bench->mean_metric_ = 0;
+        for (uint32_t i = 0; i < bench->iterations; i++)
+            bench->mean_metric_ += bench->metric_on_iter_[i];
+        bench->mean_metric_ /= bench->iterations;
+
+        //Build sorted array of metrics from each iteration
+        // std::vector<double> sortedMetrics = metric_on_iter_;
+        // std::sort(sortedMetrics.begin(), sortedMetrics.end());
+
+        // //Compute percentiles
+        // min_metric_ = sortedMetrics.front();
+        // percentile_25_metric_ = sortedMetrics[sortedMetrics.size()/4];
+        // percentile_75_metric_ = sortedMetrics[sortedMetrics.size()*3/4];
+        bench->median_metric_ = compute_median(bench->metric_on_iter_, bench->iterations);
+        // percentile_95_metric_ = sortedMetrics[sortedMetrics.size()*95/100];
+        // percentile_99_metric_ = sortedMetrics[sortedMetrics.size()*99/100];
+        // max_metric_ = sortedMetrics.back();
+
+        // //Compute mode
+        // std::map<double,uint32_t> metricCounts;
+        // for (uint32_t i = 0; i < iterations_; i++)
+        //     metricCounts[metric_on_iter_[i]]++;
+        // mode_metric_ = 0;
+        // uint32_t greatest_count = 0;
+        // for (auto it = metricCounts.cbegin(); it != metricCounts.cend(); it++) {
+        //     if (it->second > greatest_count)
+        //         mode_metric_ = it->first;
+        // }
+    }
+}
