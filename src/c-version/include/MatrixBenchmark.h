@@ -83,38 +83,50 @@ void computeMedian(MatrixBenchmark *mat_bench, uint32_t n);
 //  * @brief iter The iteration of interest.
 //  * @returns The average throughput in MB/sec.
 //  */
-// double getLoadMetricOnIter(MatrixBenchmark *bench, uint32_t iter);
+// double getLoadMetricOnIter(MatrixBenchmark *mat_bench, uint32_t iter);
 
 // /**
 //  * @brief Get the overall arithmetic mean load throughput in MB/sec that was imposed on the latency measurement.
 //  * @returns The mean throughput in MB/sec.
 //  */
-// double getMeanLoadMetric(MatrixBenchmark *bench);
+// double getMeanLoadMetric(MatrixBenchmark *mat_bench);
+
+/**
+ * @brief Gets the median benchmark metric across all iterations.
+ * @returns The median metric.
+ */
+double getMedianMetric(MatrixBenchmark *mat_bench);
 
 /**
  * @brief Gets the CPU id node used in this benchmark.
  * @returns The CPU used in this benchmark.
  */
-uint32_t getCPUId(MatrixBenchmark *bench);
+uint32_t getCPUId(MatrixBenchmark *mat_bench);
+
+/**
+ * @brief Gets the units of the metric for this benchmark.
+ * @returns A string representing the units for printing to console and file.
+ */
+char *getMetricUnits(MatrixBenchmark *mat_bench);
 
 // /**
 //  * @brief Prints a header piece of information describing the benchmark to the console.
 //  */
-// void printBenchmarkHeader(MatrixBenchmark *bench);
+// void printBenchmarkHeader(MatrixBenchmark *mat_bench);
 
 // /**
 //  * @brief Reports benchmark configuration details to the console.
 //  */
-// void reportBenchmarkInfo(MatrixBenchmark *bench);
+// void reportBenchmarkInfo(MatrixBenchmark *mat_bench);
 
-// /**
-//  * @brief Reports results to the console.
-//  */
-// void reportResults(MatrixBenchmark *bench);
+/**
+ * @brief Reports results to the console.
+ */
+void reportResults(MatrixBenchmark *mat_bench);
 
 /**
  * @brief Computes the metrics across iterations.
  */
-void computeMetrics(MatrixBenchmark *bench);
+void computeMetrics(MatrixBenchmark *mat_bench);
 
 #endif

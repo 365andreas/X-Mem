@@ -38,7 +38,7 @@ typedef struct {
     uint32_t num_lat_mat_benchmarks_;
     uint32_t num_thr_mat_benchmarks_;
 
-    LatencyMatrixBenchmark* *lat_mat_benchmarks_; /**< Set of latency matrix benchmarks. */
+    LatencyMatrixBenchmark **lat_mat_benchmarks_; /**< Set of latency matrix benchmarks. */
     uint32_t lat_mat_benchmarks_size_; /**< Size of latency matrix benchmarks. */
     // ThroughputMatrixBenchmark* *thr_mat_benchmarks_; /**< Set of throughput matrix benchmarks. */
     // uint32_t thr_mat_benchmarks_size_; /**< Size of throughput matrix benchmarks. */
@@ -65,29 +65,29 @@ BenchmarkManager *initBenchMgr(Configurator *config);
  * @brief Runs the latency matrix benchmark.
  * @returns True on benchmarking success.
  */
-bool runLatencyMatrixBenchmarks(BenchmarkManager *benchmgr);
+bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr);
 
 // /**
 //  * @brief Runs the throughput matrix benchmark.
 //  * @returns True on benchmarking success.
 //  */
-// bool runThroughputMatrixBenchmarks(BenchmarkManager *benchmgr);
+// bool runThroughputMatrixBenchmarks(BenchmarkManager *bench_mgr);
 
 /**
  * @brief Allocates memory for all working sets.
  * @param working_set_size Memory size in bytes, per enabled NUMA node.
  */
-void setupWorkingSets(BenchmarkManager *benchmgr, size_t working_set_size);
+void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size);
 
 /**
  * @brief Constructs and initializes all configured benchmarks.
  * @returns True on success.
  */
-bool buildBenchmarks(BenchmarkManager *benchmgr);
+bool buildBenchmarks(BenchmarkManager *bench_mgr);
 
-// /**
-//  * @brief Prints the results aggregated in a matrix form (for latencyMatrix and throughputMatrix benchmarks).
-//  */
-// void printMatrix(std::vector<MatrixBenchmark *> mat_benchmarks_, std::string what);
+/**
+ * @brief Prints the results aggregated in a matrix form (for latencyMatrix and throughputMatrix benchmarks).
+ */
+void printMatrix(BenchmarkManager *bench_mgr, LatencyMatrixBenchmark **lat_mat_benchmarks, char *what);
 
 #endif

@@ -86,6 +86,17 @@ void computeMedian(MatrixBenchmark *mat_bench, uint32_t n) {
     mat_bench->upper_95_CI_median_ = sortedMetrics[upper_95_CI_rank - 1]; //-1 since it is zero-indexed
 }
 
+double getMedianMetric(MatrixBenchmark *mat_bench) {
+
+    if (mat_bench->has_run_)
+        return mat_bench->median_metric_;
+    else {
+        //bad call
+        fprintf(stderr, "WARNING: getMedianMetric() was called before running the benchmark.\n");
+        return -1;
+    }
+}
+
 uint32_t getCPUId(MatrixBenchmark *mat_bench) {
 
     if (mat_bench->use_cpu_nodes)
@@ -93,6 +104,34 @@ uint32_t getCPUId(MatrixBenchmark *mat_bench) {
         return 0; //cpu_id_in_numa_node(getCPUNode(), 0)
     else
         return mat_bench->cpu;
+}
+
+char *getMetricUnits(MatrixBenchmark *mat_bench) {
+    return mat_bench->metric_units;
+}
+
+void reportResults(MatrixBenchmark *mat_bench) {
+
+    if (mat_bench->use_cpu_nodes) {
+        printf("CPU NUMA Node: %d ", mat_bench->cpu_node);
+    } else {
+        printf("CPU: %d ", mat_bench->cpu);
+    }
+    printf("Memory NUMA Node: %d ", mat_bench->mem_node);
+    printf("Region: %d ", mat_bench->mem_region);
+
+    if (mat_bench->has_run_) {
+        printf("Mean: %f %s ", mat_bench->mean_metric_, mat_bench->metric_units); // << " and " << mean_load_metric_ << " MB/s mean imposed load (not necessarily matched)";
+        printf("Median: %f %s ", mat_bench->median_metric_, mat_bench->metric_units);
+        printf("LB 95%% CI: %f %s ", mat_bench->lower_95_CI_median_, mat_bench->metric_units);
+        printf("UB 95%% CI: %f %s ", mat_bench->upper_95_CI_median_, mat_bench->metric_units);
+        printf("iterations: %d", mat_bench->iterations);
+        if (mat_bench->warning_)
+            printf(" (WARNING)");
+        printf("\n");
+    }
+    else
+        fprintf(stderr, "WARNING: Benchmark has not run yet. No reported results.\n");
 }
 
 void computeMetrics(MatrixBenchmark *bench) {

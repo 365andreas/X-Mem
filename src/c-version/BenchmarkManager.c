@@ -32,23 +32,23 @@
 
 BenchmarkManager *initBenchMgr(Configurator *config) {
 
-    BenchmarkManager *benchmgr = (BenchmarkManager *) malloc(sizeof(BenchmarkManager));
+    BenchmarkManager *bench_mgr = (BenchmarkManager *) malloc(sizeof(BenchmarkManager));
 
-    benchmgr->config_ = config;
-    benchmgr->built_benchmarks_ = false;
+    bench_mgr->config_ = config;
+    bench_mgr->built_benchmarks_ = false;
 
     //Set up NUMA stuff
     // cpu_numa_node_affinities_ = config_.getCpuNumaNodeAffinities();
-    benchmgr->num_cpu_numa_node_affinities_ = 1;
-    benchmgr->cpu_numa_node_affinities_ = (uint32_t *) malloc(benchmgr->num_cpu_numa_node_affinities_ * sizeof(uint32_t));
-    for (int i = 0; i < benchmgr->num_cpu_numa_node_affinities_; i++) {
-        benchmgr->cpu_numa_node_affinities_[i] = i;
+    bench_mgr->num_cpu_numa_node_affinities_ = 1;
+    bench_mgr->cpu_numa_node_affinities_ = (uint32_t *) malloc(bench_mgr->num_cpu_numa_node_affinities_ * sizeof(uint32_t));
+    for (int i = 0; i < bench_mgr->num_cpu_numa_node_affinities_; i++) {
+        bench_mgr->cpu_numa_node_affinities_[i] = i;
     }
 
     // memory_numa_node_affinities_ = config_.getMemoryNumaNodeAffinities();
 
     //Build working memory regions
-    setupWorkingSets(benchmgr, getWorkingSetSizePerThread(benchmgr->config_));
+    setupWorkingSets(bench_mgr, getWorkingSetSizePerThread(bench_mgr->config_));
 
     // //Open decoding networks compatible resuslts file
     // if (config_.useDecNetFile()) {
@@ -90,7 +90,7 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
 //     //                      << "units"                                           << std::endl;
 //     // }
 
-    return benchmgr;
+    return bench_mgr;
 }
 
 // BenchmarkManager::~BenchmarkManager() {
@@ -147,49 +147,62 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
 //         thr_mat_logfile_.close();
 // }
 
-// void BenchmarkManager::printMatrix(std::vector<xmem::MatrixBenchmark *> mat_benchmarks_, std::string what) {
-//     uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
+// TODO: replace LatencyMatrixBenchmark ** w/ MatrixBenchmark ** (malloc a new array MatrixBenchmark **)
+void printMatrix(BenchmarkManager *bench_mgr, LatencyMatrixBenchmark **lat_mat_benchmarks, char *what) {
 
-//     std::cout <<  "Measured " << what << " (in " << mat_benchmarks_[0]->getMetricUnits() << ")..." << std::endl;
-//     std::cout << "(Node, Reg) = " << "(Memory NUMA Node, Region)" << std::endl << std::endl;
+    Configurator *cfg = bench_mgr->config_;
 
-//     std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
+    // uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
 
-//     int width = config_.allCoresSelected() ? 3 : 13;
-//     std::cout << std::setw(width) << " ";
-//     for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
-//         std::cout << " (Node, Reg)";
-//     }
-//     std::cout << std::endl;
+    printf("Measured %s (in %s)...\n", what, getMetricUnits(lat_mat_benchmarks[0]->mat_bench));
+    printf("(Node, Reg) = (Memory NUMA Node, Region)\n\n");
 
-//     uint32_t regions_per_pu = config_.memoryRegionsInPhysAddr() ? mem_regions_phys_addr.size()
-//                                                                 : mem_regions_per_numa * g_num_numa_nodes;
+    // std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
 
-//     std::cout << (config_.allCoresSelected() ? "CPU" : "CPU NUMA Node");
-//     for (uint32_t region_id = 0; region_id < mem_arrays_.size(); region_id++) {
-//         uint32_t mem_node = mem_array_node_[region_id];
-//         uint32_t mem_region = region_id;
-//         if (! config_.memoryRegionsInPhysAddr()) {
-//             mem_region = region_id % config_.getMemoryRegionsPerNUMANode();
-//         }
+    int width = allCoresSelected(cfg) ? 3 : 13;
+    printf("%*c", width, ' ');
+    for (uint32_t region_id = 0; region_id < bench_mgr->num_mem_regions_; region_id++) {
+        printf(" (Node, Reg)");
+    }
+    printf("\n");
 
-//         std::string node_str = (mem_node == static_cast<uint32_t>(-1)) ? "?" : std::to_string(mem_node);
-//         std::cout  << std::setw(12) << "(" + node_str + ", " + std::to_string(mem_region) + ")";
-//     }
+    uint32_t regions_per_pu = cfg->num_mem_regions_phys_addr_;
+    // uint32_t regions_per_pu = config_.memoryRegionsInPhysAddr() ? mem_regions_phys_addr.size()
+    //                                                             : mem_regions_per_numa * g_num_numa_nodes;
 
-//     for (uint32_t i = 0; i < mat_benchmarks_.size(); i++) {
-//         if (i % regions_per_pu == 0) {
-//             std::cout << std::endl;
-//             uint32_t pu = config_.allCoresSelected() ? mat_benchmarks_[i]->getCPUId() : mat_benchmarks_[i]->getCPUNode();
-//             std::cout << std::setw(width) << pu;
-//         }
+    if (allCoresSelected(cfg))
+        printf("CPU");
+    else
+        printf("CPU NUMA Node");
+    for (uint32_t region_id = 0; region_id < bench_mgr->num_mem_regions_; region_id++) {
+        uint32_t mem_node = bench_mgr->mem_array_node_[region_id];
+        uint32_t mem_region = region_id;
+        // if (! config_.memoryRegionsInPhysAddr()) {
+        //     mem_region = region_id % config_.getMemoryRegionsPerNUMANode();
+        // }
 
-//         double median_metric = mat_benchmarks_[i]->getMedianMetric();
-//         // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
-//         std::cout << std::setw(12) << median_metric;
-//     }
-//     std::cout << std::endl;
-// }
+        // std::string node_str = (mem_node == static_cast<uint32_t>(-1)) ? "?" : std::to_string(mem_node);
+        // std::cout  << std::setw(12) << "(" + node_str + ", " + std::to_string(mem_region) + ")";
+        printf("(?, %*d)", 7, mem_region);
+    }
+
+    for (uint32_t i = 0; i < bench_mgr->lat_mat_benchmarks_size_; i++) {
+        if (i % regions_per_pu == 0) {
+            printf("\n");
+            uint32_t pu;
+            if (allCoresSelected(cfg))
+                pu = getCPUId(lat_mat_benchmarks[i]->mat_bench);
+            else
+                pu = 0; //mat_benchmarks_[i]->getCPUNode();
+            printf("%*d", width, pu);
+        }
+
+        double median_metric = getMedianMetric(lat_mat_benchmarks[i]->mat_bench);
+        // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
+        printf("%*f", 12, median_metric);
+    }
+    printf("\n");
+}
 
 // bool BenchmarkManager::runThroughputBenchmarks() {
 //     if (!built_benchmarks_) {
@@ -427,9 +440,9 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
 //     return true;
 // }
 
-bool runLatencyMatrixBenchmarks(BenchmarkManager *benchmgr) {
-    if (! benchmgr->built_benchmarks_) {
-        if (! buildBenchmarks(benchmgr)) {
+bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr) {
+    if (! bench_mgr->built_benchmarks_) {
+        if (! buildBenchmarks(bench_mgr)) {
             fprintf(stderr, "ERROR: Failed to build benchmarks.\n");
             return false;
         }
@@ -440,9 +453,9 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *benchmgr) {
 //         mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
 //     }
 
-    for (uint32_t i = 0; i < benchmgr->lat_mat_benchmarks_size_; i++) {
-        run(benchmgr->lat_mat_benchmarks_[i]);
-        // reportResults(benchmgr->lat_mat_benchmarks_[i]);
+    for (uint32_t i = 0; i < bench_mgr->lat_mat_benchmarks_size_; i++) {
+        run(bench_mgr->lat_mat_benchmarks_[i]);
+        reportResults(bench_mgr->lat_mat_benchmarks_[i]->mat_bench);
 
         // if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
         //     dec_net_results_file_ << "bench_result(";
@@ -459,7 +472,7 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *benchmgr) {
 
 //     // aggregated report of latency matrix benchmarks
 //     std::vector<xmem::MatrixBenchmark *> mat_benchmarks_(lat_mat_benchmarks_.begin(), lat_mat_benchmarks_.end());
-//     printMatrix(mat_benchmarks_, "idle latencies");
+    printMatrix(bench_mgr, bench_mgr->lat_mat_benchmarks_, "idle latencies");
 
     if (g_verbose)
         printf("\nDone running latency matrix benchmarks.\n");
@@ -609,18 +622,19 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *benchmgr) {
 //     return true;
 // }
 
-void setupWorkingSets(BenchmarkManager *benchmgr, size_t working_set_size) {
+void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size) {
     //Allocate memory in each NUMA node to be tested
 
-    Configurator *cfg = benchmgr->config_;
+    Configurator *cfg = bench_mgr->config_;
 
     uint64_t *mem_regions_phys_addr = getMemoryRegionsPhysAddresses(cfg);
 
     uint32_t mem_regions_per_cpu = numberOfMemoryRegionsPhysAddresses(cfg);
 
-    benchmgr->mem_arrays_     = (void **)  malloc(mem_regions_per_cpu * sizeof(void *));
-    benchmgr->mem_array_lens_ = (size_t *) malloc(mem_regions_per_cpu * sizeof(size_t));
-    benchmgr->mem_array_node_ = (size_t *) malloc(mem_regions_per_cpu * sizeof(size_t));
+    bench_mgr->mem_arrays_      = (void **)  malloc(mem_regions_per_cpu * sizeof(void *));
+    bench_mgr->mem_array_lens_  = (size_t *) malloc(mem_regions_per_cpu * sizeof(size_t));
+    bench_mgr->mem_array_node_  = (size_t *) malloc(mem_regions_per_cpu * sizeof(size_t));
+    bench_mgr->num_mem_regions_ = mem_regions_per_cpu;
 
     if (! memoryRegionsInPhysAddr(cfg)) {
         fprintf(stderr, "ERROR: memory regions to be benchmarked were not specified\n");
@@ -653,9 +667,9 @@ void setupWorkingSets(BenchmarkManager *benchmgr, size_t working_set_size) {
                 exit(-1);
             }
 
-            benchmgr->mem_arrays_[region_id] = virt_addr;
-            benchmgr->mem_array_lens_[region_id] = allocation_size;
-            benchmgr->mem_array_node_[region_id] = -1;
+            bench_mgr->mem_arrays_[region_id] = virt_addr;
+            bench_mgr->mem_array_lens_[region_id] = allocation_size;
+            bench_mgr->mem_array_node_[region_id] = -1;
 
             if (latencyMatrixTestSelected(cfg) || throughputMatrixTestSelected(cfg)) {
                 printf("Virtual address for memory region #%d: ", region_id);
@@ -680,10 +694,10 @@ void setupWorkingSets(BenchmarkManager *benchmgr, size_t working_set_size) {
                         errno = -status[i];
                         perror("WARNING! In move_page() status returned error");
                         fprintf(stderr, "\n^^^ page #%d\n", i + 1);
-                        benchmgr->mem_array_node_[region_id] = (uint32_t) -1;
+                        bench_mgr->mem_array_node_[region_id] = (uint32_t) -1;
                     } else if (i == 0) {
                         printf(" on NUMA node %d (first page)", status[0]);
-                        benchmgr->mem_array_node_[region_id] = status[0];
+                        bench_mgr->mem_array_node_[region_id] = status[0];
                     } else if (i == num_pages - 1) {
                         printf(" and on NUMA node %d (last page, %ld)", status[num_pages - 1], num_pages);
                     }
@@ -698,7 +712,7 @@ void setupWorkingSets(BenchmarkManager *benchmgr, size_t working_set_size) {
     printf("\n");
 }
 
-bool buildBenchmarks(BenchmarkManager *benchmgr) {
+bool buildBenchmarks(BenchmarkManager *bench_mgr) {
     if (g_verbose)  {
         printf("\nGenerating benchmarks.\n");
     }
@@ -761,7 +775,7 @@ bool buildBenchmarks(BenchmarkManager *benchmgr) {
     uint32_t *processor_units; // List of CPU nodes or CPUs to affinitize for benchmark experiments.
     bool use_cpu_nodes = false;
 
-    Configurator *cfg = benchmgr->config_;
+    Configurator *cfg = bench_mgr->config_;
 
     if (allCoresSelected(cfg)) {
         num_processor_units = g_num_logical_cpus;
@@ -770,8 +784,8 @@ bool buildBenchmarks(BenchmarkManager *benchmgr) {
             processor_units[i] = i;
         }
     } else {
-        num_processor_units = benchmgr->num_cpu_numa_node_affinities_;
-        processor_units = benchmgr->cpu_numa_node_affinities_;
+        num_processor_units = bench_mgr->num_cpu_numa_node_affinities_;
+        processor_units = bench_mgr->cpu_numa_node_affinities_;
         use_cpu_nodes = true;
     }
 
@@ -780,8 +794,8 @@ bool buildBenchmarks(BenchmarkManager *benchmgr) {
     uint32_t cpu      = -1;
     uint32_t cpu_node = -1;
 
-    benchmgr->lat_mat_benchmarks_size_ = num_processor_units * numberOfMemoryRegionsPhysAddresses(cfg);
-    benchmgr->lat_mat_benchmarks_ = (LatencyMatrixBenchmark **) malloc(benchmgr->lat_mat_benchmarks_size_ * sizeof(LatencyMatrixBenchmark *));
+    bench_mgr->lat_mat_benchmarks_size_ = num_processor_units * numberOfMemoryRegionsPhysAddresses(cfg);
+    bench_mgr->lat_mat_benchmarks_ = (LatencyMatrixBenchmark **) malloc(bench_mgr->lat_mat_benchmarks_size_ * sizeof(LatencyMatrixBenchmark *));
     int l = 0;
     //Build latency matrix benchmarks
     for (int pu = 0; pu < num_processor_units; pu++) { //iterate each cpu NUMA node
@@ -793,9 +807,9 @@ bool buildBenchmarks(BenchmarkManager *benchmgr) {
         }
 
         for (uint32_t region_id = 0; region_id < numberOfMemoryRegionsPhysAddresses(cfg); region_id++) {
-            uint32_t mem_node = benchmgr->mem_array_node_[region_id];
-            void* mem_array = benchmgr->mem_arrays_[region_id];
-            size_t mem_array_len = benchmgr->mem_array_lens_[region_id];
+            uint32_t mem_node = bench_mgr->mem_array_node_[region_id];
+            void* mem_array = bench_mgr->mem_arrays_[region_id];
+            size_t mem_array_len = bench_mgr->mem_array_lens_[region_id];
             uint32_t mem_region = region_id;
 
             chunk_size_t chunk = CHUNK_64b;
@@ -804,7 +818,7 @@ bool buildBenchmarks(BenchmarkManager *benchmgr) {
             // Latency benchmark from every core to every memory region
             sprintf(benchmark_name, "Test #%d LM (LatencyMatrix)", g_test_index);
 
-            benchmgr->lat_mat_benchmarks_[l] = initLatencyMatrixBenchmark(mem_array,
+            bench_mgr->lat_mat_benchmarks_[l] = initLatencyMatrixBenchmark(mem_array,
                                                                           mem_array_len,
                                                                           getIterationsPerTest(cfg),
                                                                           DEFAULT_NUM_WORKER_THREADS,
@@ -889,7 +903,7 @@ bool buildBenchmarks(BenchmarkManager *benchmgr) {
         // }
     // }
 
-    benchmgr->built_benchmarks_ = true;
+    bench_mgr->built_benchmarks_ = true;
 
     return true;
 }
