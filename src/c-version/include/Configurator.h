@@ -20,7 +20,7 @@ typedef struct {
     uint32_t iterations_; /**< Number of iterations to run for each benchmark test. */
     bool mem_regions_in_phys_addr_; /**< True if physical addresses of memory regions are passed as arguments for matrix becnhmarks. */
     uint64_t *mem_regions_phys_addr_; /**< Array of physical addresses of memory regions to be used for matrix benchmark experiments. */
-    uint32_t num_mem_regions_phys_addr_; /**< Number of memory regions to be used for matrix benchmark experiments. */
+    uint32_t mem_regions_phys_addr_size; /**< Number of memory regions to be used for matrix benchmark experiments. */
     bool run_all_cores_; /**< True if matrix benchmarks should run for all cores. */
     bool run_latency_matrix_; /**< True if latency matrix tests should be run. */
     bool run_throughput_matrix_; /**< True if throughput matrix tests should be run. */

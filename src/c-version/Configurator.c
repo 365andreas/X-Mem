@@ -17,7 +17,8 @@
 
 void printHelpText() {
 
-    char *msg = "\n -a, run benchmarks on all cores\n -l, run latency matrix benchmarks\n -t, run throughput matrix benchmarks\n -v, verbose mode\n";
+    char *msg = "\n -a, run benchmarks on all cores\n -l, run latency matrix benchmarks\n -v, verbose mode\n";
+    // char *msg = "\n -a, run benchmarks on all cores\n -l, run latency matrix benchmarks\n -t, run throughput matrix benchmarks\n -v, verbose mode\n";
     printf("%s", msg);
 }
 
@@ -30,15 +31,24 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
 
     bool isCaseInsensitive = false;
     int opt;
+    uint64_t addr;
 
-    while ((opt = getopt(argc, argv, "altv")) != -1) {
+    while ((opt = getopt(argc, argv, "alvr:")) != -1) {
         switch (opt) {
         case 'a': conf->run_all_cores_ = true; break;
         case 'l': conf->run_latency_matrix_ = true; break;
-        case 't': conf->run_throughput_matrix_ = true; break;
+        // case 't': conf->run_throughput_matrix_ = true; break;
+        case 'r':
+            addr = strtoull(optarg, NULL, 0);
+            // memory regions specified by physical addresses
+            conf->mem_regions_in_phys_addr_ = true;
+            conf->mem_regions_phys_addr_size = 1;
+            conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->mem_regions_phys_addr_size * sizeof(uint64_t));
+            conf->mem_regions_phys_addr_[0] = addr;
+            break;
         case 'v': conf->verbose_ = true; break;
         default:
-            fprintf(stderr, "Usage: %s [-altv] \n", argv[0]);
+            fprintf(stderr, "Usage: %s [-alv] -r region_address \n", argv[0]);
             printHelpText();
             return EXIT_FAILURE;
         }
@@ -47,10 +57,12 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     conf->working_set_size_per_thread_ = DEFAULT_WORKING_SET_SIZE_PER_THREAD;
 
     // memory regions specified by physical addresses
-    conf->mem_regions_in_phys_addr_ = true;
-    conf->num_mem_regions_phys_addr_ = 1;
-    conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->num_mem_regions_phys_addr_ * sizeof(uint64_t));
-    conf->mem_regions_phys_addr_[0] = 0x1afffefff;
+    if (! conf->mem_regions_in_phys_addr_) {
+        fprintf(stderr, "Usage: %s [-alv] -r region_address \n", argv[0]);
+        printHelpText();
+        fprintf(stderr, "ERROR: A region_address was not specified \n");
+        return EXIT_FAILURE;
+    }
 
     conf->iterations_ = 10;
 
@@ -72,7 +84,7 @@ bool throughputMatrixTestSelected(Configurator *conf) { return conf->run_through
 
 bool memoryRegionsInPhysAddr(Configurator *conf) { return conf->mem_regions_in_phys_addr_; }
 
-uint32_t numberOfMemoryRegionsPhysAddresses(Configurator *conf) { return conf->num_mem_regions_phys_addr_; }
+uint32_t numberOfMemoryRegionsPhysAddresses(Configurator *conf) { return conf->mem_regions_phys_addr_size; }
 
 uint64_t *getMemoryRegionsPhysAddresses(Configurator *conf) { return conf->mem_regions_phys_addr_; }
 

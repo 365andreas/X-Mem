@@ -166,7 +166,7 @@ void printMatrix(BenchmarkManager *bench_mgr, LatencyMatrixBenchmark **lat_mat_b
     }
     printf("\n");
 
-    uint32_t regions_per_pu = cfg->num_mem_regions_phys_addr_;
+    uint32_t regions_per_pu = cfg->mem_regions_phys_addr_size;
     // uint32_t regions_per_pu = config_.memoryRegionsInPhysAddr() ? mem_regions_phys_addr.size()
     //                                                             : mem_regions_per_numa * g_num_numa_nodes;
 
