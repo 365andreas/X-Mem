@@ -445,11 +445,13 @@ int32_t query_sys_info() {
         }
     }
 
-    printf("phys_package_ids: ");
-    for (int i = 0; i < g_num_physical_packages; i++) {
-        printf("%d ", phys_package_ids[i]);
+    if (g_verbose) {
+        printf("phys_package_ids: ");
+        for (int i = 0; i < g_num_physical_packages; i++) {
+            printf("%d ", phys_package_ids[i]);
+        }
+        printf("\n");
     }
-    printf("\n");
 
     //Get number of CPUs
     //Get number of logical CPUs
@@ -459,7 +461,8 @@ int32_t query_sys_info() {
         return -1;
     }
 
-    printf("g_num_logical_cpus: %d\n", g_num_logical_cpus);
+    if (g_verbose)
+        printf("g_num_logical_cpus: %d\n", g_num_logical_cpus);
 
     fseek(in, 0, SEEK_SET);
     //Get number of physical CPUs. This is somewhat convoluted, but not sure of a better way on Linux. I don't want to assume anything about HyperThreading-like things.
@@ -493,11 +496,13 @@ int32_t query_sys_info() {
     }
     g_num_physical_cpus = num_core_ids * g_num_physical_packages; //FIXME: currently this assumes each processor package has an equal number of cores. This may not be true in general! Need more complicated /proc/cpuinfo parsing.
 
-    printf("core_ids: ");
-    for (int i = 0; i < num_core_ids; i++) {
-        printf("%d ", core_ids[i]);
+    if (g_verbose) {
+        printf("core_ids: ");
+        for (int i = 0; i < num_core_ids; i++) {
+            printf("%d ", core_ids[i]);
+        }
+        printf("\n");
     }
-    printf("\n");
 
     //Get mapping of physical CPUs to packages
     g_physical_package_of_cpu = (uint32_t *) malloc(g_num_logical_cpus * sizeof(uint32_t));
@@ -519,11 +524,13 @@ int32_t query_sys_info() {
         }
     }
 
-    printf("g_physical_package_of_cpus: \n");
-    for (int i = 0; i < g_num_logical_cpus; i++) {
-        printf("g_physical_package_of_cpu[%d] = %d\n", i, g_physical_package_of_cpu[i]);
+    if (g_verbose) {
+        printf("g_physical_package_of_cpus: \n");
+        for (int i = 0; i < g_num_logical_cpus; i++) {
+            printf("g_physical_package_of_cpu[%d] = %d\n", i, g_physical_package_of_cpu[i]);
+        }
+        printf("\n");
     }
-    printf("\n");
 
     //Get page size
     g_page_size = (size_t) (sysconf(_SC_PAGESIZE));
@@ -536,7 +543,8 @@ int32_t query_sys_info() {
     g_large_page_size = gethugepagesize();
 #endif
 
-    printf("g_page_size: %ld\n", g_page_size);
+    if (g_verbose)
+        printf("g_page_size: %ld\n", g_page_size);
 
 
     fclose(in);
