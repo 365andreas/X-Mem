@@ -183,7 +183,7 @@ void printMatrix(BenchmarkManager *bench_mgr, LatencyMatrixBenchmark **lat_mat_b
 
         // std::string node_str = (mem_node == static_cast<uint32_t>(-1)) ? "?" : std::to_string(mem_node);
         // std::cout  << std::setw(12) << "(" + node_str + ", " + std::to_string(mem_region) + ")";
-        printf("(?, %*d)", 7, mem_region);
+        printf(" (   ?, %*d)", 3, mem_region);
     }
 
     for (uint32_t i = 0; i < bench_mgr->lat_mat_benchmarks_size_; i++) {
@@ -199,7 +199,7 @@ void printMatrix(BenchmarkManager *bench_mgr, LatencyMatrixBenchmark **lat_mat_b
 
         double median_metric = getMedianMetric(lat_mat_benchmarks[i]->mat_bench);
         // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
-        printf("%*f", 12, median_metric);
+        printf("%*.4f", 12, median_metric);
     }
     printf("\n");
 }
