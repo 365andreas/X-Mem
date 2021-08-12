@@ -38,9 +38,13 @@ int main(int argc, char* argv[]) {
         // if (g_verbose)
         //     report_timer();
 
-        BenchmarkManager *benchmgr = initBenchMgr(&config);
         if (latencyMatrixTestSelected(&config)) {
+            BenchmarkManager *benchmgr = initBenchMgr(&config);
             runLatencyMatrixBenchmarks(benchmgr);
+        }
+
+        if (registerRegionsSelected(&config)) {
+            runRegisterRegions(&config);
         }
 
         // if (config.throughputMatrixTestSelected()) {

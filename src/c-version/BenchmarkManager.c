@@ -448,10 +448,10 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr) {
         }
     }
 
-//     std::vector<uint64_t> mem_regions_phys_addr;
-//     if (config_.useDecNetFile()) {
-//         mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
-//     }
+    // std::vector<uint64_t> mem_regions_phys_addr;
+    // if (config_.useDecNetFile()) {
+    //     mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
+    // }
 
     for (uint32_t i = 0; i < bench_mgr->lat_mat_benchmarks_size_; i++) {
         run(bench_mgr->lat_mat_benchmarks_[i]);
@@ -470,8 +470,8 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr) {
     }
     printf("\n");
 
-//     // aggregated report of latency matrix benchmarks
-//     std::vector<xmem::MatrixBenchmark *> mat_benchmarks_(lat_mat_benchmarks_.begin(), lat_mat_benchmarks_.end());
+    // // aggregated report of latency matrix benchmarks
+    // std::vector<xmem::MatrixBenchmark *> mat_benchmarks_(lat_mat_benchmarks_.begin(), lat_mat_benchmarks_.end());
     printMatrix(bench_mgr, bench_mgr->lat_mat_benchmarks_, "idle latencies");
 
     if (g_verbose)
@@ -621,6 +621,14 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr) {
 
 //     return true;
 // }
+
+bool runRegisterRegions(Configurator *conf) {
+
+    if (g_verbose)
+        printf("\nDone registering regions.\n");
+
+    return true;
+}
 
 void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size) {
     //Allocate memory in each NUMA node to be tested

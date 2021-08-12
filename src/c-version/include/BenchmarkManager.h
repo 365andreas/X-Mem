@@ -74,6 +74,12 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr);
 // bool runThroughputMatrixBenchmarks(BenchmarkManager *bench_mgr);
 
 /**
+ * @brief Registers regions for remote memory access in XEON PHI related matrix benchmarks.
+ * @returns True on success.
+ */
+bool runRegisterRegions(Configurator *conf);
+
+/**
  * @brief Allocates memory for all working sets.
  * @param working_set_size Memory size in bytes, per enabled NUMA node.
  */

@@ -17,9 +17,19 @@
 
 void printHelpText() {
 
-    char *msg = "\n -a, run benchmarks on all cores\n -l, run latency matrix benchmarks\n -v, verbose mode\n";
-    // char *msg = "\n -a, run benchmarks on all cores\n -l, run latency matrix benchmarks\n -t, run throughput matrix benchmarks\n -v, verbose mode\n";
+    char *msg = "\n"
+                " -a, run benchmarks on all cores\n"
+                " -l, run latency matrix benchmarks\n"
+                // " -t, run throughput matrix benchmarks\n"
+                " -v, verbose mode\n"
+                " -r addr, pass physical address to benchmark\n"
+                " -R addr, (XEON PHI systems specific) declare that this node (host or PHI) will only register an address region for remote access\n";
     printf("%s", msg);
+}
+
+void printUsageText(char *name){
+
+    fprintf(stderr, "Usage: %s [-alv] -r region_address [-R region_address]\n", name);
 }
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
@@ -33,34 +43,41 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     int opt;
     uint64_t addr;
 
-    while ((opt = getopt(argc, argv, "alvr:")) != -1) {
+    while ((opt = getopt(argc, argv, "alvr:R:")) != -1) {
         switch (opt) {
-        case 'a': conf->run_all_cores_ = true; break;
-        case 'l': conf->run_latency_matrix_ = true; break;
-        // case 't': conf->run_throughput_matrix_ = true; break;
-        case 'r':
-            addr = strtoull(optarg, NULL, 0);
-            // memory regions specified by physical addresses
-            conf->mem_regions_in_phys_addr_ = true;
-            conf->mem_regions_phys_addr_size = 1;
-            conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->mem_regions_phys_addr_size * sizeof(uint64_t));
-            conf->mem_regions_phys_addr_[0] = addr;
-            break;
-        case 'v': conf->verbose_ = true; break;
-        default:
-            fprintf(stderr, "Usage: %s [-alv] -r region_address \n", argv[0]);
-            printHelpText();
-            return EXIT_FAILURE;
+            case 'v': conf->verbose_            = true; break;
+            case 'a': conf->run_all_cores_      = true; break;
+            case 'l': conf->run_latency_matrix_ = true; break;
+            // case 't': conf->run_throughput_matrix_ = true; break;
+            case 'r':
+                // memory regions specified by physical addresses
+                conf->mem_regions_in_phys_addr_ = true;
+                conf->mem_regions_phys_addr_size = 1;
+                conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->mem_regions_phys_addr_size * sizeof(uint64_t));
+                addr = strtoull(optarg, NULL, 0);
+                conf->mem_regions_phys_addr_[0] = addr;
+                break;
+            case 'R':
+                conf->register_regions_ = true;
+                conf->mem_regions_phys_addr_size = 1;
+                conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->mem_regions_phys_addr_size * sizeof(uint64_t));
+                addr = strtoull(optarg, NULL, 0);
+                conf->mem_regions_phys_addr_[0] = addr;
+                break;
+            default:
+                printUsageText(argv[0]);
+                printHelpText();
+                return EXIT_FAILURE;
         }
     }
 
     conf->working_set_size_per_thread_ = DEFAULT_WORKING_SET_SIZE_PER_THREAD;
 
     // memory regions specified by physical addresses
-    if (! conf->mem_regions_in_phys_addr_) {
-        fprintf(stderr, "Usage: %s [-alv] -r region_address \n", argv[0]);
+    if ((! conf->mem_regions_in_phys_addr_) && (! conf->register_regions_)) {
+        printUsageText(argv[0]);
         printHelpText();
-        fprintf(stderr, "ERROR: A region_address was not specified \n");
+        fprintf(stderr, "ERROR: A region_address was not specified\n");
         return EXIT_FAILURE;
     }
 
@@ -81,6 +98,8 @@ bool allCoresSelected(Configurator *conf) { return conf->run_all_cores_; }
 bool latencyMatrixTestSelected(Configurator *conf) { return conf->run_latency_matrix_; }
 
 bool throughputMatrixTestSelected(Configurator *conf) { return conf->run_throughput_matrix_; }
+
+bool registerRegionsSelected(Configurator *conf) { return conf->register_regions_; }
 
 bool memoryRegionsInPhysAddr(Configurator *conf) { return conf->mem_regions_in_phys_addr_; }
 
