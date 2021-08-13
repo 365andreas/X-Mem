@@ -83,7 +83,7 @@ if hostos == 'linux': # gcc
         env.Replace(CPPFLAGS = '')
         env.Replace(CPPPATH = [])
         env.Replace(LIBS = [])
-        env.Append(LIBS = ['pthread', 'm'])
+        env.Append(LIBS = ['pthread', 'm', 'scif'])
 
         env.Append(CPPPATH = ['src/c-version/include'])
         env.Replace(CCFLAGS = ' -Wall -Wno-unused-but-set-variable -Wno-unused-variable -g -O3')

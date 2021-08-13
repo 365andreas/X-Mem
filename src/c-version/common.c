@@ -182,6 +182,15 @@ uint32_t num_core_ids = 0;
 //     std::cout << std::endl;
 // }
 
+const char *getMsgName(scif_msg_t msg) {
+   switch (msg) {
+      case DUMMY:                 return "DUMMY";
+      case REGISTERED_MEM_REGION: return "REGISTERED_MEM_REGION";
+      case FINISHED:              return "FINISHED";
+      default:                    return "UNKNOWN_MSG_TYPE";
+   }
+}
+
 void setup_timer() {
     if (g_verbose)
         printf("\nInitializing timer...");

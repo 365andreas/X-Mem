@@ -23,13 +23,15 @@ void printHelpText() {
                 // " -t, run throughput matrix benchmarks\n"
                 " -v, verbose mode\n"
                 " -r addr, pass physical address to benchmark\n"
-                " -R addr, (XEON PHI systems specific) declare that this node (host or PHI) will only register an address region for remote access\n";
+                " -R addr, (XEON PHI systems specific) declare that this node (host or PHI) will only register an address region for remote access\n"
+                " -X, (XEON PHI systems specific) declare that this node (host or PHI) will have to connectToPeer to a node that has registered its memory"
+                " for remote access before running the benchmarks\n";
     printf("%s", msg);
 }
 
 void printUsageText(char *name){
 
-    fprintf(stderr, "Usage: %s [-alv] -r region_address [-R region_address]\n", name);
+    fprintf(stderr, "Usage: %s [-alvX] -r region_address [-R region_address]\n", name);
 }
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
@@ -43,7 +45,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     int opt;
     uint64_t addr;
 
-    while ((opt = getopt(argc, argv, "alvr:R:")) != -1) {
+    while ((opt = getopt(argc, argv, "alvr:R:X")) != -1) {
         switch (opt) {
             case 'v': conf->verbose_            = true; break;
             case 'a': conf->run_all_cores_      = true; break;
@@ -64,6 +66,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
                 addr = strtoull(optarg, NULL, 0);
                 conf->mem_regions_phys_addr_[0] = addr;
                 break;
+            case 'X': conf->connect_before_run_ = true; break;
             default:
                 printUsageText(argv[0]);
                 printHelpText();
@@ -100,6 +103,8 @@ bool latencyMatrixTestSelected(Configurator *conf) { return conf->run_latency_ma
 bool throughputMatrixTestSelected(Configurator *conf) { return conf->run_throughput_matrix_; }
 
 bool registerRegionsSelected(Configurator *conf) { return conf->register_regions_; }
+
+bool connectBeforeRun(Configurator *conf) { return conf->connect_before_run_; }
 
 bool memoryRegionsInPhysAddr(Configurator *conf) { return conf->mem_regions_in_phys_addr_; }
 

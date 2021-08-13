@@ -351,6 +351,18 @@ typedef enum {
     NUM_CHUNK_SIZES
 } chunk_size_t;
 
+/**
+ * @brief Memory access batterns are broadly categorized by reads and writes.
+ */
+typedef enum {
+    DUMMY,
+    REGISTERED_MEM_REGION,
+    FINISHED,
+    NUM_MSGS
+} scif_msg_t;
+
+const char *getMsgName(scif_msg_t msg);
+
 // /**
 //  * @brief Prints the various C/C++ types to the console for this machine.
 //  */

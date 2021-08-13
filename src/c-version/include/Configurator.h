@@ -25,6 +25,8 @@ typedef struct {
     bool run_latency_matrix_; /**< True if latency matrix tests should be run. */
     bool run_throughput_matrix_; /**< True if throughput matrix tests should be run. */
     bool register_regions_; /**< True if regions will be registered for remote memory access. */
+    bool connect_before_run_; /**< True if the current (local) node must be connected to another (remote) node before running the benchmarks.
+                                  Useful for systems containing Xeon PHIs. */
     bool verbose_; /**< If true, then console reporting should be more detailed. */
     size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */
 
@@ -84,6 +86,12 @@ bool throughputMatrixTestSelected(Configurator *conf);
  * @returns True if the regions' registration has been selected to run.
  */
 bool registerRegionsSelected(Configurator *conf);
+
+/**
+ * @brief Indicates if the local node must be connected with a remote node.
+ * @returns True if the local node must be connected with a remote node option has been selected.
+ */
+bool connectBeforeRun(Configurator *conf);
 
 /**
  * @brief Gets the working set size in bytes for each worker thread, if applicable.

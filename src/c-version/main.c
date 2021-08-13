@@ -2,6 +2,7 @@
 #include <common.h>
 #include <Configurator.h>
 #include <BenchmarkManager.h>
+#include <RegisterRegions.h>
 
 //Libraries
 #include <stdlib.h>
@@ -38,13 +39,23 @@ int main(int argc, char* argv[]) {
         // if (g_verbose)
         //     report_timer();
 
+        if (registerRegionsSelected(&config) && connectBeforeRun(&config)) {
+            fprintf(stderr, "ERROR: Wrong configuration. Registering regions (-R option) must not be selected"
+                            " along with connecting to a remote node (-X option)\n");
+        }
+
+        if (connectBeforeRun(&config)) {
+            RemoteRegion *rr = newRemoteRegion(&config);
+            connectToPeer(rr);
+        }
+
         if (latencyMatrixTestSelected(&config)) {
             BenchmarkManager *benchmgr = initBenchMgr(&config);
             runLatencyMatrixBenchmarks(benchmgr);
         }
 
         if (registerRegionsSelected(&config)) {
-            runRegisterRegions(&config);
+            registerRegions(&config);
         }
 
         // if (config.throughputMatrixTestSelected()) {

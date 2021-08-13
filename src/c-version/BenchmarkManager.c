@@ -5,8 +5,8 @@
  */
 
 //Headers
-#include <BenchmarkManager.h>
 #include <common.h>
+#include <BenchmarkManager.h>
 #include <Configurator.h>
 
 //Libraries
@@ -621,14 +621,6 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr) {
 
 //     return true;
 // }
-
-bool runRegisterRegions(Configurator *conf) {
-
-    if (g_verbose)
-        printf("\nDone registering regions.\n");
-
-    return true;
-}
 
 void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size) {
     //Allocate memory in each NUMA node to be tested
