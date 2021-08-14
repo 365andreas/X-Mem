@@ -35,33 +35,45 @@ int main(int argc, char* argv[]) {
         //     test_thread_affinities();
         // }
 
-        setup_timer();
-        // if (g_verbose)
-        //     report_timer();
-
         if (registerRegionsSelected(&config) && connectBeforeRun(&config)) {
             fprintf(stderr, "ERROR: Wrong configuration. Registering regions (-R option) must not be selected"
                             " along with connecting to a remote node (-X option)\n");
         }
 
-        if (connectBeforeRun(&config)) {
-            RemoteRegion *rr = newRemoteRegion(&config);
-            connectToPeer(rr);
-        }
-
+        // if (latencyMatrixTestSelected(&config) || throughputMatrixTestSelected(&config)) {
         if (latencyMatrixTestSelected(&config)) {
+
+            setup_timer();
+            // if (g_verbose)
+            //     report_timer();
+
+            RemoteRegion *rr = NULL;
+            if (connectBeforeRun(&config)) {
+                rr = newRemoteRegion(&config);
+                connectToPeer(rr);
+            }
+
             BenchmarkManager *benchmgr = initBenchMgr(&config);
-            runLatencyMatrixBenchmarks(benchmgr);
+
+            // if (latencyMatrixTestSelected(&config))
+                runLatencyMatrixBenchmarks(benchmgr);
+
+            // if (throughputMatrixTestSelected((&config))
+            //     benchmgr.runThroughputMatrixBenchmarks();
+
+            if (connectBeforeRun(&config)) {
+                if (rr == NULL) {
+                    fprintf(stderr, "ERROR: RemoteRegister is not set (== NULL).\n");
+                    return -1;
+                }
+                sendFinishedMsg(rr);
+            }
         }
 
         if (registerRegionsSelected(&config)) {
             registerRegions(&config);
         }
 
-        // if (config.throughputMatrixTestSelected()) {
-        //     benchmgr.runThroughputMatrixBenchmarks();
-        // }
-        // }
     }
 
     if (config_success)

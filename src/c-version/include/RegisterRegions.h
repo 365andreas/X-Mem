@@ -41,9 +41,15 @@ RemoteRegion *newRemoteRegion(Configurator *cfg);
 bool registerRegions(Configurator *conf);
 
 /**
- * @brief TODO
+ * @brief Connects to remote peer that has registered for RMA (Remote Memory Access).
  * @returns True on success.
  */
 bool connectToPeer(RemoteRegion *rr);
+
+/**
+ * @brief Informs the remote peer that it finished benchmarking the regions that the remote registered for RMA (Remote Memory Access).
+ * @returns True on success.
+ */
+bool sendFinishedMsg(RemoteRegion *rr);
 
 #endif
