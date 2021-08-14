@@ -25,6 +25,8 @@ typedef struct {
     scif_epd_t *newepd; /**< New endpoint descriptor created by scif_accept(), which is the endpoint to which the peer
                              is connected. */
 
+    void *vaddr;
+
 } RemoteRegion;
 
 
@@ -51,5 +53,11 @@ bool connectToPeer(RemoteRegion *rr);
  * @returns True on success.
  */
 bool sendFinishedMsg(RemoteRegion *rr);
+
+/**
+ * @brief Translates the virtual address to the physical address it correspond to.
+ * @returns The physical address on success, NULL on failure.
+ */
+void *getPhysicalAddress(void *virt_addr);
 
 #endif

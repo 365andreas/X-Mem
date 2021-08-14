@@ -60,8 +60,6 @@ bool registerRegions(Configurator *conf) {
     }
     printf("offset = %ld\n", offset);
 
-    printf("addr[0] = %d\n", ((int *)addr)[0]);
-
     // send message that node is listening
     int msg_len = sizeof(scif_msg_t);
     scif_msg_t *msg = malloc(msg_len);
@@ -82,8 +80,6 @@ bool registerRegions(Configurator *conf) {
     }
     if (g_verbose)
         printf("Received %s message.\n", getMsgName(*msg));
-
-    printf("addr[0] = %d\n", ((int *)addr)[0]);
 
     if (g_verbose)
         printf("\nDone registering regions.\n");
@@ -153,13 +149,12 @@ bool connectToPeer(RemoteRegion *rr) {
         perror("scif_mmap() failed");
         return false;
     }
-    printf("addr = 0x%.16llx\n", (long long unsigned int) addr);
     printf("pa = 0x%.16llx\n", (long long unsigned int) pa);
 
-    ((int *) pa)[0] = 2021;
+    rr->vaddr = pa;
 
     if (g_verbose)
-    printf("Connected to remote peer.\n");
+    printf("\nConnected to remote peer.\n");
 
     return true;
 }
@@ -184,4 +179,78 @@ bool sendFinishedMsg(RemoteRegion *rr) {
     }
 
     return true;
+}
+
+#define PAGEMAP_ENTRY 8
+#define GET_BIT(X,Y) (X & ((uint64_t)1<<Y)) >> Y
+#define GET_PFN(X) X & 0x7FFFFFFFFFFFFF
+
+const int __endian_bit = 1;
+#define is_bigendian() ( (*(char*)&__endian_bit) == 0 )
+
+void *getPhysicalAddress(void *virt_addr) {
+
+    int i, c, pid, status;
+    uint64_t read_val, file_offset;
+    char path_buf [0x100] = {};
+    char *end;
+
+    sprintf(path_buf, "/proc/self/pagemap");
+
+    printf("Big endian? %d\n", is_bigendian());
+    FILE *f = fopen(path_buf, "rb");
+    if (!f) {
+        printf("Error! Cannot open %s\n", path_buf);
+        return NULL;
+    }
+
+    //Shifting by virt-addr-offset number of bytes
+    //and multiplying by the size of an address (the size of an entry in pagemap file)
+    file_offset = ((unsigned long long) virt_addr) / getpagesize() * PAGEMAP_ENTRY;
+    printf("Vaddr: 0x%llx, Page_size: %d, Entry_size: %d\n", ((unsigned long long) virt_addr), getpagesize(), PAGEMAP_ENTRY);
+    printf("Reading %s at 0x%llx\n", path_buf, (unsigned long long) file_offset);
+    status = fseek(f, file_offset, SEEK_SET);
+    if (status) {
+        perror("Failed to do fseek!");
+        return NULL;
+    }
+    errno = 0;
+    read_val = 0;
+    unsigned char c_buf[PAGEMAP_ENTRY];
+    for (i = 0; i < PAGEMAP_ENTRY; i++){
+        c = getc(f);
+        if (c == EOF){
+            printf("\nReached end of the file\n");
+            return NULL;
+        }
+        if (is_bigendian())
+            c_buf[i] = c;
+        else
+            c_buf[PAGEMAP_ENTRY - i - 1] = c;
+        printf("[%d]0x%x ", i, c);
+    }
+    for (i = 0; i < PAGEMAP_ENTRY; i++) {
+        //printf("%d ",c_buf[i]);
+        read_val = (read_val << 8) + c_buf[i];
+    }
+    // printf("Result: 0x%llx\n", (unsigned long long) read_val);
+    unsigned long long paddr = GET_PFN(read_val);
+    if (GET_BIT(read_val, 63)) {
+        // printf("PFN: 0x%llx\n",(unsigned long long) GET_PFN(read_val));
+        paddr = paddr * getpagesize();
+        // add offset within page
+        paddr = paddr | (((unsigned long long) virt_addr) & (getpagesize() - 1));
+        // printf("Physical address: 0x%llx\n", paddr);
+    } else {
+        fprintf(stderr, "Page not present\n");
+        return NULL;
+    }
+
+    if (GET_BIT(read_val, 62)) {
+        fprintf(stderr, "Page swapped\n");
+    }
+
+    fclose(f);
+
+    return (void *) paddr;
 }
