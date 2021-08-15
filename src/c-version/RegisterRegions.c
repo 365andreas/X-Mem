@@ -28,8 +28,9 @@ bool registerRegions(Configurator *conf) {
         perror("scif_open(): cannot create a new endpoint");
         return false;
     }
+    printf("epd = %d\n", epd);
 
-    uint16_t port = 1;
+    uint16_t port = 2;
     size_t len = 4096;
     int prot_flags = SCIF_PROT_READ | SCIF_PROT_WRITE;
     int map_flags = SCIF_MAP_FIXED;
@@ -43,15 +44,17 @@ bool registerRegions(Configurator *conf) {
 
     // TODO: connectToPeer to all mics
     struct scif_portID *dst = (struct scif_portID *) malloc(sizeof(struct scif_portID));
-    dst->node = 1;
+    dst->node = conf->remote_peer_;
     dst->port = 1;
+
+    if (g_verbose)
+        printf("Connecting to remote peer #%d ...\n", conf->remote_peer_);
 
     int port_id = scif_connect(epd, dst);
     if (port_id < 0) {
         perror("scif_connect() failed");
         return false;
     }
-    printf("port_id = %d\n", port_id);
 
     off_t offset = scif_register(epd, addr, len, 0, prot_flags, map_flags);
     if (offset == SCIF_REGISTER_FAILED) {

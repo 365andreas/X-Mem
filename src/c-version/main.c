@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
                 void *phys_addr = getPhysicalAddress(rr->vaddr);
                 if (phys_addr == NULL) {
                     fprintf(stderr, "ERROR: Could not retrieve physical address of 0x%.16llx",
-                            (long long unsigned) rr->vaddr)
+                            (long long unsigned) rr->vaddr);
                     return -1;
                 }
                 config.mem_regions_phys_addr_[0] = (uint64_t) phys_addr;

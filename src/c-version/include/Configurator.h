@@ -27,6 +27,7 @@ typedef struct {
     bool register_regions_; /**< True if regions will be registered for remote memory access. */
     bool connect_before_run_; /**< True if the current (local) node must be connected to another (remote) node before running the benchmarks.
                                   Useful for systems containing Xeon PHIs. */
+    uint16_t remote_peer_; /**< Id of the remote node which will have access to the registered region. */
     bool verbose_; /**< If true, then console reporting should be more detailed. */
     size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */
 
