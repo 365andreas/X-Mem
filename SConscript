@@ -92,6 +92,19 @@ if hostos == 'linux': # gcc
         sources = [
             Glob('src/c-version/*.c'),
         ]
+    elif arch == 'gcc_host':
+        env.Replace(PATH = os.environ['PATH'])
+        env.Replace(CC = 'gcc')
+        env.Replace(CPPFLAGS = '')
+        env.Replace(CPPPATH = ['src/c-version/include'])
+        env.Replace(LIBS = ['pthread', 'm', 'scif'])
+
+        env.Replace(CCFLAGS = ' -std=gnu99 -Wall -Wno-unused-but-set-variable -Wno-unused-variable -g -O3')
+        # env.Append(LIBS = ['numa', 'hugetlbfs'])
+        # List all C source files
+        sources = [
+            Glob('src/c-version/*.c'),
+        ]
     else:
         print 'Error: architecture ' + arch + ' not supported on ' + hostos + ', cannot build.'
         exit(1)
