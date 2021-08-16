@@ -12,7 +12,7 @@
 #include <Timer.h>
 // #include <Benchmark.h>
 #include <LatencyMatrixBenchmark.h>
-// #include <ThroughputMatrixBenchmark.h>
+#include <ThroughputMatrixBenchmark.h>
 #include <Configurator.h>
 
 //Libraries
@@ -40,8 +40,8 @@ typedef struct {
 
     LatencyMatrixBenchmark **lat_mat_benchmarks_; /**< Set of latency matrix benchmarks. */
     uint32_t lat_mat_benchmarks_size_; /**< Size of latency matrix benchmarks. */
-    // ThroughputMatrixBenchmark* *thr_mat_benchmarks_; /**< Set of throughput matrix benchmarks. */
-    // uint32_t thr_mat_benchmarks_size_; /**< Size of throughput matrix benchmarks. */
+    ThroughputMatrixBenchmark* *thr_mat_benchmarks_; /**< Set of throughput matrix benchmarks. */
+    uint32_t thr_mat_benchmarks_size_; /**< Size of throughput matrix benchmarks. */
 
     // std::fstream results_file_; /**< The results CSV file. */
     // std::fstream dec_net_results_file_; /**< The results file for use by a decoding network. */
@@ -67,11 +67,11 @@ BenchmarkManager *initBenchMgr(Configurator *config);
  */
 bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr);
 
-// /**
-//  * @brief Runs the throughput matrix benchmark.
-//  * @returns True on benchmarking success.
-//  */
-// bool runThroughputMatrixBenchmarks(BenchmarkManager *bench_mgr);
+/**
+ * @brief Runs the throughput matrix benchmark.
+ * @returns True on benchmarking success.
+ */
+bool runThroughputMatrixBenchmarks(BenchmarkManager *bench_mgr);
 
 /**
  * @brief Allocates memory for all working sets.
@@ -88,6 +88,6 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr);
 /**
  * @brief Prints the results aggregated in a matrix form (for latencyMatrix and throughputMatrix benchmarks).
  */
-void printMatrix(BenchmarkManager *bench_mgr, LatencyMatrixBenchmark **lat_mat_benchmarks, char *what);
+void printMatrix(BenchmarkManager *bench_mgr, MatrixBenchmark **mat_benchmarks, char *what);
 
 #endif
