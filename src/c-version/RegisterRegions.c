@@ -31,7 +31,7 @@ bool registerRegions(Configurator *conf) {
     printf("epd = %d\n", epd);
 
     uint16_t port = 2;
-    size_t len = 4096;
+    size_t len = getpagesize();
     int prot_flags = SCIF_PROT_READ | SCIF_PROT_WRITE;
     int map_flags = SCIF_MAP_FIXED;
     void *addr = memalign(sysconf(_SC_PAGESIZE), len);
@@ -103,10 +103,9 @@ bool connectToPeer(RemoteRegion *rr) {
     printf("epd = %d\n", epd);
 
     uint16_t port = 1;
-    size_t len = 4096;
+    size_t len = getpagesize();
     int prot_flags = SCIF_PROT_READ | SCIF_PROT_WRITE;
     int map_flags = SCIF_MAP_FIXED;
-    void *addr = memalign(sysconf(_SC_PAGESIZE), len);
 
     int port_given = scif_bind(epd, port);
     if (port_given < 0) {
@@ -144,10 +143,8 @@ bool connectToPeer(RemoteRegion *rr) {
     if (g_verbose)
         printf("Received %s message\n", getMsgName(*msg));
 
-    addr = 0;
     map_flags = 0;
-    void *pa = scif_mmap(addr, len, prot_flags, map_flags, *newepd, 0);
-    // void *pa = scif_mmap(addr, len, prot_flags, map_flags, *newepd, 0);
+    void *pa = scif_mmap(0, len, prot_flags, map_flags, *newepd, 0);
     if (pa == SCIF_MMAP_FAILED) {
         perror("scif_mmap() failed");
         return false;

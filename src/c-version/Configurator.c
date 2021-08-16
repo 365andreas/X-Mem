@@ -23,7 +23,7 @@ void printHelpText() {
                 // " -t, run throughput matrix benchmarks\n"
                 " -v, verbose mode\n"
                 " -r addr, pass physical address to benchmark\n"
-                " -R addr, (XEON PHI systems specific) declare that this node (host or PHI) will only register an address region for remote access\n"
+                " -R, (XEON PHI systems specific) declare that this node (host or PHI) will only register an address region for remote access\n"
                 " -X, (XEON PHI systems specific) declare that this node (host or PHI) will have to connectToPeer to a node that has registered its memory\n"
                 " -N, (XEON PHI systems specific) define the remote node (host or PHI) which will have access to the registered memory"
                 " for remote access before running the benchmarks\n";
@@ -32,7 +32,7 @@ void printHelpText() {
 
 void printUsageText(char *name){
 
-    fprintf(stderr, "Usage: %s [-alvX] -r region_address [-R region_address] [-N remote peer node id]\n", name);
+    fprintf(stderr, "Usage: %s [-alvX] -r region_address [-R] [-N remote peer node id]\n", name);
 }
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
@@ -46,7 +46,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     int opt;
     uint64_t addr;
 
-    while ((opt = getopt(argc, argv, "alvr:R:XN:")) != -1) {
+    while ((opt = getopt(argc, argv, "alvr:RXN:")) != -1) {
         switch (opt) {
             case 'v': conf->verbose_            = true; break;
             case 'a': conf->run_all_cores_      = true; break;
@@ -60,13 +60,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
                 addr = strtoull(optarg, NULL, 0);
                 conf->mem_regions_phys_addr_[0] = addr;
                 break;
-            case 'R':
-                conf->register_regions_ = true;
-                conf->mem_regions_phys_addr_size = 1;
-                conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->mem_regions_phys_addr_size * sizeof(uint64_t));
-                addr = strtoull(optarg, NULL, 0);
-                conf->mem_regions_phys_addr_[0] = addr;
-                break;
+            case 'R': conf->register_regions_ = true; break;
             case 'X': conf->connect_before_run_ = true; break;
             case 'N': conf->remote_peer_ = (uint16_t) strtoul(optarg, NULL, 0); break;
             default:
