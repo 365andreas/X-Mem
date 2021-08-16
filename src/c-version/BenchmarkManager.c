@@ -147,14 +147,13 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
 //         thr_mat_logfile_.close();
 // }
 
-// TODO: replace LatencyMatrixBenchmark ** w/ MatrixBenchmark ** (malloc a new array MatrixBenchmark **)
-void printMatrix(BenchmarkManager *bench_mgr, LatencyMatrixBenchmark **lat_mat_benchmarks, char *what) {
+void printMatrix(BenchmarkManager *bench_mgr, MatrixBenchmark **mat_benchmarks, char *what) {
 
     Configurator *cfg = bench_mgr->config_;
 
     // uint32_t mem_regions_per_numa = config_.getMemoryRegionsPerNUMANode();
 
-    printf("Measured %s (in %s)...\n", what, getMetricUnits(lat_mat_benchmarks[0]->mat_bench));
+    printf("Measured %s (in %s)...\n", what, getMetricUnits(mat_benchmarks[0]));
     printf("(Node, Reg) = (Memory NUMA Node, Region)\n\n");
 
     // std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
@@ -191,13 +190,13 @@ void printMatrix(BenchmarkManager *bench_mgr, LatencyMatrixBenchmark **lat_mat_b
             printf("\n");
             uint32_t pu;
             if (allCoresSelected(cfg))
-                pu = getCPUId(lat_mat_benchmarks[i]->mat_bench);
+                pu = getCPUId(mat_benchmarks[i]);
             else
                 pu = 0; //mat_benchmarks_[i]->getCPUNode();
             printf("%*d", width, pu);
         }
 
-        double median_metric = getMedianMetric(lat_mat_benchmarks[i]->mat_bench);
+        double median_metric = getMedianMetric(mat_benchmarks[i]);
         // std::string metric_units = lat_mat_benchmarks_[i]->getMetricUnits();
         printf("%*.4f", 12, median_metric);
     }
@@ -454,7 +453,7 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr) {
     // }
 
     for (uint32_t i = 0; i < bench_mgr->lat_mat_benchmarks_size_; i++) {
-        run(bench_mgr->lat_mat_benchmarks_[i]);
+        runLatency(bench_mgr->lat_mat_benchmarks_[i]);
         reportResults(bench_mgr->lat_mat_benchmarks_[i]->mat_bench);
 
         // if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
@@ -470,9 +469,12 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr) {
     }
     printf("\n");
 
-    // // aggregated report of latency matrix benchmarks
-    // std::vector<xmem::MatrixBenchmark *> mat_benchmarks_(lat_mat_benchmarks_.begin(), lat_mat_benchmarks_.end());
-    printMatrix(bench_mgr, bench_mgr->lat_mat_benchmarks_, "idle latencies");
+    // aggregated report of latency matrix benchmarks
+    uint32_t size = bench_mgr->lat_mat_benchmarks_size_;
+    MatrixBenchmark **mat_benchmarks = (MatrixBenchmark **) malloc(size * sizeof(MatrixBenchmark *));
+    for (uint32_t i = 0; i < size; i++)
+        mat_benchmarks[i] = bench_mgr->lat_mat_benchmarks_[i]->mat_bench;
+    printMatrix(bench_mgr, mat_benchmarks, "idle latencies");
 
     if (g_verbose)
         printf("\nDone running latency matrix benchmarks.\n");
