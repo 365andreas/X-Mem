@@ -17,8 +17,9 @@
 1. Load Ubuntu 14 in `babybel3`
 1. `(babybel3):~# apt update`
 1. `(babybel3):~# apt install build-essential`
-1. `(babybel3):~# apt-get source linux-image-unsigned-3.13.0`
-1. `(babybel3):~/linux-3.13.0# cp /boot/config-3.13.0-24-generic .config`
+1. `(babybel3):~# apt-get source linux-image-unsigned-3.13.0-170-generic`
+1. `(babybel3):~# cd linux-3.13.0`
+1. `(babybel3):~/linux-3.13.0# cp /boot/config-3.13.0+ .config`
 1. `(babybel3):~/linux-3.13.0# make menuconfig`
     1. Select `Kernel hacking`
     1. Press `n` on `Filter access to /dev/mem`
@@ -34,7 +35,18 @@
 1. `(babybel3):~/linux-3.13.0/lztempdir# cd ..`
 1. `(babybel3):~/linux-3.13.0# make modules_install INSTALL_MOD_PATH=./lztempdir/ -j 20`
 1. `(babybel3):~/linux-3.13.0# cd lztempdir`
-1. `(babybel3):~/linux-3.13.0# find . | cpio --quiet --dereference -o -H newc | lzma -7 > ../initrd.lz`
+1. `(babybel3):~/linux-3.13.0/lztempdir# find . | cpio --quiet --dereference -o -H newc | lzma -7 > ../initrd.lz`
+1. `(babybel3):~/linux-3.13.0/lztempdir# cp -r lib/modules/3.13.11-ckt39 /lib/modules/`
+1. `(babybel3):~/linux-3.13.0/lztempdir# cd ..`
+1. Check https://unix.stackexchange.com/questions/270123/how-to-create-usr-src-linux-headers-version-files for creating the linux headers.
+1. `(babybel3):~/linux-3.13.0# mkdir build`
+1. `(babybel3):~/linux-3.13.0# make O=build/ oldconfig`
+1. `(babybel3):~/linux-3.13.0# make mrproper`
+1. `(babybel3):~/linux-3.13.0# make O=build/ modules_prepare`
+1. `(babybel3):~/linux-3.13.0# cd build`
+1. `(babybel3):~/linux-3.13.0/build# make -j 20`
+1. `(babybel3):~/linux-3.13.0/build# cd ..`
+1. `(babybel3):~/linux-3.13.0# ln -s  build /lib/modules/3.13.11-ckt39/build`
 
 
 ## Set up X-Mem in babybel3
@@ -80,6 +92,7 @@
 
 1. `(babybel3):~# apt install scons`
 1. `(babybel3):~# echo "ExtraCommandLine nopat" >> /etc/mpss/mic0.conf`
+1. `(babybel3):~# echo "ExtraCommandLine nopat" >> /etc/mpss/mic1.conf`
 1. `(babybel3):~# micctrl -r`
 1. `(babybel3):~# micctrl -b`
 1. `(babybel3):~# cd X-Mem`
@@ -88,8 +101,3 @@
 1. `(babybel3):~/X-Mem# scp -r ./bin/xmem-linux-gcc_mic mic0:~`
 1. `(babybel3):~/X-Mem# cd`
 1. `(babybel3):~# ssh mic0`
-
-
-
-root@ubuntu:~# sudo tar czf ./sdb2/backup.tar.gz --exclude=/backup.tar.gz --exclude=/dev --exclude=/mnt-exclude=/proc --exclude=/sys --exclude=/tmp --exclude=/lost+found --exclude=/root --exclude=/cdrom /
-
