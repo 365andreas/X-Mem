@@ -28,7 +28,7 @@ ARGC=$# # Get number of arguments, not including script name
 
 if [[ "$ARGC" != 2 ]]; then # Bad number of arguments
     echo "Usage: build-linux.sh <ARCH> <NUM_THREADS>"
-    echo "<ARCH> can be x64_avx (RECOMMENDED), x64, x86, mic, gcc_mic, or ARM."
+    echo "<ARCH> can be x64_avx (RECOMMENDED), x64, x86, mic, gcc_mic, gcc_host, or ARM."
     exit 1
 fi
 
