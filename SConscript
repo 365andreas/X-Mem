@@ -79,7 +79,7 @@ if hostos == 'linux': # gcc
         env.Append(CPPFLAGS = ' -mfloat-abi=hard -mfpu=vfpv3 -mfpu=neon -march=armv8-a')
     elif arch == 'gcc_mic':
         env.Replace(PATH = os.environ['PATH'])
-        env.Replace(CC = 'gcc')
+        env.Replace(CC = '/usr/linux-k1om-4.7/bin/x86_64-k1om-linux-gcc')
         env.Replace(CPPFLAGS = '')
         env.Replace(CPPPATH = [])
         env.Replace(LIBS = [])

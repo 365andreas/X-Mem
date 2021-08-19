@@ -28,7 +28,7 @@ ARGC=$# # Get number of arguments, not including script name
 
 if [[ "$ARGC" != 1 ]]; then # Bad number of arguments
     echo "Usage: clean-linux.sh <ARCH>"
-    echo "<ARCH> can be x64_avx (RECOMMENDED), x64, x86, gcc_mic, or ARM."
+    echo "<ARCH> can be x64_avx (RECOMMENDED), x64, x86, gcc_mic, gcc_host, or ARM."
     exit 1
 fi
 
