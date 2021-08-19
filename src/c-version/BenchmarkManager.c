@@ -821,23 +821,23 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
             sprintf(benchmark_name, "Test #%d LM (LatencyMatrix)", g_test_index);
 
             bench_mgr->lat_mat_benchmarks_[l] = initLatencyMatrixBenchmark(mem_array,
-                                                                          mem_array_len,
-                                                                          getIterationsPerTest(cfg),
-                                                                          DEFAULT_NUM_WORKER_THREADS,
-                                                                          mem_node,
-                                                                          mem_region,
-                                                                          cpu_node,
-                                                                          cpu,
-                                                                          use_cpu_nodes,
-                                                                          SEQUENTIAL,
-                                                                          READ,
-                                                                          chunk,
-                                                                          stride,
-                                                                          benchmark_name);
-            // if (lat_mat_benchmarks_[lat_mat_benchmarks_.size()-1] == NULL) {
-            //     std::cerr << "ERROR: Failed to build a LatencyMatrixBenchmark!" << std::endl;
-            //     return false;
-            // }
+                                                                           mem_array_len,
+                                                                           getIterationsPerTest(cfg),
+                                                                           DEFAULT_NUM_WORKER_THREADS,
+                                                                           mem_node,
+                                                                           mem_region,
+                                                                           cpu_node,
+                                                                           cpu,
+                                                                           use_cpu_nodes,
+                                                                           RANDOM,
+                                                                           READ,
+                                                                           chunk,
+                                                                           stride,
+                                                                           benchmark_name);
+            if (bench_mgr->lat_mat_benchmarks_[l] == NULL) {
+                fprintf(stderr, "ERROR: Failed to build a LatencyMatrixBenchmark!\n");
+                return false;
+            }
             l++;
             g_test_index++;
         }

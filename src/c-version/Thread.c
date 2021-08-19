@@ -5,18 +5,19 @@
  */
 
 //Headers
-#include <Thread.h>
 #include <LatencyWorker.h>
+#include <LoadWorker.h>
+#include <Thread.h>
 
 //Libraries
-#include <stdlib.h>
 #include <pthread.h>
+#include <stdlib.h>
 
-Thread *newThread(LatencyWorker *lat_worker) {
+Thread *newThread(void *worker) {
 
     Thread *t = (Thread *) malloc(sizeof(Thread));
 
-    t->target_           = lat_worker;
+    t->target_           = worker;
     t->created_          = false;
     t->started_          = false;
     t->completed_        = false;
@@ -34,14 +35,14 @@ Thread *newThread(LatencyWorker *lat_worker) {
 // }
 
 
-bool create_and_start(Thread *t) {
+bool create_and_start(Thread *t, void *(*runLaunchpad)(void *)) {
 
     //We cannot use create() and start() on Linux because pthreads API does not allow for a thread created in the suspended state. So we just do it in one shot.
     if (t->target_ != NULL) {
         pthread_attr_t attr;
         if (pthread_attr_init(&attr)) //Currently using just default flags. This may not be the optimal choice in general.
             return false;
-        if (pthread_create(&(t->thread_handle_), &attr, &runLaunchpad, t->target_))
+        if (pthread_create(&(t->thread_handle_), &attr, runLaunchpad, t->target_))
             return false;
         t->created_   = true;
         t->started_   = true;
@@ -154,12 +155,11 @@ bool join(Thread *t) {
 // }
 // #endif
 
-void *runLaunchpad(void *target_runnable_object) {
+void *runLaunchpadLatency(void *target_runnable_object) {
     int32_t *thread_retval = (int32_t *) malloc(sizeof(int32_t));
     *thread_retval = 1;
     if (target_runnable_object != NULL) {
         LatencyWorker *target = (LatencyWorker *) target_runnable_object;
-        // TODO: pass runLatWorker as parameter to support more benchmark types
         runLatWorker(target);
         *thread_retval = 0;
         return (void *) thread_retval;
