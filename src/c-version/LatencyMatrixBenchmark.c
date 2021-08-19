@@ -97,7 +97,7 @@ bool runLatencyCore(LatencyMatrixBenchmark *lat_mat_bench) {
 
         //Start worker threads! gogogo
         for (uint32_t t = 0; t < num_worker_threads; t++)
-            create_and_start(worker_threads[t]);
+            create_and_start(worker_threads[t], &runLaunchpadLatency);
 
         //Wait for all threads to complete
         for (uint32_t t = 0; t < num_worker_threads; t++)
@@ -143,7 +143,7 @@ bool runLatencyCore(LatencyMatrixBenchmark *lat_mat_bench) {
         lat_mat_bench->mat_bench->denominator_metric_on_iter_[i] = (double) (lat_accesses_per_pass * lat_passes);
         lat_mat_bench->mat_bench->metric_on_iter_[i] = (double) (lat_adjusted_ticks * g_ns_per_tick)  /  (double) (lat_accesses_per_pass * lat_passes);
         if (g_verbose)
-            printf("latency_matrix: iter %d -> %f %s\n", i, lat_mat_bench->mat_bench->metric_on_iter_[i], lat_mat_bench->mat_bench->metric_units);
+            printf("latency_matrix: iter %d -> %f %s\n", i + 1, lat_mat_bench->mat_bench->metric_on_iter_[i], lat_mat_bench->mat_bench->metric_units);
 
         //Clean up workers and threads for this iteration
         for (uint32_t t = 0; t < num_worker_threads; t++) {
