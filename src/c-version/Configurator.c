@@ -20,7 +20,7 @@ void printHelpText() {
     char *msg = "\n"
                 " -a, run benchmarks on all cores\n"
                 " -l, run latency matrix benchmarks\n"
-                // " -t, run throughput matrix benchmarks\n"
+                " -t, run throughput matrix benchmarks\n"
                 " -v, verbose mode\n"
                 " -r addr, pass physical address to benchmark\n"
                 " -R, (XEON PHI systems specific) declare that this node (host or PHI) will only register an address region for remote access\n"
@@ -46,12 +46,12 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     int opt;
     uint64_t addr;
 
-    while ((opt = getopt(argc, argv, "alvr:RXN:")) != -1) {
+    while ((opt = getopt(argc, argv, "alvtr:RXN:")) != -1) {
         switch (opt) {
-            case 'v': conf->verbose_            = true; break;
-            case 'a': conf->run_all_cores_      = true; break;
-            case 'l': conf->run_latency_matrix_ = true; break;
-            // case 't': conf->run_throughput_matrix_ = true; break;
+            case 'v': conf->verbose_               = true; break;
+            case 'a': conf->run_all_cores_         = true; break;
+            case 'l': conf->run_latency_matrix_    = true; break;
+            case 't': conf->run_throughput_matrix_ = true; break;
             case 'r':
                 // memory regions specified by physical addresses
                 conf->mem_regions_in_phys_addr_ = true;

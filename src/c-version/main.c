@@ -40,8 +40,7 @@ int main(int argc, char* argv[]) {
                             " along with connecting to a remote node (-X option)\n");
         }
 
-        // if (latencyMatrixTestSelected(&config) || throughputMatrixTestSelected(&config)) {
-        if (latencyMatrixTestSelected(&config)) {
+        if (latencyMatrixTestSelected(&config) || throughputMatrixTestSelected(&config)) {
 
             setup_timer();
             // if (g_verbose)
@@ -62,11 +61,11 @@ int main(int argc, char* argv[]) {
 
             BenchmarkManager *benchmgr = initBenchMgr(&config);
 
-            // if (latencyMatrixTestSelected(&config))
+            if (latencyMatrixTestSelected(&config))
                 runLatencyMatrixBenchmarks(benchmgr);
 
-            // if (throughputMatrixTestSelected((&config))
-            //     benchmgr.runThroughputMatrixBenchmarks();
+            if (throughputMatrixTestSelected(&config))
+                runThroughputMatrixBenchmarks(benchmgr);
 
             if (connectBeforeRun(&config)) {
                 if (rr == NULL) {
