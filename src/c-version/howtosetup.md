@@ -16,10 +16,10 @@
 
 1. Load Ubuntu 14 in `babybel3`
 1. `(babybel3):~# apt update`
-1. `(babybel3):~# apt install build-essential`
+1. `(babybel3):~# apt install -y build-essential`
 1. `(babybel3):~# apt-get source linux-image-unsigned-3.13.0-170-generic`
 1. `(babybel3):~# cd linux-3.13.0`
-1. `(babybel3):~/linux-3.13.0# cp /boot/config-3.13.0+ .config`
+1. `(babybel3):~/linux-3.13.0# scp -r /mnt/local/nfs/ubuntu-14.04-amd64/binary/casper/mount/squashfs-root/boot/config-3.13.0 root@babybel3:/root/linux-3.13.0/.config`
 1. `(babybel3):~/linux-3.13.0# make menuconfig`
     1. Select `Kernel hacking`
     1. Press `n` on `Filter access to /dev/mem`
@@ -36,25 +36,37 @@
 1. `(babybel3):~/linux-3.13.0# make modules_install INSTALL_MOD_PATH=./lztempdir/ -j 20`
 1. `(babybel3):~/linux-3.13.0# cd lztempdir`
 1. `(babybel3):~/linux-3.13.0/lztempdir# find . | cpio --quiet --dereference -o -H newc | lzma -7 > ../initrd.lz`
+1. Boot w/ the new image and initrd:
+1. `(emmentaler1):~$ scp -r root@babybel3:~ /mnt/netos/tftpboot/atriantaf/ubuntu-14.04-custom/initrd-3.13.11-ckt39.lz`
+1. `(emmentaler1):~$ scp -r root@babybel3:~ /mnt/netos/tftpboot/atriantaf/ubuntu-14.04-custom/vmlinuz-3.13.11-ckt39`
+1. Edit the appropriate fields in `/mnt/netos/tftpboot/atriantaf/ubuntu-14.04-custom.cfg` (kernel, initrd)
+rackboot
 1. `(babybel3):~/linux-3.13.0/lztempdir# cp -r lib/modules/3.13.11-ckt39 /lib/modules/`
 1. `(babybel3):~/linux-3.13.0/lztempdir# cd ..`
 1. Check https://unix.stackexchange.com/questions/270123/how-to-create-usr-src-linux-headers-version-files for creating the linux headers.
 1. `(babybel3):~/linux-3.13.0# mkdir build`
-1. `(babybel3):~/linux-3.13.0# make O=build/ oldconfig`
+1. `(babybel3):~/linux-3.13.0# cp /boot/config-3.13.0-24-generic ./build/.config`
 1. `(babybel3):~/linux-3.13.0# make mrproper`
 1. `(babybel3):~/linux-3.13.0# make O=build/ modules_prepare`
 1. `(babybel3):~/linux-3.13.0# cd build`
 1. `(babybel3):~/linux-3.13.0/build# make -j 20`
 1. `(babybel3):~/linux-3.13.0/build# cd ..`
-1. `(babybel3):~/linux-3.13.0# ln -s  build /lib/modules/3.13.11-ckt39/build`
+1. `(babybel3):~/linux-3.13.0# cp -r  build /lib/modules/3.13.11-ckt39/`
+
+
+## Set up mounting point for persistent storage into emmentaler
+
+1. `(babybel3):~# mkdir tmp_mount`
+1. `(babybel3):~# mount -t nfs 10.110.4.4:/mnt/local/nfs/ tmp_mount/  -o relatime,vers=3,rsize=1048576,wsize=1048576,namlen=255,hard,nolock,proto=tcp,port=2049,timeo=7,retrans=3,sec=sys,local_lock=all,addr=10.110.4.4`
+1. `(babybel3):~# cd tmp_mount`
 
 
 ## Set up X-Mem in babybel3
 
 1. `(emmentaler1):~$ scp -r ./2021-msc-atriantaf-code/ root@babybel3:~`
-1. `(babybel3):~# apt install scons`
-1. `(babybel3):~# apt install libnuma-dev`
-1. `(babybel3):~# apt install libhugetlbfs-dev`
+1. `(babybel3):~# apt install -y scons`
+1. `(babybel3):~# apt install -y libnuma-dev`
+1. `(babybel3):~# apt install -y libhugetlbfs-dev`
 1. `(babybel3):~# cd 2021-msc-atriantaf-code/X-Mem`
 1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# ./build-linux.sh x64 20`
 
@@ -62,7 +74,7 @@
 ## Set up PHI in babybel3
 
 1. `(babybel3):~# apt update`
-1. `(babybel3):~# apt install alien`
+1. `(babybel3):~# apt install -y alien`
 1. `(babybel3):~# wget http://registrationcenter-download.intel.com/akdlm/irc_nas/15904/mpss-3.8.6-linux.tar`
 1. `(babybel3):~# tar -xvf mpss-3.8.6-linux.tar`
 1. `(babybel3):~# cd mpss-3.8.6`
@@ -90,10 +102,10 @@
 
 ## Run X-Mem on PHI
 
-1. `(babybel3):~# apt install scons`
+1. `(babybel3):~# apt install -y scons`
 1. `(babybel3):~# echo "ExtraCommandLine nopat" >> /etc/mpss/mic0.conf`
 1. `(babybel3):~# echo "ExtraCommandLine nopat" >> /etc/mpss/mic1.conf`
-1. `(babybel3):~# micctrl -r`
+1. `(babybel3):~# micctrl -r -w`
 1. `(babybel3):~# micctrl -b`
 1. `(babybel3):~# cd X-Mem`
 1. replace `gcc` w/ `/usr/linux-k1om-4.7/bin/x86_64-k1om-linux-gcc` in `SConscript`.
