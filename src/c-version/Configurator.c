@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 
@@ -23,6 +24,8 @@ void printHelpText() {
                 " -t, run throughput matrix benchmarks\n"
                 " -v, verbose mode\n"
                 " -r addr, pass physical address to benchmark\n"
+                " -n iters, pass number of iterations\n"
+                " -x, extended benchmarking mode (running all the iterations)\n"
                 " -R, (XEON PHI systems specific) declare that this node (host or PHI) will only register an address region for remote access\n"
                 " -X, (XEON PHI systems specific) declare that this node (host or PHI) will have to connectToPeer to a node that has registered its memory\n"
                 " -N, (XEON PHI systems specific) define the remote node (host or PHI) which will have access to the registered memory"
@@ -32,7 +35,7 @@ void printHelpText() {
 
 void printUsageText(char *name){
 
-    fprintf(stderr, "Usage: %s [-alvX] -r region_address [-R] [-N remote peer node id]\n", name);
+    fprintf(stderr, "Usage: %s [-alvxX] -r region_address [-n iterations_num] [-R] [-N remote peer node id]\n", name);
 }
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
@@ -43,26 +46,33 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     }
 
     bool isCaseInsensitive = false;
-    int opt;
-    uint64_t addr;
+    int opt, regions;
 
-    while ((opt = getopt(argc, argv, "alvtr:RXN:")) != -1) {
+    for (size_t i = 1; i < argc; i++) {
+        if (strstr(argv[i], "-r")) {
+            conf->mem_regions_in_phys_addr_ = true;
+            conf->mem_regions_phys_addr_size++;
+        }
+    }
+    if (conf->mem_regions_in_phys_addr_) {
+        conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->mem_regions_phys_addr_size * sizeof(uint64_t));
+    }
+
+    regions = 0;
+    while ((opt = getopt(argc, argv, "alvtr:n:xRXN:")) != -1) {
         switch (opt) {
-            case 'v': conf->verbose_               = true; break;
-            case 'a': conf->run_all_cores_         = true; break;
-            case 'l': conf->run_latency_matrix_    = true; break;
-            case 't': conf->run_throughput_matrix_ = true; break;
+            case 'a': conf->run_all_cores_      = true; break;
+            case 'l': conf->run_latency_matrix_ = true; break;
+            case 'n': conf->iterations_         = (uint32_t) strtoul(optarg, NULL, 0); break;
             case 'r':
                 // memory regions specified by physical addresses
-                conf->mem_regions_in_phys_addr_ = true;
-                conf->mem_regions_phys_addr_size = 1;
-                conf->mem_regions_phys_addr_ = (uint64_t *) malloc(conf->mem_regions_phys_addr_size * sizeof(uint64_t));
-                addr = strtoull(optarg, NULL, 0);
-                conf->mem_regions_phys_addr_[0] = addr;
-                break;
-            case 'R': conf->register_regions_ = true; break;
-            case 'X': conf->connect_before_run_ = true; break;
-            case 'N': conf->remote_peer_ = (uint16_t) strtoul(optarg, NULL, 0); break;
+                conf->mem_regions_phys_addr_[regions++] = strtoull(optarg, NULL, 0); break;
+            case 't': conf->run_throughput_matrix_ = true; break;
+            case 'v': conf->verbose_               = true; break;
+            case 'x': g_log_extended               = true; break;
+            case 'R': conf->register_regions_      = true; break;
+            case 'X': conf->connect_before_run_    = true; break;
+            case 'N': conf->remote_peer_           = (uint16_t) strtoul(optarg, NULL, 0); break;
             default:
                 printUsageText(argv[0]);
                 printHelpText();
