@@ -69,10 +69,12 @@ rackboot
 1. `(babybel3):~# apt install -y libhugetlbfs-dev`
 1. `(babybel3):~# cd 2021-msc-atriantaf-code/X-Mem`
 1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# ./build-linux.sh x64 20`
+1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# ./bin/xmem-linux-x64 --latency_matrix -w40 -n50 --regions=0x1f5713d000,0x3efdb6a000,0x3eaa998000,0x380500000000,0x380100000000 --sync`
 
 
 ## Set up PHI in babybel3
 
+#### (mpss)
 1. `(babybel3):~# apt update`
 1. `(babybel3):~# apt install -y alien`
 1. `(babybel3):~# wget http://registrationcenter-download.intel.com/akdlm/irc_nas/15904/mpss-3.8.6-linux.tar`
@@ -83,6 +85,7 @@ rackboot
 1. `(babybel3):~/mpss-3.8.6# echo '/usr/lib64' >> /etc/ld.so.conf.d/zz_x86_64-compat.conf`
 1. `(babybel3):~/mpss-3.8.6# ldconfig`
 
+#### (kernel module)
 1. `(babybel3):~/mpss-3.8.6# cd`
 1. `(babybel3):~# git clone https://github.com/pentschev/mpss-modules.git`
 1. `(babybel3):~# cd mpss-modules`
@@ -113,3 +116,4 @@ rackboot
 1. `(babybel3):~/X-Mem# scp -r ./bin/xmem-linux-gcc_mic mic0:~`
 1. `(babybel3):~/X-Mem# cd`
 1. `(babybel3):~# ssh mic0`
+1. `(mic0):~# ./xmem-linux-gcc_mic -l -r 0x100000000`
