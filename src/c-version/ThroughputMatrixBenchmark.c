@@ -171,11 +171,15 @@ bool runThroughputCore(ThroughputMatrixBenchmark *thr_mat_bench) {
             double highest_bound = (1 + DEV_FROM_MEDIAN) * thr_mat_bench->mat_bench->median_metric_;
             bool lower_CI_in = (int) (thr_mat_bench->mat_bench->lower_95_CI_median_ - lowest_bound) >= 0; // float comparison (fucomip) is not supported on k1om
             bool upper_CI_in = (int) (thr_mat_bench->mat_bench->upper_95_CI_median_ - highest_bound) <= 0;
-            if (!g_log_extended && lower_CI_in && upper_CI_in) {
+            if (lower_CI_in && upper_CI_in) {
                 // 95% CI is within DEV_FROM_MEDIAN % of the median
-                uint32_t iterations_needed_ = i + 1;
-                // Resizing vector for keeping the results of the measurements since they are fewer than the max.
-                thr_mat_bench->mat_bench->iterations = iterations_needed_;
+                if (! g_log_extended) {
+                    // stop if extended measurements are not enabled
+                    uint32_t iterations_needed_ = i + 1;
+                    // Resizing vector for keeping the results of the measurements since they are fewer than the max.
+                    thr_mat_bench->mat_bench->iterations = iterations_needed_;
+                    break;
+                }
             } else if (i ==  thr_mat_bench->mat_bench->iterations - 1) {
                 fprintf(stderr, "WARNING: 95%% CI did not converge within %f%% of median value!\n", DEV_FROM_MEDIAN * 100);
             }
