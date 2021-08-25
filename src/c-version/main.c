@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
         //     report_timer();
 
         BenchmarkManager *benchmgr = initBenchMgr(&config);
+
         if (latencyMatrixTestSelected(&config)) {
             runLatencyMatrixBenchmarks(benchmgr);
         }
