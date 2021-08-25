@@ -96,9 +96,9 @@ void runLoadWorker(LoadWorker *load_worker) {
     if (! locked)
         fprintf(stderr, "WARNING: Failed to lock thread to logical CPU %d! Results may not be correct.\n", cpu_affinity);
 
-    // //Increase scheduling priority
-    // if (!boost_scheduling_priority())
-    //     std::cerr << "WARNING: Failed to boost scheduling priority. Perhaps running in Administrator mode would help." << std::endl;
+    //Increase scheduling priority
+    if (! boost_scheduling_priority())
+        fprintf(stderr, "WARNING: Failed to boost scheduling priority. Perhaps running in Administrator mode would help.\n");
 
     //Prime memory
     for (uint32_t i = 0; i < 4; i++) {
@@ -160,9 +160,9 @@ void runLoadWorker(LoadWorker *load_worker) {
             fprintf(stderr, "WARNING: Failed to unlock threads!\n");
     }
 
-    //Revert thread priority
-    // if (!revert_scheduling_priority())
-    //     fprintf(stderr, "WARNING: Failed to revert scheduling priority. Perhaps running in Administrator mode would help.\n";
+    // Revert thread priority
+    if (! revert_scheduling_priority())
+        fprintf(stderr, "WARNING: Failed to revert scheduling priority. Perhaps running in Administrator mode would help.\n");
 
     adjusted_ticks = elapsed_ticks - elapsed_dummy_ticks;
 

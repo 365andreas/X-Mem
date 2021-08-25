@@ -572,41 +572,17 @@ namespace xmem {
      */
     tick_t stop_timer();
 
-#ifdef _WIN32
-    /**
-     * @brief Increases the scheduling priority of the calling thread.
-     * @param originalPriorityClass The Windows priority class before priority was increased.
-     * @param originalPriority The Windows priority before priority was increased.
-     * @returns True on success.
-     */
-    bool boost_scheduling_priority(DWORD& original_priority_class, DWORD& original_priority);
-#endif
-
-#ifdef __gnu_linux__
     /**
      * @brief Increases the scheduling priority of the calling thread.
      * @returns True on success.
      */
     bool boost_scheduling_priority();
-#endif
 
-#ifdef _WIN32
-    /**
-     * @brief Reverts the scheduling priority of the calling thread.
-     * @param originalPriorityClass The Windows priority class before priority was increased.
-     * @param originalPriority The Windows priority before priority was increased.
-     * @returns True on success.
-     */
-    bool revert_scheduling_priority(DWORD original_priority_class, DWORD original_priority);
-#endif
-
-#ifdef __gnu_linux__
     /**
      * @brief Reverts the scheduling priority of the calling thread.
      * @returns True on success.
      */
     bool revert_scheduling_priority();
-#endif
 };
 
 #endif

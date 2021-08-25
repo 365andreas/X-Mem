@@ -453,18 +453,16 @@ tick_t start_timer();
  */
 tick_t stop_timer();
 
-// #ifdef __gnu_linux__
-//     /**
-//      * @brief Increases the scheduling priority of the calling thread.
-//      * @returns True on success.
-//      */
-//     bool boost_scheduling_priority();
+/**
+ * @brief Increases the scheduling priority of the calling thread.
+ * @returns True on success.
+ */
+bool boost_scheduling_priority();
 
-//     /**
-//      * @brief Reverts the scheduling priority of the calling thread.
-//      * @returns True on success.
-//      */
-//     bool revert_scheduling_priority();
-// #endif
+/**
+ * @brief Reverts the scheduling priority of the calling thread.
+ * @returns True on success.
+ */
+bool revert_scheduling_priority();
 
 #endif

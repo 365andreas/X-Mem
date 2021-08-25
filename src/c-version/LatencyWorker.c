@@ -66,10 +66,9 @@ void runLatWorker(LatencyWorker *lat_worker) {
     if (! locked)
         fprintf(stderr, "WARNING: Failed to lock thread to logical CPU %d! Results may not be correct.\n", cpu_affinity);
 
-    // TODO: add me
-    // //Increase scheduling priority
-    // if (! boost_scheduling_priority())
-    //     std::cerr << "WARNING: Failed to boost scheduling priority. Perhaps running in Administrator mode would help." << std::endl;
+    // Increase scheduling priority
+    if (! boost_scheduling_priority())
+        fprintf(stderr, "WARNING: Failed to boost scheduling priority. Perhaps running in Administrator mode would help.\n");
 
     //Prime memory
     for (uint32_t i = 0; i < 4; i++) {
@@ -113,10 +112,9 @@ void runLatWorker(LatencyWorker *lat_worker) {
             fprintf(stderr, "WARNING: Failed to unlock threads!\n");
     }
 
-    // TODO: add me
-    //Revert thread priority
-    // if (!revert_scheduling_priority())
-    //     fprintf(stderr, "WARNING: Failed to revert scheduling priority. Perhaps running in Administrator mode would help.\n";
+    // Revert thread priority
+    if (! revert_scheduling_priority())
+        fprintf(stderr, "WARNING: Failed to revert scheduling priority. Perhaps running in Administrator mode would help.\n");
 
     //Update the object state thread-safely
     if (acquireLock(lat_worker->mem_worker->runnable, -1)) {

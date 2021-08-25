@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/resource.h>
 
 
 #include <unistd.h>
@@ -612,18 +613,18 @@ tick_t stop_timer() {
 #endif
 }
 
-// #ifdef __gnu_linux__
-// bool xmem::boost_scheduling_priority() {
-//     if (nice(-20) == EPERM)
-//         return false;
-//     return true;
-// }
-// #endif
+bool boost_scheduling_priority() {
+    if (setpriority(PRIO_PROCESS, 0, -20) == -1) {
+        perror("setting priority failed");
+        return false;
+    }
+    return true;
+}
 
-// #ifdef __gnu_linux__
-// bool xmem::revert_scheduling_priority() {
-//     if (nice(0) == EPERM)
-//         return false;
-//     return true;
-// }
-// #endif
+bool revert_scheduling_priority() {
+    if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
+        perror("setting priority failed");
+        return false;
+    }
+    return true;
+}
