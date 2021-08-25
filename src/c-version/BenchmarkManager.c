@@ -575,9 +575,8 @@ void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size) {
             bench_mgr->mem_array_node_[region_id] = -1;
 
             if (latencyMatrixTestSelected(cfg) || throughputMatrixTestSelected(cfg)) {
-                printf("Virtual address for memory region #%d: ", region_id);
-                printf("0x%.16llx", (long long unsigned int) phys_addr);
-                printf(" is 0x%.16llx", (long long unsigned int) virt_addr);
+                printf("Virtual address for memory region #%d: 0x%.16llx is 0x%.16llx\n", region_id,
+                (long long unsigned int) phys_addr, (long long unsigned int) virt_addr);
 
 #ifdef HAS_NUMA
                 // check on which NUMA node this region belongs to

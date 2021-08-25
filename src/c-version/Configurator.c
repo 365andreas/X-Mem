@@ -36,13 +36,15 @@ void printUsageText(char *name){
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
 
+    int opt, regions;
+
     if (conf->configured_) { //If this object was already configured, cannot override from user inputs. This is to prevent an invalid state.
         fprintf(stderr, "WARNING: Something bad happened when configuring X-Mem. This is probably not your fault.\n");
         return EXIT_FAILURE;
     }
 
-    bool isCaseInsensitive = false;
-    int opt, regions;
+    // default configuration
+    conf->iterations_ = 10;
 
     for (size_t i = 1; i < argc; i++) {
         if (strstr(argv[i], "-r")) {
@@ -82,8 +84,6 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
         fprintf(stderr, "ERROR: A region_address was not specified\n");
         return EXIT_FAILURE;
     }
-
-    conf->iterations_ = 10;
 
     conf->configured_ = true;
 

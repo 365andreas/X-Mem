@@ -383,24 +383,24 @@ void setup_timer();
 //  */
 // bool lock_thread_to_numa_node(uint32_t numa_node);
 
-// /**
-//  * @brief Clears the affinity of the calling thread to any given NUMA node.
-//  * @returns True on success.
-//  */
-// bool unlock_thread_to_numa_node();
+/**
+ * @brief Clears the affinity of the calling thread to any given NUMA node.
+ * @returns True on success.
+ */
+bool unlock_thread_to_numa_node();
 
-// /**
-//  * @brief Sets the affinity of the calling thread to a given logical CPU.
-//  * @param cpu_id The logical CPU identifier to lock the thread to.
-//  * @returns True on success.
-//  */
-// bool lock_thread_to_cpu(uint32_t cpu_id);
+/**
+ * @brief Sets the affinity of the calling thread to a given logical CPU.
+ * @param cpu_id The logical CPU identifier to lock the thread to.
+ * @returns True on success.
+ */
+bool lock_thread_to_cpu(uint32_t cpu_id);
 
-// /**
-//  * @brief Clears the affinity of the calling thread to any given logical CPU.
-//  * @returns True on success.
-//  */
-// bool unlock_thread_to_cpu();
+/**
+ * @brief Clears the affinity of the calling thread to any given logical CPU.
+ * @returns True on success.
+ */
+bool unlock_thread_to_cpu();
 
 // /**
 //  * @brief Gets the CPU ID for a logical CPU of interest in a particular NUMA node.

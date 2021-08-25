@@ -4,10 +4,13 @@
  * @brief Implementation file for common preprocessor definitions, macros, functions, and global constants.
  */
 
+#define _GNU_SOURCE
+
 //Headers
 #include <Configurator.h>
-#include <common.h>
 #include <Timer.h>
+#include <common.h>
+#include <sched.h>
 
 //Libraries
 #include <errno.h>
@@ -15,7 +18,6 @@
 #include <string.h>
 
 
-#ifdef __gnu_linux__
 #include <unistd.h>
 #include <pthread.h>
 #ifdef HAS_NUMA
@@ -34,7 +36,6 @@
 
 #ifdef HAS_LARGE_PAGES
 #include <hugetlbfs.h> //for getting huge page size
-#endif
 #endif
 
 #define MAX_PHYS_PACKAGE_IDS 10
@@ -256,61 +257,33 @@ void setup_timer() {
 // #endif
 // }
 
-// bool xmem::unlock_thread_to_numa_node() {
-//     return unlock_thread_to_cpu();
-// }
+bool unlock_thread_to_numa_node() {
+    return unlock_thread_to_cpu();
+}
 
-// bool xmem::lock_thread_to_cpu(uint32_t cpu_id) {
-// #ifdef _WIN32
-//     HANDLE tid = GetCurrentThread();
-//     if (tid == 0)
-//         return false;
-//     else {
-//         DWORD_PTR threadAffinityMask = 1 << cpu_id;
-//         DWORD_PTR prev_mask = SetThreadAffinityMask(tid, threadAffinityMask); //enable only 1 CPU
-//         if (prev_mask == 0)
-//             return false;
-//     }
-//     return true;
-// #endif
-// #ifdef __gnu_linux__
-//     cpu_set_t cpus;
-//     CPU_ZERO(&cpus);
-//     CPU_SET(static_cast<int32_t>(cpu_id), &cpus);
+bool lock_thread_to_cpu(uint32_t cpu_id) {
+    cpu_set_t cpus;
+    CPU_ZERO(&cpus);
+    CPU_SET((int32_t) cpu_id, &cpus);
 
-//     pthread_t tid = pthread_self();
-//     return (!pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpus));
-// #endif
-// }
+    pthread_t tid = pthread_self();
+    return (!pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpus));
+}
 
-// bool xmem::unlock_thread_to_cpu() {
-// #ifdef _WIN32
-//     HANDLE tid = GetCurrentThread();
-//     if (tid == 0)
-//         return false;
-//     else {
-//         DWORD_PTR threadAffinityMask = static_cast<DWORD_PTR>(-1);
-//         DWORD_PTR prev_mask = SetThreadAffinityMask(tid, threadAffinityMask); //enable all CPUs
-//         if (prev_mask == 0)
-//             return false;
-//     }
-//     return true;
-// #endif
-// #ifdef __gnu_linux__
-//     pthread_t tid = pthread_self();
-//     cpu_set_t cpus;
-//     CPU_ZERO(&cpus);
+bool unlock_thread_to_cpu() {
+    pthread_t tid = pthread_self();
+    cpu_set_t cpus;
+    CPU_ZERO(&cpus);
 
-//     if (pthread_getaffinity_np(tid, sizeof(cpu_set_t), &cpus)) //failure
-//         return false;
+    if (pthread_getaffinity_np(tid, sizeof(cpu_set_t), &cpus)) //failure
+        return false;
 
-//     int32_t total_num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
-//     for (int32_t c = 0; c < total_num_cpus; c++)
-//         CPU_SET(c, &cpus);
+    int32_t total_num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+    for (int32_t c = 0; c < total_num_cpus; c++)
+        CPU_SET(c, &cpus);
 
-//     return (!pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpus));
-// #endif
-// }
+    return (!pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpus));
+}
 
 // int32_t xmem::cpu_id_in_numa_node(uint32_t numa_node, uint32_t cpu_in_node) {
 // #ifndef HAS_NUMA

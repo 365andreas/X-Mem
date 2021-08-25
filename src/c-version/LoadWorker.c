@@ -91,11 +91,10 @@ void runLoadWorker(LoadWorker *load_worker) {
         releaseLock(load_worker->mem_worker->runnable);
     }
 
-    // TODO: add me
-    // //Set processor affinity
-    // bool locked = lock_thread_to_cpu(cpu_affinity);
-    // if (!locked)
-    //     std::cerr << "WARNING: Failed to lock thread to logical CPU " << cpu_affinity << "! Results may not be correct." << std::endl;
+    // Set processor affinity
+    bool locked = lock_thread_to_cpu(cpu_affinity);
+    if (! locked)
+        fprintf(stderr, "WARNING: Failed to lock thread to logical CPU %d! Results may not be correct.\n", cpu_affinity);
 
     // //Increase scheduling priority
     // if (!boost_scheduling_priority())
@@ -153,10 +152,13 @@ void runLoadWorker(LoadWorker *load_worker) {
         elapsed_dummy_ticks += (stop_tick - start_tick);
     }
 
-    // TODO: add me
-    // //Unset processor affinity
-    // if (locked)
-    //     unlock_thread_to_numa_node();
+    // Unset processor affinity
+    if (locked) {
+        bool unlocked;
+        unlocked = unlock_thread_to_numa_node();
+        if (! unlocked)
+            fprintf(stderr, "WARNING: Failed to unlock threads!\n");
+    }
 
     //Revert thread priority
     // if (!revert_scheduling_priority())

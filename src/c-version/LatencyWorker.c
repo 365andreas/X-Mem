@@ -55,17 +55,16 @@ void runLatWorker(LatencyWorker *lat_worker) {
         mem_array = lat_worker->mem_worker->mem_array_;
         len = lat_worker->mem_worker->len_;
         bytes_per_pass = LATENCY_BENCHMARK_UNROLL_LENGTH * 8;
-        cpu_affinity = lat_worker->cpu_affinity;
+        cpu_affinity = lat_worker->mem_worker->cpu_affinity_;
         kernel_fptr = lat_worker->kernel_fptr;
         kernel_dummy_fptr = lat_worker->kernel_dummy_fptr;
         releaseLock(lat_worker->mem_worker->runnable);
     }
 
-    // TODO: add me
-    //Set processor affinity
-    // bool locked = lock_thread_to_cpu(cpu_affinity);
-    // if (! locked)
-    //     fprintf(stderr, "WARNING: Failed to lock thread to logical CPU %d! Results may not be correct.\n", cpu_affinity);
+    // Set processor affinity
+    bool locked = lock_thread_to_cpu(cpu_affinity);
+    if (! locked)
+        fprintf(stderr, "WARNING: Failed to lock thread to logical CPU %d! Results may not be correct.\n", cpu_affinity);
 
     // TODO: add me
     // //Increase scheduling priority
@@ -106,10 +105,13 @@ void runLatWorker(LatencyWorker *lat_worker) {
     if (elapsed_dummy_ticks >= elapsed_ticks || elapsed_ticks < MIN_ELAPSED_TICKS || adjusted_ticks < elapsed_ticks / 2)
         warning = true;
 
-    // TODO: add me
-    //Unset processor affinity
-    // if (locked)
-    //     unlock_thread_to_numa_node();
+    // Unset processor affinity
+    if (locked) {
+        bool unlocked;
+        unlocked = unlock_thread_to_numa_node();
+        if (! unlocked)
+            fprintf(stderr, "WARNING: Failed to unlock threads!\n");
+    }
 
     // TODO: add me
     //Revert thread priority

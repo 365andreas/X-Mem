@@ -20,7 +20,6 @@ typedef struct {
     MemoryWorker *mem_worker;
     RandomFunction kernel_fptr;
     RandomFunction kernel_dummy_fptr;
-    int32_t cpu_affinity;
 } LatencyWorker;
 
 LatencyWorker *newLatencyWorker(void* mem_array, size_t len, RandomFunction kernel_fptr, RandomFunction kernel_dummy_fptr, int32_t cpu_affinity);
