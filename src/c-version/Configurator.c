@@ -20,7 +20,7 @@ void printHelpText() {
     char *msg = "\n"
                 " -a, run benchmarks on all cores\n"
                 " -l, run latency matrix benchmarks\n"
-                // " -t, run throughput matrix benchmarks\n"
+                " -t, run throughput matrix benchmarks\n"
                 " -v, verbose mode\n"
                 " -r addr, pass physical address to benchmark\n";
     printf("%s", msg);
@@ -42,12 +42,12 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     int opt;
     uint64_t addr;
 
-    while ((opt = getopt(argc, argv, "alvr:")) != -1) {
+    while ((opt = getopt(argc, argv, "alvtr:")) != -1) {
         switch (opt) {
-            case 'v': conf->verbose_            = true; break;
-            case 'a': conf->run_all_cores_      = true; break;
-            case 'l': conf->run_latency_matrix_ = true; break;
-            // case 't': conf->run_throughput_matrix_ = true; break;
+            case 'v': conf->verbose_               = true; break;
+            case 'a': conf->run_all_cores_         = true; break;
+            case 'l': conf->run_latency_matrix_    = true; break;
+            case 't': conf->run_throughput_matrix_ = true; break;
             case 'r':
                 addr = strtoull(optarg, NULL, 0);
                 // memory regions specified by physical addresses

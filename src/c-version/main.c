@@ -44,10 +44,9 @@ int main(int argc, char* argv[]) {
             runLatencyMatrixBenchmarks(benchmgr);
         }
 
-        // if (config.throughputMatrixTestSelected()) {
-        //     benchmgr.runThroughputMatrixBenchmarks();
-        // }
-        // }
+        if (throughputMatrixTestSelected(&config)) {
+            runThroughputMatrixBenchmarks(benchmgr);
+        }
     }
 
     if (config_success)

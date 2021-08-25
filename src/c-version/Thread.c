@@ -166,3 +166,15 @@ void *runLaunchpadLatency(void *target_runnable_object) {
     }
     return (void *) thread_retval;
 }
+
+void *runLaunchpadLoad(void *target_runnable_object) {
+    int32_t *thread_retval = (int32_t *) malloc(sizeof(int32_t));
+    *thread_retval = 1;
+    if (target_runnable_object != NULL) {
+        LoadWorker *target = (LoadWorker *) target_runnable_object;
+        runLoadWorker(target);
+        *thread_retval = 0;
+        return (void *) thread_retval;
+    }
+    return (void *) thread_retval;
+}
