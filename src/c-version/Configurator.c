@@ -22,9 +22,10 @@ void printHelpText() {
                 " -a, run benchmarks on all cores\n"
                 " -l, run latency matrix benchmarks\n"
                 " -t, run throughput matrix benchmarks\n"
-                " -v, verbose mode\n"
-                " -r addr, pass physical address to benchmark\n"
                 " -n iters, pass number of iterations\n"
+                " -r addr, pass physical address to benchmark\n"
+                " -v, verbose mode\n"
+                " -w working set size, pass working set size per thread in KB\n"
                 " -x, extended benchmarking mode (running all the iterations)\n";
     printf("%s", msg);
 }
@@ -45,6 +46,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
 
     // default configuration
     conf->iterations_ = 10;
+    conf->working_set_size_per_thread_ = DEFAULT_WORKING_SET_SIZE_PER_THREAD;
 
     for (size_t i = 1; i < argc; i++) {
         if (strstr(argv[i], "-r")) {
@@ -57,17 +59,18 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     }
 
     regions = 0;
-    while ((opt = getopt(argc, argv, "alvtr:n:x")) != -1) {
+    while ((opt = getopt(argc, argv, "alvtr:n:w:x")) != -1) {
         switch (opt) {
             case 'a': conf->run_all_cores_      = true; break;
             case 'l': conf->run_latency_matrix_ = true; break;
             case 'n': conf->iterations_         = (uint32_t) strtoul(optarg, NULL, 0); break;
             case 'r':
                 // memory regions specified by physical addresses
-                conf->mem_regions_phys_addr_[regions++] = strtoull(optarg, NULL, 0); break;
-            case 't': conf->run_throughput_matrix_ = true; break;
-            case 'v': conf->verbose_               = true; break;
-            case 'x': g_log_extended               = true; break;
+                conf->mem_regions_phys_addr_[regions++]  = strtoull(optarg, NULL, 0); break;
+            case 't': conf->run_throughput_matrix_       = true; break;
+            case 'v': conf->verbose_                     = true; break;
+            case 'w': conf->working_set_size_per_thread_ = strtoull(optarg, NULL, 0) * 1024; break;
+            case 'x': g_log_extended                     = true; break;
             default:
                 printUsageText(argv[0]);
                 printHelpText();
@@ -75,7 +78,6 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
         }
     }
 
-    conf->working_set_size_per_thread_ = DEFAULT_WORKING_SET_SIZE_PER_THREAD;
 
     // memory regions specified by physical addresses
     if (! conf->mem_regions_in_phys_addr_) {
