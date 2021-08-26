@@ -24,6 +24,7 @@ void printHelpText() {
                 " -t, run throughput matrix benchmarks\n"
                 " -n iters, pass number of iterations\n"
                 " -r addr, pass physical address to benchmark\n"
+                " -s, use synchronous operations (O_SYNC enabled)\n"
                 " -v, verbose mode\n"
                 " -w working set size, pass working set size per thread in KB\n"
                 " -x, extended benchmarking mode (running all the iterations)\n";
@@ -32,7 +33,7 @@ void printHelpText() {
 
 void printUsageText(char *name){
 
-    fprintf(stderr, "Usage: %s [-altvx] -r region_address [-n iterations_num]\n", name);
+    fprintf(stderr, "Usage: %s [-a] [-lt] [-svx] -r region_address [-n iterations_num]\n", name);
 }
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
@@ -47,6 +48,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     // default configuration
     conf->iterations_ = 10;
     conf->working_set_size_per_thread_ = DEFAULT_WORKING_SET_SIZE_PER_THREAD;
+    conf->sync_mem_ = false;
 
     for (size_t i = 1; i < argc; i++) {
         if (strstr(argv[i], "-r")) {
@@ -59,7 +61,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     }
 
     regions = 0;
-    while ((opt = getopt(argc, argv, "alvtr:n:w:x")) != -1) {
+    while ((opt = getopt(argc, argv, "alvtn:r:sw:x")) != -1) {
         switch (opt) {
             case 'a': conf->run_all_cores_      = true; break;
             case 'l': conf->run_latency_matrix_ = true; break;
@@ -67,6 +69,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
             case 'r':
                 // memory regions specified by physical addresses
                 conf->mem_regions_phys_addr_[regions++]  = strtoull(optarg, NULL, 0); break;
+            case 's': conf->sync_mem_                    = true; break;
             case 't': conf->run_throughput_matrix_       = true; break;
             case 'v': conf->verbose_                     = true; break;
             case 'w': conf->working_set_size_per_thread_ = strtoull(optarg, NULL, 0) * 1024; break;
@@ -102,6 +105,8 @@ bool allCoresSelected(Configurator *conf) { return conf->run_all_cores_; }
 bool latencyMatrixTestSelected(Configurator *conf) { return conf->run_latency_matrix_; }
 
 bool throughputMatrixTestSelected(Configurator *conf) { return conf->run_throughput_matrix_; }
+
+bool syncMemory(Configurator *conf) { return conf->sync_mem_; }
 
 bool memoryRegionsInPhysAddr(Configurator *conf) { return conf->mem_regions_in_phys_addr_; }
 

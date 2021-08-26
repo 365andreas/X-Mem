@@ -26,11 +26,11 @@ typedef struct {
     bool run_throughput_matrix_; /**< True if throughput matrix tests should be run. */
     bool verbose_; /**< If true, then console reporting should be more detailed. */
     size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */
+    bool sync_mem_; /**< True if accesses to memory should happen synchronously. If true every access will be uncached. */
 
 //         bool run_extensions_; /**< If true, run extensions. */
 //         bool run_latency_; /**< True if latency tests should be run. */
 //         bool run_throughput_; /**< True if throughput tests should be run. */
-//         bool sync_mem_; /**< True if accesses to memory should happen synchronously. If true every access will be uncached. */
 //         uint32_t num_worker_threads_; /**< Number of load threads to use for throughput benchmarks, loaded latency benchmarks, and stress tests. */
 //         bool numa_enabled_; /**< If false, only CPU/memory NUMA nodes 0 may be used. */
 //         std::list<uint32_t> cpu_numa_node_affinities_; /**< List of CPU NUMA nodes to affinitize on all benchmark experiments. */
@@ -77,6 +77,12 @@ bool latencyMatrixTestSelected(Configurator *conf);
  * @returns True if the throughput matrix test has been selected to run.
  */
 bool throughputMatrixTestSelected(Configurator *conf);
+
+/**
+ * @brief Indicates if the accesses to memory for matrix tests will be processed synchronously.
+ * @returns True if the accesses to memory for matrix tests will be processed synchronously.
+ */
+bool syncMemory(Configurator *conf);
 
 /**
  * @brief Gets the working set size in bytes for each worker thread, if applicable.

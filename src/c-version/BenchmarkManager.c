@@ -544,8 +544,7 @@ void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size) {
         exit(-1);
     } else {
         int flags = O_RDWR;
-        // if (config_.syncMemory()) flags |= O_SYNC;
-        flags |= O_SYNC;
+        if (syncMemory(cfg)) flags |= O_SYNC;
         int fd = open("/dev/mem", flags);
         if (fd < 0) {
             perror("ERROR! Failed to open /dev/mem");
