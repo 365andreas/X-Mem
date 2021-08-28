@@ -793,11 +793,11 @@ extern "C" int32_t win_x86_64_asm_dummy_revStride16Loop_Word256(Word256_t* first
 
 void shuffle(Word64_t *first, Word64_t *last) {
 
-    int size = (last - first) / sizeof(Word64_t);
+    uint64_t size = ((uint64_t) last - (uint64_t) first) / sizeof(Word64_t);
 
-    for (int i = size - 1; i > 0; --i) {
-        uint32_t r = mt_lrand();
-        int ind = r % (size + 1);
+    for (uint64_t i = size - 1; i > 0; --i) {
+        uint64_t r = mt_llrand();
+        uint64_t ind = r % (i + 1);
         // std::uniform_int_distribution<decltype(i)> d(0,i);
         Word64_t a = first[i];
         first[i] = first[ind];

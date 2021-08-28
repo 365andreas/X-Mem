@@ -72,7 +72,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
             case 's': conf->sync_mem_                    = true; break;
             case 't': conf->run_throughput_matrix_       = true; break;
             case 'v': conf->verbose_                     = true; break;
-            case 'w': conf->working_set_size_per_thread_ = strtoull(optarg, NULL, 0) * 1024; break;
+            case 'w': conf->working_set_size_per_thread_ = strtoull(optarg, NULL, 0) * KB; break;
             case 'x': g_log_extended                     = true; break;
             default:
                 printUsageText(argv[0]);
