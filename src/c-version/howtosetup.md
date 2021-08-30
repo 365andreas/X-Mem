@@ -116,4 +116,49 @@ rackboot
 1. `(babybel3):~/X-Mem# scp -r ./bin/xmem-linux-gcc_mic mic0:~`
 1. `(babybel3):~/X-Mem# cd`
 1. `(babybel3):~# ssh mic0`
-1. `(mic0):~# ./xmem-linux-gcc_mic -l -r 0x100000000`
+1. `(mic0):~# ./xmem-linux-gcc_mic -l -r 0x100000000 -n 10`
+
+
+## Run sockeye-compiler on babybel3 (Ubuntu 14.04)
+
+#### (build cabal)
+1. `(babybel3):~# apt remove cabal-install`
+1. `(babybel3):~# wget https://downloads.haskell.org/~cabal/cabal-install-1.24.0.2/cabal-install-1.24.0.2-x86_64-unknown-linux.tar.gz`
+1. `(babybel3):~# tar -xvf cabal-install-1.24.0.2-x86_64-unknown-linux.tar.gz`
+1. `(babybel3):~# export PATH=/root/dist-newstyle/build/x86_64-linux/ghc-8.0.2/cabal-install-1.24.0.2/build/cabal/:$PATH`
+1. `(babybel3):~# which cabal`
+1. `(babybel3):~# rm /root/.cabal/bin//cabal`
+1. `(babybel3):~# which cabal`
+1. `(babybel3):~# cabal --version`
+1. `(babybel3):~# cabal update`
+
+#### (build ghc)
+1. `(babybel3):~# wget https://downloads.haskell.org/~ghc/8.0.1/ghc-8.0.1-x86_64-deb8-linux.tar.xz`
+1. `(babybel3):~# tar -xvf ghc-8.0.1-x86_64-deb8-linux.tar.xz`
+1. `(babybel3):~# cd ghc-8.0.1/`
+1. `(babybel3):~/ghc-8.0.1# ./configure`
+1. `(babybel3):~/ghc-8.0.1# make install`
+1. `(babybel3):~/ghc-8.0.1# cd`
+1. `(babybel3):~# which ghc`
+1. `(babybel3):~# ghc --version`
+1. `(babybel3):~# sudo apt-get install libgmp3-dev`
+
+1. `(babybel3):~# cabal install aeson`
+1. `(babybel3):~# cabal install MissingH`
+
+#### (build eclipseclp)
+1. `(babybel3):~# cd 2021-msc-atriantaf-code/sockeye-compiler/eclipse`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# mv ./eclipse_basic.tgz ..`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# cd ..`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# rm -rf eclipse eclipseclp`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# mkdir eclipse; cd eclipse`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# mv ../eclipse_basic.tgz .`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# tar -xvf eclipse_basic.tgz`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# ./RUNME`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# cd ..`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# ln -s ./eclipse/bin/x86_64_linux/eclipse eclipseclp`
+
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# cd ..`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# make clean`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# make`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# make ECLIPSE=./eclipseclp test_perf`
