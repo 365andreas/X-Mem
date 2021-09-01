@@ -20,6 +20,7 @@ void printHelpText() {
 
     char *msg = "\n"
                 " -a, run benchmarks on all cores\n"
+                " -d filename, writes the results in a format compatible with the decoding nets\n"
                 " -l, run latency matrix benchmarks\n"
                 " -t, run throughput matrix benchmarks\n"
                 " -n iters, pass number of iterations\n"
@@ -33,7 +34,7 @@ void printHelpText() {
 
 void printUsageText(char *name){
 
-    fprintf(stderr, "Usage: %s [-a] [-lt] [-svx] -r region_address [-n iterations_num]\n", name);
+    fprintf(stderr, "Usage: %s [-a] [-lt] [-dsvx] -r region_address [-n iterations_num]\n", name);
 }
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
@@ -61,9 +62,13 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     }
 
     regions = 0;
-    while ((opt = getopt(argc, argv, "alvtn:r:sw:x")) != -1) {
+    while ((opt = getopt(argc, argv, "ad:lvtn:r:sw:x")) != -1) {
         switch (opt) {
-            case 'a': conf->run_all_cores_      = true; break;
+            case 'a': conf->run_all_cores_ = true; break;
+            case 'd':
+                conf->use_dec_net_file_ = true;
+                conf->dec_net_filename_ = optarg;
+                break;
             case 'l': conf->run_latency_matrix_ = true; break;
             case 'n': conf->iterations_         = (uint32_t) strtoul(optarg, NULL, 0); break;
             case 'r':
@@ -117,6 +122,12 @@ uint64_t *getMemoryRegionsPhysAddresses(Configurator *conf) { return conf->mem_r
 size_t getWorkingSetSizePerThread(Configurator *conf) { return conf->working_set_size_per_thread_; }
 
 uint32_t getIterationsPerTest(Configurator *conf) { return conf->iterations_; }
+
+char *getDecNetFilename(Configurator *conf) { return conf->dec_net_filename_; }
+
+bool useDecNetFile(Configurator *conf) { return conf->use_dec_net_file_; }
+
+void setUseDecNetFile(Configurator *conf, bool use) { conf->use_dec_net_file_ = use; }
 
 //     //Throw out first argument which is usually the program name.
 //     argc -= (argc > 0);

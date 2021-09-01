@@ -110,6 +110,12 @@ uint32_t getCPUId(MatrixBenchmark *mat_bench);
  */
 char *getMetricUnits(MatrixBenchmark *mat_bench);
 
+/**
+ * @brief Gets the region id of the memory used in this benchmark.
+ * @returns The region id of memory area used in this benchmark.
+ */
+uint32_t getMemRegion(MatrixBenchmark *mat_bench);
+
 // /**
 //  * @brief Prints a header piece of information describing the benchmark to the console.
 //  */

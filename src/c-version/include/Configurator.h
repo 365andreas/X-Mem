@@ -27,6 +27,8 @@ typedef struct {
     bool verbose_; /**< If true, then console reporting should be more detailed. */
     size_t working_set_size_per_thread_; /**< Working set size in bytes for each thread, if applicable. */
     bool sync_mem_; /**< True if accesses to memory should happen synchronously. If true every access will be uncached. */
+    bool use_dec_net_file_; /**< If true, generate a decoding net friendly output file for results. */
+    char *dec_net_filename_; /**< The decoding network compatible output filename if applicable. */
 
 //         bool run_extensions_; /**< If true, run extensions. */
 //         bool run_latency_; /**< True if latency tests should be run. */
@@ -44,8 +46,6 @@ typedef struct {
 //         bool use_large_pages_; /**< If true, then large pages should be used. */
 //         bool use_reads_; /**< If true, throughput benchmarks should use reads. */
 //         bool use_writes_; /**< If true, throughput benchmarks should use writes. */
-//         std::string dec_net_filename_; /**< The decoding network friendly output filename if applicable. */
-//         bool use_dec_net_file_; /**< If true, generate a decoding net friendly output file for results. */
 
 } Configurator;
 
@@ -181,23 +181,23 @@ uint32_t getIterationsPerTest(Configurator *conf);
 //          */
 //         void setUseOutputFile(bool use) { use_output_file_ = use; }
 
-//         /**
-//          * @brief Gets the output filename suitable for decoding network to use, if applicable.
-//          * @returns The output filename to use if useDecNetFile() returns true. Otherwise return value is "".
-//          */
-//         std::string getDecNetFilename() const { return dec_net_filename_; }
+/**
+ * @brief Gets the output filename suitable for decoding network to use, if applicable.
+ * @returns The output filename to use if useDecNetFile() returns true. Otherwise return value is "".
+ */
+char *getDecNetFilename(Configurator *conf);
 
-//         /**
-//          * @brief Determines whether to generate an output file with a format suitbale for decoding networks.
-//          * @returns True if a decoding network file should be used.
-//          */
-//         bool useDecNetFile() const { return use_dec_net_file_; }
+/**
+ * @brief Determines whether to generate an output file with a format suitbale for decoding networks.
+ * @returns True if a decoding network file should be used.
+ */
+bool useDecNetFile(Configurator *conf);
 
-//         /**
-//          * @brief Changes whether an output file written for decoding networks should be used.
-//          * @param use If true, then use the output file.
-//          */
-//         void setUseDecNetFile(bool use) { use_dec_net_file_ = use; }
+/**
+ * @brief Changes whether an output file written for decoding networks should be used.
+ * @param use If true, then use the output file.
+ */
+void setUseDecNetFile(Configurator *conf, bool use);
 
 //         /**
 //          * @brief Determines whether X-Mem is in verbose mode.

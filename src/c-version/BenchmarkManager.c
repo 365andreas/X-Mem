@@ -28,7 +28,18 @@
 #include <hugetlbfs.h> //for allocating and freeing huge pages
 #endif
 
-
+void writeToDecNetFile(BenchmarkManager *bench_mgr, MatrixBenchmark *mat_bench, uint64_t *mem_regions_phys_addr,
+                       char *bench_type) {
+    uint32_t region_id = getMemRegion(mat_bench);
+    fprintf(bench_mgr->dec_net_results_file_,
+            "bench_result(%d, %ld, %s, %f, '%s').\n",
+            getCPUId(mat_bench),
+            mem_regions_phys_addr[region_id],
+            bench_type,
+            getMedianMetric(mat_bench),
+            getMetricUnits(mat_bench)
+    );
+}
 
 BenchmarkManager *initBenchMgr(Configurator *config) {
 
@@ -50,15 +61,15 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
     //Build working memory regions
     setupWorkingSets(bench_mgr, getWorkingSetSizePerThread(bench_mgr->config_));
 
-    // //Open decoding networks compatible resuslts file
-    // if (config_.useDecNetFile()) {
-    //     dec_net_results_file_.open(config_.getDecNetFilename().c_str(), std::fstream::out);
-    //     if (!dec_net_results_file_.is_open()) {
-    //         config_.setUseDecNetFile(false);
-    //         std::cerr << "WARNING: Failed to open " << config_.getDecNetFilename()
-    //         << " for writing! No results file for decoding networks will be generated." << std::endl;
-    //     }
-    // }
+    //Open decoding networks compatible resuslts file
+    if (useDecNetFile(bench_mgr->config_)) {
+        bench_mgr->dec_net_results_file_ = fopen(getDecNetFilename(bench_mgr->config_), "w");
+        if (bench_mgr->dec_net_results_file_ == NULL) {
+            setUseDecNetFile(bench_mgr->config_, false);
+            fprintf(stderr, "WARNING: Failed to open %s for writing! No results file for decoding"
+            "networks will be generated.\n", getDecNetFilename(bench_mgr->config_));
+        }
+    }
 
     // // If extended measurements are enabled for latency matrix benchmark open logfile
     // if (g_log_extended && config_.latencyMatrixTestSelected()) {
@@ -447,25 +458,19 @@ bool runLatencyMatrixBenchmarks(BenchmarkManager *bench_mgr) {
         }
     }
 
-    // std::vector<uint64_t> mem_regions_phys_addr;
-    // if (config_.useDecNetFile()) {
-    //     mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
-    // }
+    uint64_t *mem_regions_phys_addr = NULL;
+    if (useDecNetFile(bench_mgr->config_)) {
+        mem_regions_phys_addr = getMemoryRegionsPhysAddresses(bench_mgr->config_);
+    }
 
     for (uint32_t i = 0; i < bench_mgr->lat_mat_benchmarks_size_; i++) {
-        runLatency(bench_mgr->lat_mat_benchmarks_[i]);
-        reportResults(bench_mgr->lat_mat_benchmarks_[i]->mat_bench);
+        MatrixBenchmark *curr_mat_bench = bench_mgr->lat_mat_benchmarks_[i]->mat_bench;
 
-        // if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
-        //     dec_net_results_file_ << "bench_result(";
-        //     dec_net_results_file_ << lat_mat_benchmarks_[i]->getCPUId() << ", ";
-        //     uint32_t region_id = lat_mat_benchmarks_[i]->getMemRegion();
-        //     dec_net_results_file_ << mem_regions_phys_addr[region_id] << ", ";
-        //     dec_net_results_file_ << "'latency'" << ", ";
-        //     dec_net_results_file_ << lat_mat_benchmarks_[i]->getMedianMetric() << ", ";
-        //     dec_net_results_file_ << "'" << lat_mat_benchmarks_[i]->getMetricUnits() << "'" << ").";
-        //     dec_net_results_file_ << std::endl;
-        // }
+        runLatency(bench_mgr->lat_mat_benchmarks_[i]);
+        reportResults(curr_mat_bench);
+        if (useDecNetFile(bench_mgr->config_) && (bench_mgr->config_->mem_regions_phys_addr_size > 0)) {
+            writeToDecNetFile(bench_mgr, curr_mat_bench, mem_regions_phys_addr, "'latency'");
+        }
     }
     printf("\n");
 
@@ -490,25 +495,19 @@ bool runThroughputMatrixBenchmarks(BenchmarkManager *bench_mgr) {
         }
     }
 
-    // std::vector<uint64_t> mem_regions_phys_addr;
-    // if (config_.useDecNetFile()) {
-    //     mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
-    // }
+    uint64_t *mem_regions_phys_addr = NULL;
+    if (useDecNetFile(bench_mgr->config_)) {
+        mem_regions_phys_addr = getMemoryRegionsPhysAddresses(bench_mgr->config_);
+    }
 
     for (uint32_t i = 0; i < bench_mgr->thr_mat_benchmarks_size_; i++) {
-        runThroughput(bench_mgr->thr_mat_benchmarks_[i]);
-        reportResults(bench_mgr->thr_mat_benchmarks_[i]->mat_bench);
+        MatrixBenchmark *curr_mat_bench = bench_mgr->thr_mat_benchmarks_[i]->mat_bench;
 
-        // if (config_.useDecNetFile() && (mem_regions_phys_addr.size() > 0)) {
-        //     dec_net_results_file_ << "bench_result(";
-        //     dec_net_results_file_ << thr_mat_benchmarks_[i]->getCPUId() << ", ";
-        //     uint32_t region_id = thr_mat_benchmarks_[i]->getMemRegion();
-        //     dec_net_results_file_ << mem_regions_phys_addr[region_id] << ", ";
-        //     dec_net_results_file_ << "'throughput'" << ", ";
-        //     dec_net_results_file_ << thr_mat_benchmarks_[i]->getMedianMetric() << ", ";
-        //     dec_net_results_file_ << "'" << thr_mat_benchmarks_[i]->getMetricUnits() << "'" << ").";
-        //     dec_net_results_file_ << std::endl;
-        // }
+        runThroughput(bench_mgr->thr_mat_benchmarks_[i]);
+        reportResults(curr_mat_bench);
+        if (useDecNetFile(bench_mgr->config_) && (bench_mgr->config_->mem_regions_phys_addr_size > 0)) {
+            writeToDecNetFile(bench_mgr, curr_mat_bench, mem_regions_phys_addr, "'throughput'");
+        }
     }
     printf("\n");
 

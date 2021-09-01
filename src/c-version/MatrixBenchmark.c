@@ -107,6 +107,10 @@ uint32_t getCPUId(MatrixBenchmark *mat_bench) {
         return mat_bench->cpu;
 }
 
+uint32_t getMemRegion(MatrixBenchmark *mat_bench) {
+    return mat_bench->mem_region;
+}
+
 char *getMetricUnits(MatrixBenchmark *mat_bench) {
     return mat_bench->metric_units;
 }
