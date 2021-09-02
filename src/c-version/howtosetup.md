@@ -64,13 +64,14 @@ rackboot
 ## Set up X-Mem in babybel3
 
 1. `(emmentaler1):~$ scp -r ./2021-msc-atriantaf-code/ root@babybel3:~`
-1. `(babybel3):~# apt install -y scons`
-1. `(babybel3):~# apt install -y libnuma-dev`
-1. `(babybel3):~# apt install -y libhugetlbfs-dev`
+1. `(babybel3):~# apt install -y scons libnuma-dev libhugetlbfs-dev`
 1. `(babybel3):~# cd 2021-msc-atriantaf-code/X-Mem`
 1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# ./build-linux.sh x64 20`
 1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# ./bin/xmem-linux-x64 --latency_matrix -w40 -n50 --regions=0x1f5713d000,0x3efdb6a000,0x3eaa998000,0x380500000000,0x380100000000 --sync`
 
+Or for the c version:
+1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# ./build-linux.sh gcc_host 20`
+1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# ./bin/xmem-linux-gcc_host -l -w200000 -n10 -r 0xa00000000 -r 0x1680000000 -r 0x2300000000 -r 0x2f80000000 -r 0x3c00000000 -r 0x380100000000 -r 0x380500000000 -d regions.txt`
 
 ## Set up PHI in babybel3
 
@@ -84,6 +85,14 @@ rackboot
 1. `(babybel3):~/mpss-3.8.6# dpkg -i *.deb`
 1. `(babybel3):~/mpss-3.8.6# echo '/usr/lib64' >> /etc/ld.so.conf.d/zz_x86_64-compat.conf`
 1. `(babybel3):~/mpss-3.8.6# ldconfig`
+
+#### (mount prebuilt kernel modules)
+1. `(babybel3):~# mkdir sda2`
+1. `(babybel3):~# mount -t ext4 /dev/sda2 sda2`
+1. `(babybel3):~# cd /lib/modules`
+1. `(babybel3):/lib/modules# ln -s ~/sda2/atriantaf/lib/modules/3.13.11-ckt39/ 3.13.11-ckt39`
+1. `(babybel3):/lib/modules# cd`
+1. `(babybel3):/lib/modules# ln -s ~/sda2/atriantaf/linux-3.13.0/ linux-3.13.0`
 
 #### (kernel module)
 1. `(babybel3):~/mpss-3.8.6# cd`
@@ -106,17 +115,16 @@ rackboot
 ## Run X-Mem on PHI
 
 1. `(babybel3):~# apt install -y scons`
-1. `(babybel3):~# echo "ExtraCommandLine nopat" >> /etc/mpss/mic0.conf`
-1. `(babybel3):~# echo "ExtraCommandLine nopat" >> /etc/mpss/mic1.conf`
+1. `(babybel3):~# echo "ExtraCommandLine \"nopat mem=1G\"" >> /etc/mpss/mic0.conf`
+1. `(babybel3):~# echo "ExtraCommandLine \"nopat mem=1G\"" >> /etc/mpss/mic1.conf`
 1. `(babybel3):~# micctrl -r -w`
 1. `(babybel3):~# micctrl -b`
-1. `(babybel3):~# cd X-Mem`
-1. replace `gcc` w/ `/usr/linux-k1om-4.7/bin/x86_64-k1om-linux-gcc` in `SConscript`.
-1. `(babybel3):~/X-Mem# ./build-linux.sh gcc_mic 20`
-1. `(babybel3):~/X-Mem# scp -r ./bin/xmem-linux-gcc_mic mic0:~`
-1. `(babybel3):~/X-Mem# cd`
+1. `(babybel3):~# cd ./2021-msc-atriantaf-code/X-Mem`
+1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# ./build-linux.sh gcc_mic 20`
+1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# scp ./bin/xmem-linux-gcc_mic mic0:~`
+1. `(babybel3):~/2021-msc-atriantaf-code/X-Mem# cd`
 1. `(babybel3):~# ssh mic0`
-1. `(mic0):~# ./xmem-linux-gcc_mic -l -r 0x100000000 -n 10`
+1. `(mic0):~# ./xmem-linux-gcc_mic -l -w 200000 -r 0x100000000 -n 10`
 
 
 ## Run sockeye-compiler on babybel3 (Ubuntu 14.04)
@@ -126,8 +134,6 @@ rackboot
 1. `(babybel3):~# wget https://downloads.haskell.org/~cabal/cabal-install-1.24.0.2/cabal-install-1.24.0.2-x86_64-unknown-linux.tar.gz`
 1. `(babybel3):~# tar -xvf cabal-install-1.24.0.2-x86_64-unknown-linux.tar.gz`
 1. `(babybel3):~# export PATH=/root/dist-newstyle/build/x86_64-linux/ghc-8.0.2/cabal-install-1.24.0.2/build/cabal/:$PATH`
-1. `(babybel3):~# which cabal`
-1. `(babybel3):~# rm /root/.cabal/bin//cabal`
 1. `(babybel3):~# which cabal`
 1. `(babybel3):~# cabal --version`
 1. `(babybel3):~# cabal update`
@@ -143,8 +149,8 @@ rackboot
 1. `(babybel3):~# ghc --version`
 1. `(babybel3):~# sudo apt-get install libgmp3-dev`
 
-1. `(babybel3):~# cabal install aeson`
-1. `(babybel3):~# cabal install MissingH`
+1. `(babybel3):~# cabal install aeson -j20`
+1. `(babybel3):~# cabal install MissingH -j20`
 
 #### (build eclipseclp)
 1. `(babybel3):~# cd 2021-msc-atriantaf-code/sockeye-compiler/eclipse`
@@ -156,9 +162,8 @@ rackboot
 1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# tar -xvf eclipse_basic.tgz`
 1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# ./RUNME`
 1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# cd ..`
-1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# ln -s ./eclipse/bin/x86_64_linux/eclipse eclipseclp`
+1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# ln -s ./eclipse/bin/x86_64_linux/eclipse eclipseclp`
 
-1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler/eclipse# cd ..`
 1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# make clean`
 1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# make`
 1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# make ECLIPSE=./eclipseclp test_perf`
