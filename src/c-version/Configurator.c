@@ -20,6 +20,9 @@ void printHelpText() {
 
     char *msg = "\n"
                 " -a, run benchmarks on all cores\n"
+                " -c, number of cores to be used for the throughput matrix benchmarks\n"
+                "     if -1 is given, all cores will be used for the throughput matrix benchmarks\n"
+                "     if omitted, 1 core will be used for the throughput matrix benchmarks\n"
                 " -d filename, writes the results in a format compatible with the decoding nets\n"
                 " -l, run latency matrix benchmarks\n"
                 " -t, run throughput matrix benchmarks\n"
@@ -34,7 +37,7 @@ void printHelpText() {
 
 void printUsageText(char *name){
 
-    fprintf(stderr, "Usage: %s [-a] [-lt] [-dsvx] -r region_address [-n iterations_num]\n", name);
+    fprintf(stderr, "Usage: %s [-a] [-lt] [-dsvx] -r region_address [-n iterations_num] [-c num_cores]\n", name);
 }
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
@@ -50,6 +53,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     conf->iterations_ = 10;
     conf->working_set_size_per_thread_ = DEFAULT_WORKING_SET_SIZE_PER_THREAD;
     conf->sync_mem_ = false;
+    conf->use_num_cores_ = 1;
 
     for (size_t i = 1; i < argc; i++) {
         if (strstr(argv[i], "-r")) {
@@ -62,9 +66,22 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     }
 
     regions = 0;
-    while ((opt = getopt(argc, argv, "ad:lvtn:r:sw:x")) != -1) {
+    while ((opt = getopt(argc, argv, "ac:d:lvtn:r:sw:x")) != -1) {
         switch (opt) {
             case 'a': conf->run_all_cores_ = true; break;
+            case 'c':
+                if (strtoul(optarg, NULL, 0) == (unsigned long) -1) {
+                    conf->use_num_cores_ = g_num_logical_cpus;
+                } else {
+                    conf->use_num_cores_ = (uint32_t) strtoul(optarg, NULL, 0);
+                }
+                if ((conf->use_num_cores_ == 0) || (conf->use_num_cores_ > g_num_logical_cpus)) {
+                    fprintf(stderr, "ERROR: Specified number of cores is not valid.\n");
+                    printUsageText(argv[0]);
+                    printHelpText();
+                    return EXIT_FAILURE;
+                }
+                break;
             case 'd':
                 conf->use_dec_net_file_ = true;
                 conf->dec_net_filename_ = optarg;
@@ -105,7 +122,9 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-bool allCoresSelected(Configurator *conf) { return conf->run_all_cores_; }
+bool runForAllCoresSelected(Configurator *conf) { return conf->run_all_cores_; }
+
+uint32_t useNumCores(Configurator *conf) { return conf->use_num_cores_; }
 
 bool latencyMatrixTestSelected(Configurator *conf) { return conf->run_latency_matrix_; }
 

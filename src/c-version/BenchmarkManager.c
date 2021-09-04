@@ -78,7 +78,7 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
     //         std::cerr << "WARNING: Logfile latency_mat.logs was not created." << std::endl;
     //     }
 
-    //     lat_mat_logfile_ << (config_.allCoresSelected() ? "cpu" : "cpu_node") << ","
+    //     lat_mat_logfile_ << (config_.runForAllCoresSelected() ? "cpu" : "cpu_node") << ","
     //                      << "numa_node"                                       << ","
     //                      << "region"                                          << ","
     //                      << "iteration"                                       << ","
@@ -93,7 +93,7 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
     //         std::cerr << "WARNING: Logfile throughput_mat.logs was not created." << std::endl;
     //     }
 
-    //     thr_mat_logfile_ << (config_.allCoresSelected() ? "cpu" : "cpu_node") << ","
+    //     thr_mat_logfile_ << (config_.runForAllCoresSelected() ? "cpu" : "cpu_node") << ","
     //                      << "numa_node"                                       << ","
     //                      << "region"                                          << ","
     //                      << "iteration"                                       << ","
@@ -169,7 +169,7 @@ void printMatrix(BenchmarkManager *bench_mgr, MatrixBenchmark **mat_benchmarks, 
 
     // std::vector<uint64_t> mem_regions_phys_addr = config_.getMemoryRegionsPhysAddresses();
 
-    int width = allCoresSelected(cfg) ? 3 : 13;
+    int width = runForAllCoresSelected(cfg) ? 3 : 13;
     printf("%*c", width, ' ');
     for (uint32_t region_id = 0; region_id < bench_mgr->num_mem_regions_; region_id++) {
         printf(" (Node, Reg)");
@@ -180,7 +180,7 @@ void printMatrix(BenchmarkManager *bench_mgr, MatrixBenchmark **mat_benchmarks, 
     // uint32_t regions_per_pu = config_.memoryRegionsInPhysAddr() ? mem_regions_phys_addr.size()
     //                                                             : mem_regions_per_numa * g_num_numa_nodes;
 
-    if (allCoresSelected(cfg))
+    if (runForAllCoresSelected(cfg))
         printf("CPU");
     else
         printf("CPU NUMA Node");
@@ -200,7 +200,7 @@ void printMatrix(BenchmarkManager *bench_mgr, MatrixBenchmark **mat_benchmarks, 
         if (i % regions_per_pu == 0) {
             printf("\n");
             uint32_t pu;
-            if (allCoresSelected(cfg))
+            if (runForAllCoresSelected(cfg))
                 pu = getCPUId(mat_benchmarks[i]);
             else
                 pu = 0; //mat_benchmarks_[i]->getCPUNode();
@@ -670,13 +670,12 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
 
     char benchmark_name[50];
 
+    Configurator *cfg = bench_mgr->config_;
     uint32_t num_processor_units; // Number of CPU nodes or CPUs to affinitize for benchmark experiments.
     uint32_t *processor_units; // List of CPU nodes or CPUs to affinitize for benchmark experiments.
     bool use_cpu_nodes = false;
 
-    Configurator *cfg = bench_mgr->config_;
-
-    if (allCoresSelected(cfg)) {
+    if (runForAllCoresSelected(cfg)) {
         num_processor_units = g_num_logical_cpus;
         processor_units = (uint32_t *) malloc(g_num_logical_cpus * sizeof(uint32_t));
         for (uint32_t i = 0; i < g_num_logical_cpus; i++) {
@@ -698,7 +697,7 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
     int l = 0;
     //Build latency matrix benchmarks
     for (int pu = 0; pu < num_processor_units; pu++) { //iterate each cpu NUMA node
-        if (allCoresSelected(cfg)) {
+        if (runForAllCoresSelected(cfg)) {
             cpu = processor_units[pu];
         }
         else {
@@ -745,35 +744,12 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
     bench_mgr->thr_mat_benchmarks_ = (ThroughputMatrixBenchmark **) malloc(bench_mgr->thr_mat_benchmarks_size_ * sizeof(ThroughputMatrixBenchmark *));
     l = 0;
 
-    uint32_t num_of_cpus_to_use;
     //Build throughput matrix benchmarks
-    for (int pu = 0; pu != num_processor_units; pu++) { //iterate each cpu NUMA node
+    for (int pu = 0; pu != num_processor_units; pu++) { //iterate each cpu
         if (! use_cpu_nodes) {
             cpu = processor_units[pu];
-            if (false) { // TODO: when every core should be used
-                num_of_cpus_to_use = g_num_logical_cpus;   //TODO: Fix since it gives only 10
-                // for (uint32_t i = 0; i < g_num_logical_cpus; i++) {
-                //     if (g_physical_package_of_cpu[i] == cpu_node) {
-                //         num_of_cpus_in_cpu_node++;
-                //     }
-                // }
-            } else {
-                num_of_cpus_to_use = 1;
-            }
         } else {
             cpu_node = processor_units[pu];
-            // find out how many cores has the cpu NUMA node
-            if (false) { // TODO: when every core should be used
-                num_of_cpus_in_cpu_node = 0;
-                for (uint32_t i = 0; i < g_num_logical_cpus; i++) {
-                    if (g_physical_package_of_cpu[i] == cpu_node) {
-                        num_of_cpus_in_cpu_node++;
-                    }
-                }
-                num_of_cpus_to_use = num_of_cpus_in_cpu_node;
-            } else {
-                num_of_cpus_to_use = 1;
-            }
         }
 
         for (uint32_t region_id = 0; region_id < numberOfMemoryRegionsPhysAddresses(cfg); region_id++) {
@@ -791,7 +767,7 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
             bench_mgr->thr_mat_benchmarks_[l] = initThroughputMatrixBenchmark(mem_array,
                                                                               mem_array_len,
                                                                               getIterationsPerTest(cfg),
-                                                                              num_of_cpus_to_use,
+                                                                              useNumCores(cfg),
                                                                               mem_node,
                                                                               mem_region,
                                                                               cpu_node,

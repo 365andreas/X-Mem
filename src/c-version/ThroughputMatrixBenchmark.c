@@ -77,7 +77,7 @@ bool runThroughputCore(ThroughputMatrixBenchmark *thr_mat_bench) {
         //Create workers and worker threads
         for (uint32_t t = 0; t < num_worker_threads; t++) {
             void* thread_mem_array = (void *) ((uint8_t *) thr_mat_bench->mat_bench->mem_array + t * len_per_thread);
-            int32_t cpu_id = getCPUId(thr_mat_bench->mat_bench);
+            int32_t cpu_id = (getCPUId(thr_mat_bench->mat_bench) + t) % g_num_logical_cpus;
             if (cpu_id < 0) {
                 fprintf(stderr, "WARNING: Failed to find logical CPU %d\n", t);
             }
