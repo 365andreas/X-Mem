@@ -78,7 +78,7 @@ void runLoadWorker(LoadWorker *load_worker) {
     if (acquireLock(load_worker->mem_worker->runnable, -1)) {
         mem_array = load_worker->mem_worker->mem_array_;
         len = load_worker->mem_worker->len_;
-        cpu_affinity = load_worker->cpu_affinity;
+        cpu_affinity = load_worker->mem_worker->cpu_affinity_;
         use_sequential_kernel_fptr = load_worker->use_sequential_kernel_fptr_;
         kernel_fptr_seq = load_worker->kernel_fptr_seq_;
         kernel_dummy_fptr_seq = load_worker->kernel_dummy_fptr_seq_;
@@ -88,7 +88,13 @@ void runLoadWorker(LoadWorker *load_worker) {
         end_address = (void *) ((uint8_t *) mem_array + bytes_per_pass);
         prime_start_address = mem_array;
         prime_end_address = (void *) ((uint8_t *) mem_array + len);
-        releaseLock(load_worker->mem_worker->runnable);
+        if (! releaseLock(load_worker->mem_worker->runnable)) {
+            fprintf(stderr, "ERROR: in releaseLock()\n");
+            exit(EXIT_FAILURE);
+        }
+    }  else {
+        fprintf(stderr, "ERROR: in acquireLock()\n");
+        exit(EXIT_FAILURE);
     }
 
     // Set processor affinity
@@ -155,7 +161,7 @@ void runLoadWorker(LoadWorker *load_worker) {
     // Unset processor affinity
     if (locked) {
         bool unlocked;
-        unlocked = unlock_thread_to_numa_node();
+        unlocked = unlock_thread_to_cpu();
         if (! unlocked)
             fprintf(stderr, "WARNING: Failed to unlock threads!\n");
     }

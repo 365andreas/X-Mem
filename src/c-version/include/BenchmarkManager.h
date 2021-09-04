@@ -89,6 +89,6 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr);
 /**
  * @brief Prints the results aggregated in a matrix form (for latencyMatrix and throughputMatrix benchmarks).
  */
-void printMatrix(BenchmarkManager *bench_mgr, MatrixBenchmark **mat_benchmarks, char *what);
+void printMatrix(BenchmarkManager *bench_mgr, MatrixBenchmark **mat_benchmarks, uint32_t mat_benchmarks_size, char *what);
 
 #endif

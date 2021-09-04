@@ -58,7 +58,13 @@ void runLatWorker(LatencyWorker *lat_worker) {
         cpu_affinity = lat_worker->mem_worker->cpu_affinity_;
         kernel_fptr = lat_worker->kernel_fptr;
         kernel_dummy_fptr = lat_worker->kernel_dummy_fptr;
-        releaseLock(lat_worker->mem_worker->runnable);
+        if (! releaseLock(lat_worker->mem_worker->runnable)) {
+            fprintf(stderr, "ERROR: in releaseLock()\n");
+            exit(EXIT_FAILURE);
+        }
+    }  else {
+        fprintf(stderr, "ERROR: in acquireLock()\n");
+        exit(EXIT_FAILURE);
     }
 
     // Set processor affinity
@@ -107,7 +113,7 @@ void runLatWorker(LatencyWorker *lat_worker) {
     // Unset processor affinity
     if (locked) {
         bool unlocked;
-        unlocked = unlock_thread_to_numa_node();
+        unlocked = unlock_thread_to_cpu();
         if (! unlocked)
             fprintf(stderr, "WARNING: Failed to unlock threads!\n");
     }

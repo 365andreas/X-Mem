@@ -22,7 +22,6 @@ typedef struct {
     SequentialFunction kernel_dummy_fptr_seq_; /**< Points to a dummy version of the memory test core routine to use of the "sequential" type. */
     RandomFunction kernel_fptr_ran_; /**< Points to the memory test core routine to use of the "random" type. */
     RandomFunction kernel_dummy_fptr_ran_; /**< Points to a dummy version of the memory test core routine to use of the "random" type. */
-    int32_t cpu_affinity;
 } LoadWorker;
 
 LoadWorker *newLoadWorkerSeq(void* mem_array, size_t len, SequentialFunction kernel_fptr, SequentialFunction kernel_dummy_fptr, int32_t cpu_affinity);
