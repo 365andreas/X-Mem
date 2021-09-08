@@ -672,8 +672,9 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
 
     Configurator *cfg = bench_mgr->config_;
     uint32_t num_processor_units; // Number of CPU nodes or CPUs to affinitize for benchmark experiments.
-    uint32_t *processor_units; // List of CPU nodes or CPUs to affinitize for benchmark experiments.
+    uint32_t *processor_units = NULL; // List of CPU nodes or CPUs to affinitize for benchmark experiments.
     bool use_cpu_nodes = false;
+    uint32_t cpu_node = -1;
 
     if (runForAllCoresSelected(cfg)) {
         num_processor_units = g_num_logical_cpus;
@@ -682,15 +683,15 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
             processor_units[i] = i;
         }
     } else {
-        num_processor_units = bench_mgr->num_cpu_numa_node_affinities_;
-        processor_units = bench_mgr->cpu_numa_node_affinities_;
+        num_processor_units = 1; //bench_mgr->num_cpu_numa_node_affinities_;
+        // processor_units = bench_mgr->cpu_numa_node_affinities_;
         use_cpu_nodes = true;
+        cpu_node = getCoreId(cfg);
     }
 
     uint64_t *mem_regions_phys_addr = getMemoryRegionsPhysAddresses(cfg);
 
     uint32_t cpu      = -1;
-    uint32_t cpu_node = -1;
 
     bench_mgr->lat_mat_benchmarks_size_ = num_processor_units * numberOfMemoryRegionsPhysAddresses(cfg);
     bench_mgr->lat_mat_benchmarks_ = (LatencyMatrixBenchmark **) malloc(bench_mgr->lat_mat_benchmarks_size_ * sizeof(LatencyMatrixBenchmark *));
@@ -699,9 +700,6 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
     for (int pu = 0; pu < num_processor_units; pu++) { //iterate each cpu NUMA node
         if (runForAllCoresSelected(cfg)) {
             cpu = processor_units[pu];
-        }
-        else {
-            cpu_node = processor_units[pu];
         }
 
         for (uint32_t region_id = 0; region_id < numberOfMemoryRegionsPhysAddresses(cfg); region_id++) {
@@ -748,8 +746,6 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
     for (int pu = 0; pu != num_processor_units; pu++) { //iterate each cpu
         if (! use_cpu_nodes) {
             cpu = processor_units[pu];
-        } else {
-            cpu_node = processor_units[pu];
         }
 
         for (uint32_t region_id = 0; region_id < numberOfMemoryRegionsPhysAddresses(cfg); region_id++) {

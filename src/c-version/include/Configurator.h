@@ -21,6 +21,7 @@ typedef struct {
     bool mem_regions_in_phys_addr_; /**< True if physical addresses of memory regions are passed as arguments for matrix becnhmarks. */
     uint64_t *mem_regions_phys_addr_; /**< Array of physical addresses of memory regions to be used for matrix benchmark experiments. */
     uint32_t mem_regions_phys_addr_size; /**< Number of memory regions to be used for matrix benchmark experiments. */
+    uint32_t core_id_; /**< Core id of the core that will be used for the benchmarks. */
     bool run_all_cores_; /**< True if matrix benchmarks should run for all cores. */
     uint32_t use_num_cores_; /**< True if matrix benchmarks should run using all cores. */
     bool run_latency_matrix_; /**< True if latency matrix tests should be run. */
@@ -67,6 +68,11 @@ int32_t configureFromInput(Configurator *conf, int argc, char *argv[]);
  */
 bool runForAllCoresSelected(Configurator *conf);
 
+/**
+ * @brief Indicates which core will be used for the matrix tests.
+ * @returns The core which will be used for the matrix tests.
+ */
+uint32_t getCoreId(Configurator *conf);
 
 /**
  * @brief Indicates the number of cores that will be used for the throughput matrix tests.

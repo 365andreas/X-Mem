@@ -31,13 +31,15 @@ void printHelpText() {
                 " -s, use synchronous operations (O_SYNC enabled)\n"
                 " -v, verbose mode\n"
                 " -w working set size, pass working set size per thread in KB\n"
-                " -x, extended benchmarking mode (running all the iterations)\n";
+                " -x, extended benchmarking mode (running all the iterations)\n"
+                " -C, define the core that will be used for the benchmarks (zero-indexed)\n"
+                "     if -a is also specified then this option is overided and not used:\n";
     printf("%s", msg);
 }
 
 void printUsageText(char *name){
 
-    fprintf(stderr, "Usage: %s [-a] [-lt] [-dsvx] -r region_address [-n iterations_num] [-c num_cores]\n", name);
+    fprintf(stderr, "Usage: %s [-a] [-lt] [-dsvx] -r region_address [-n iterations_num] [-c num_cores] [-C core_id]\n", name);
 }
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
@@ -66,7 +68,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     }
 
     regions = 0;
-    while ((opt = getopt(argc, argv, "ac:d:lvtn:r:sw:x")) != -1) {
+    while ((opt = getopt(argc, argv, "ac:d:lvtn:r:sw:xC:")) != -1) {
         switch (opt) {
             case 'a': conf->run_all_cores_ = true; break;
             case 'c':
@@ -96,6 +98,16 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
             case 'v': conf->verbose_                     = true; break;
             case 'w': conf->working_set_size_per_thread_ = strtoull(optarg, NULL, 0) * KB; break;
             case 'x': g_log_extended                     = true; break;
+            case 'C':
+                conf->core_id_ = (uint32_t) strtoul(optarg, NULL, 0);
+                if (conf->core_id_ >= g_num_logical_cpus) {
+                    fprintf(stderr, "ERROR: Specified number of core id is not valid. Remember that core ids are"
+                                    "zero-indexed.\n");
+                    printUsageText(argv[0]);
+                    printHelpText();
+                    return EXIT_FAILURE;
+                }
+                break;
             default:
                 printUsageText(argv[0]);
                 printHelpText();
@@ -123,6 +135,8 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
 }
 
 bool runForAllCoresSelected(Configurator *conf) { return conf->run_all_cores_; }
+
+uint32_t getCoreId(Configurator *conf) { return conf->core_id_; }
 
 uint32_t useNumCores(Configurator *conf) { return conf->use_num_cores_; }
 
