@@ -17,15 +17,14 @@
 
 ThroughputMatrixBenchmark *initThroughputMatrixBenchmark(void *mem_array, size_t mem_array_len, uint32_t iters,
                                                          uint32_t num_worker_threads, uint32_t mem_node, uint32_t mem_region,
-                                                         uint32_t cpu_node, uint32_t cpu, bool use_cpu_nodes,
-                                                         pattern_mode_t pattern_mode, rw_mode_t rw_mode,
+                                                         uint32_t cpu, pattern_mode_t pattern_mode, rw_mode_t rw_mode,
                                                          chunk_size_t chunk_size, int32_t stride_size, char *benchmark_name) {
 
     ThroughputMatrixBenchmark *thr_mat_bench = (ThroughputMatrixBenchmark *) malloc(sizeof(ThroughputMatrixBenchmark));
 
     thr_mat_bench->mat_bench = newMatrixBenchmark(mem_array, mem_array_len, iters, num_worker_threads, mem_node,
-                                                  mem_region, cpu_node, cpu, use_cpu_nodes, pattern_mode, rw_mode,
-                                                  chunk_size, stride_size, benchmark_name, "MB/s");
+                                                  mem_region, cpu, pattern_mode, rw_mode, chunk_size, stride_size,
+                                                  benchmark_name, "MB/s");
 
     return thr_mat_bench;
 }
@@ -187,17 +186,6 @@ bool runThroughputCore(ThroughputMatrixBenchmark *thr_mat_bench) {
             fprintf(stderr, "WARNING: 95%% CI cannot be computed for fewer than six iterations!\n");
         }
     }
-
-    // if (g_log_extended) {
-    //     for (uint32_t i = 0; i < iterations_; i++) {
-    //         logfile_ << (use_cpu_nodes_ ? cpu_node_ : cpu_) << ","
-    //                  << mem_node_                           << ","
-    //                  << mem_region_                         << ","
-    //                  << i                                   << ","
-    //                  << metric_on_iter_[i]                  << ","
-    //                  << metric_units_                       << std::endl;
-    //     }
-    // }
 
     free(worker_threads);
     free(workers);

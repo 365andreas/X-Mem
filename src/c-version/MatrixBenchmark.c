@@ -20,10 +20,9 @@
 #include <util.h>
 
 MatrixBenchmark *newMatrixBenchmark(void* mem_array, size_t mem_array_len, uint32_t iters, uint32_t num_worker_threads,
-                                    uint32_t mem_node, uint32_t mem_region, uint32_t cpu_node, uint32_t cpu,
-                                    bool use_cpu_nodes, pattern_mode_t pattern_mode, rw_mode_t rw_mode,
-                                    chunk_size_t chunk_size, int32_t stride_size, char *benchmark_name,
-                                    char *metric_units) {
+                                    uint32_t mem_node, uint32_t mem_region, uint32_t cpu, pattern_mode_t pattern_mode,
+                                    rw_mode_t rw_mode, chunk_size_t chunk_size, int32_t stride_size,
+                                    char *benchmark_name, char *metric_units) {
 
     MatrixBenchmark *mat_bench = (MatrixBenchmark *) malloc(sizeof(MatrixBenchmark));
 
@@ -33,9 +32,7 @@ MatrixBenchmark *newMatrixBenchmark(void* mem_array, size_t mem_array_len, uint3
     mat_bench->num_worker_threads = num_worker_threads;
     mat_bench->mem_node           = mem_node;
     mat_bench->mem_region         = mem_region;
-    mat_bench->cpu_node           = cpu_node;
     mat_bench->cpu                = cpu;
-    mat_bench->use_cpu_nodes      = use_cpu_nodes;
     mat_bench->pattern_mode       = pattern_mode;
     mat_bench->rw_mode            = rw_mode;
     mat_bench->chunk_size         = chunk_size;
@@ -99,11 +96,7 @@ double getMedianMetric(MatrixBenchmark *mat_bench) {
 }
 
 uint32_t getCPUId(MatrixBenchmark *mat_bench) {
-
-    if (mat_bench->use_cpu_nodes)
-        return mat_bench->cpu_node;
-    else
-        return mat_bench->cpu;
+    return mat_bench->cpu;
 }
 
 uint32_t getMemRegion(MatrixBenchmark *mat_bench) {
@@ -116,12 +109,7 @@ char *getMetricUnits(MatrixBenchmark *mat_bench) {
 
 void reportResults(MatrixBenchmark *mat_bench) {
 
-    if (mat_bench->use_cpu_nodes) {
-        printf("CPU NUMA Node: %d ", mat_bench->cpu_node);
-    } else {
-        printf("CPU: %d ", mat_bench->cpu);
-    }
-    printf("Memory NUMA Node: %d ", mat_bench->mem_node);
+    printf("CPU: %d ", mat_bench->cpu);
     printf("Region: %d ", mat_bench->mem_region);
 
     if (mat_bench->has_run_) {
