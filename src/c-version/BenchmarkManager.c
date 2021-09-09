@@ -20,10 +20,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#ifdef HAS_NUMA
-#include <numa.h>
-#include <numaif.h>
-#endif
 #ifdef HAS_LARGE_PAGES
 #include <hugetlbfs.h> //for allocating and freeing huge pages
 #endif
@@ -47,16 +43,6 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
 
     bench_mgr->config_ = config;
     bench_mgr->built_benchmarks_ = false;
-
-    //Set up NUMA stuff
-    // cpu_numa_node_affinities_ = config_.getCpuNumaNodeAffinities();
-    bench_mgr->num_cpu_numa_node_affinities_ = 1;
-    bench_mgr->cpu_numa_node_affinities_ = (uint32_t *) malloc(bench_mgr->num_cpu_numa_node_affinities_ * sizeof(uint32_t));
-    for (int i = 0; i < bench_mgr->num_cpu_numa_node_affinities_; i++) {
-        bench_mgr->cpu_numa_node_affinities_[i] = i;
-    }
-
-    // memory_numa_node_affinities_ = config_.getMemoryNumaNodeAffinities();
 
     //Build working memory regions
     setupWorkingSets(bench_mgr, getWorkingSetSizePerThread(bench_mgr->config_));
@@ -97,11 +83,7 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
 //             } else {
 // #endif
 //                 if (! config_.memoryRegionsInPhysAddr()) {
-// #ifdef HAS_NUMA
-//                     numa_free(mem_arrays_[i], mem_array_lens_[i]);
-// #else
 //                     free(orig_malloc_addr_); //this is somewhat of a band-aid
-// #endif
 //                 } else {
 //                     if (munmap(mem_arrays_[i], mem_array_lens_[i]) < 0) {
 //                         perror("Failed to munmap() memory regions:");
@@ -139,12 +121,9 @@ void printMatrix(BenchmarkManager *bench_mgr, MatrixBenchmark **mat_benchmarks, 
     printf("\n");
 
     uint32_t regions_per_pu = cfg->mem_regions_phys_addr_size;
-    // uint32_t regions_per_pu = config_.memoryRegionsInPhysAddr() ? mem_regions_phys_addr.size()
-    //                                                             : mem_regions_per_numa * g_num_numa_nodes;
 
     printf("CPU");
     for (uint32_t region_id = 0; region_id < bench_mgr->num_mem_regions_; region_id++) {
-        uint32_t mem_node = bench_mgr->mem_array_node_[region_id];
         uint32_t mem_region = region_id;
         printf(" %*d", 11, mem_region);
     }
@@ -237,7 +216,6 @@ bool runThroughputMatrixBenchmarks(BenchmarkManager *bench_mgr) {
 }
 
 void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size) {
-    //Allocate memory in each NUMA node to be tested
 
     Configurator *cfg = bench_mgr->config_;
 
@@ -247,7 +225,6 @@ void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size) {
 
     bench_mgr->mem_arrays_      = (void **)  malloc(mem_regions_per_cpu * sizeof(void *));
     bench_mgr->mem_array_lens_  = (size_t *) malloc(mem_regions_per_cpu * sizeof(size_t));
-    bench_mgr->mem_array_node_  = (size_t *) malloc(mem_regions_per_cpu * sizeof(size_t));
     bench_mgr->num_mem_regions_ = mem_regions_per_cpu;
 
     if (! memoryRegionsInPhysAddr(cfg)) {
@@ -282,41 +259,9 @@ void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size) {
 
             bench_mgr->mem_arrays_[region_id] = virt_addr;
             bench_mgr->mem_array_lens_[region_id] = allocation_size;
-            bench_mgr->mem_array_node_[region_id] = -1;
 
             if (latencyMatrixTestSelected(cfg) || throughputMatrixTestSelected(cfg)) {
                 printf("Physical address of memory region #%d: 0x%.16llx\n", region_id, (long long unsigned int) phys_addr);
-
-#ifdef HAS_NUMA
-                // check on which NUMA node this region belongs to
-                size_t num_pages = len / page_size;
-                num_pages += ((len % page_size) > 0) ? 1 : 0;
-                int *status = (int *) malloc(num_pages * sizeof(int));
-                void **pages = (void **) malloc(num_pages * sizeof(void *));
-                memset(virt_addr, 0x41, len);
-                for(uint32_t i = 0; i < num_pages; i++) {
-                    pages[i] = &((char *) virt_addr)[i * page_size];
-                }
-                if (0 != move_pages(0 /*self memory */, 1, pages, NULL, status, MPOL_MF_MOVE_ALL)) {
-                    perror("WARNING! In move_page() willing to learn on which NUMA node belongs a physical address");
-                }
-                for (uint32_t i = 0; i < num_pages; i++) {
-                    if (status[i] < 0) {
-                        errno = -status[i];
-                        perror("WARNING! In move_page() status returned error");
-                        fprintf(stderr, "\n^^^ page #%d\n", i + 1);
-                        bench_mgr->mem_array_node_[region_id] = (uint32_t) -1;
-                    } else if (i == 0) {
-                        printf(" on NUMA node %d (first page)", status[0]);
-                        bench_mgr->mem_array_node_[region_id] = status[0];
-                    } else if (i == num_pages - 1) {
-                        printf(" and on NUMA node %d (last page, %ld)", status[num_pages - 1], num_pages);
-                    }
-                }
-                printf("\n");
-                free(pages);
-                free(status);
-#endif
             }
         }
     }
@@ -356,11 +301,10 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
     bench_mgr->lat_mat_benchmarks_ = (LatencyMatrixBenchmark **) malloc(bench_mgr->lat_mat_benchmarks_size_ * sizeof(LatencyMatrixBenchmark *));
     int l = 0;
     //Build latency matrix benchmarks
-    for (int pu = 0; pu < num_processor_units; pu++) { //iterate each cpu NUMA node
+    for (int pu = 0; pu < num_processor_units; pu++) {
         cpu = processor_units[pu];
 
         for (uint32_t region_id = 0; region_id < numberOfMemoryRegionsPhysAddresses(cfg); region_id++) {
-            uint32_t mem_node = bench_mgr->mem_array_node_[region_id];
             void* mem_array = bench_mgr->mem_arrays_[region_id];
             size_t mem_array_len = bench_mgr->mem_array_lens_[region_id];
             uint32_t mem_region = region_id;
@@ -375,7 +319,6 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
                                                                            mem_array_len,
                                                                            getIterationsPerTest(cfg),
                                                                            DEFAULT_NUM_WORKER_THREADS,
-                                                                           mem_node,
                                                                            mem_region,
                                                                            cpu,
                                                                            RANDOM,
@@ -402,7 +345,6 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
         cpu = processor_units[pu];
 
         for (uint32_t region_id = 0; region_id < numberOfMemoryRegionsPhysAddresses(cfg); region_id++) {
-            uint32_t mem_node = bench_mgr->mem_array_node_[region_id];
             void* mem_array = bench_mgr->mem_arrays_[region_id];
             size_t mem_array_len = bench_mgr->mem_array_lens_[region_id];
             uint32_t mem_region = region_id;
@@ -417,7 +359,6 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
                                                                               mem_array_len,
                                                                               getIterationsPerTest(cfg),
                                                                               useNumCores(cfg),
-                                                                              mem_node,
                                                                               mem_region,
                                                                               cpu,
                                                                               SEQUENTIAL,

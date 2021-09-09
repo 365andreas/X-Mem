@@ -26,16 +26,9 @@ typedef struct {
 
     Configurator *config_;
 
-    uint32_t num_cpu_numa_node_affinities_; /**< List of CPU nodes to affinitize for benchmark experiments. */
-    uint32_t *cpu_numa_node_affinities_; /**< List of CPU nodes to affinitize for benchmark experiments. */
-    uint32_t *memory_numa_node_affinities_; /**< List of memory nodes to affinitize for benchmark experiments. */
     uint32_t num_mem_regions_;
-    void* *mem_arrays_; /**< Memory regions to use in benchmarks. One for each benchmarked NUMA node. */
-#ifndef HAS_NUMA
-    void* orig_malloc_addr_; /**< Points to the original address returned by the malloc() for __mem_arrays on non-NUMA machines. Special case. FIXME: do we need this? seems awkward */
-#endif
+    void* *mem_arrays_; /**< Memory regions to use in benchmarks. One for each benchmarked node. */
     size_t *mem_array_lens_; /**< Length of each memory region to use in benchmarks. */
-    size_t *mem_array_node_; /**< NUMA node of each memory region to use in benchmarks. */
     uint32_t num_lat_mat_benchmarks_;
     uint32_t num_thr_mat_benchmarks_;
 
@@ -76,7 +69,7 @@ bool runThroughputMatrixBenchmarks(BenchmarkManager *bench_mgr);
 
 /**
  * @brief Allocates memory for all working sets.
- * @param working_set_size Memory size in bytes, per enabled NUMA node.
+ * @param working_set_size Memory size in bytes, per enabled mem node.
  */
 void setupWorkingSets(BenchmarkManager *bench_mgr, size_t working_set_size);
 

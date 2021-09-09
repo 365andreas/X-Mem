@@ -17,15 +17,15 @@
 
 
 LatencyMatrixBenchmark *initLatencyMatrixBenchmark(void *mem_array, size_t mem_array_len, uint32_t iters,
-                                                   uint32_t num_worker_threads, uint32_t mem_node, uint32_t mem_region,
-                                                   uint32_t cpu, pattern_mode_t pattern_mode, rw_mode_t rw_mode,
+                                                   uint32_t num_worker_threads, uint32_t mem_region, uint32_t cpu,
+                                                   pattern_mode_t pattern_mode, rw_mode_t rw_mode,
                                                    chunk_size_t chunk_size, int32_t stride_size, char *benchmark_name) {
 
     LatencyMatrixBenchmark *lat_mat_bench = (LatencyMatrixBenchmark *) malloc(sizeof(LatencyMatrixBenchmark));
 
-    lat_mat_bench->mat_bench = newMatrixBenchmark(mem_array, mem_array_len, iters, num_worker_threads, mem_node,
-                                                  mem_region, cpu, pattern_mode, rw_mode, chunk_size, stride_size,
-                                                  benchmark_name, "ns/access");
+    lat_mat_bench->mat_bench = newMatrixBenchmark(mem_array, mem_array_len, iters, num_worker_threads, mem_region, cpu,
+                                                  pattern_mode, rw_mode, chunk_size, stride_size, benchmark_name,
+                                                  "ns/access");
 
     return lat_mat_bench;
 }

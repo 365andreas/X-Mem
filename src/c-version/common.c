@@ -21,9 +21,6 @@
 
 #include <unistd.h>
 #include <pthread.h>
-#ifdef HAS_NUMA
-#include <numa.h>
-#endif
 
 #ifdef ARCH_INTEL
 #include <immintrin.h> //for timer
@@ -46,7 +43,6 @@ bool g_verbose = false; /**< If true, be more verbose with console reporting. */
 bool g_log_extended = false; /**< If true, disable early stopping (when CI does not deviate too much) and log measured values to enable statistical processing of the experiments. */
 size_t g_page_size; /**< Default page size on the system, in bytes. */
 size_t g_large_page_size; /**< Large page size on the system, in bytes. */
-uint32_t g_num_numa_nodes; /**< Number of NUMA nodes in the system. */
 uint32_t g_num_logical_cpus; /**< Number of logical CPU cores in the system. This may be different than physical CPUs, e.g. simultaneous multithreading. */
 uint32_t g_num_physical_cpus; /**< Number of physical CPU cores in the system. */
 uint32_t g_num_physical_packages; /**< Number of physical CPU packages in the system. Generally this is the same as number of NUMA nodes, unless UMA emulation is done in hardware. */
@@ -57,132 +53,6 @@ tick_t g_ticks_per_ms; /**< Timer ticks per ms. */
 float g_ns_per_tick; /**< Nanoseconds per timer tick. */
 
 uint32_t num_core_ids = 0;
-
-// void xmem::print_compile_time_options() {
-//     std::cout << std::endl;
-//     std::cout << "This binary was built for the following OS and architecture capabilities: " << std::endl;
-// #ifdef _WIN32
-//     std::cout << "Win32" << std::endl;
-// #endif
-// #ifdef _WIN64
-//     std::cout << "Win64" << std::endl;
-// #endif
-// #ifdef __gnu_linux__
-//     std::cout <<  "GNU/Linux" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL
-//     std::cout << "ARCH_INTEL" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL_X86
-//     std::cout << "ARCH_INTEL_X86" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL_X86_64
-//     std::cout << "ARCH_INTEL_X86_64" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL_MIC
-//     std::cout << "ARCH_INTEL_MIC" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL_SSE
-//     std::cout << "ARCH_INTEL_SSE" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL_SSE2
-//     std::cout << "ARCH_INTEL_SSE2" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL_SSE3
-//     std::cout << "ARCH_INTEL_SSE3" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL_AVX
-//     std::cout << "ARCH_INTEL_AVX" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL_AVX2
-//     std::cout << "ARCH_INTEL_AVX2" << std::endl;
-// #endif
-// #ifdef ARCH_INTEL_AVX512
-//     std::cout << "ARCH_INTEL_AVX512" << std::endl;
-// #endif
-// #ifdef ARCH_AMD64
-//     std::cout << "ARCH_AMD64" << std::endl;
-// #endif
-// #ifdef ARCH_ARM
-//     std::cout << "ARCH_ARM" << std::endl;
-// #endif
-// #ifdef ARCH_ARM_64
-//     std::cout << "ARCH_ARM_64" << std::endl;
-// #endif
-// #ifdef ARCH_ARM_V7
-//     std::cout << "ARCH_ARM_V7" << std::endl;
-// #endif
-// #ifdef ARCH_ARM_V8
-//     std::cout << "ARCH_ARM_V8" << std::endl;
-// #endif
-// #ifdef ARCH_ARM_VFP_V3
-//     std::cout << "ARCH_ARM_VFP_V3" << std::endl;
-// #endif
-// #ifdef ARCH_ARM_VFP_V4
-//     std::cout << "ARCH_ARM_VFP_V4" << std::endl;
-// #endif
-// #ifdef ARCH_ARM_NEON
-//     std::cout << "ARCH_ARM_NEON" << std::endl;
-// #endif
-// #ifdef ARCH_64BIT
-//     std::cout << "ARCH_64BIT" << std::endl;
-// #endif
-// #ifdef HAS_NUMA
-//     std::cout << "HAS_NUMA" << std::endl;
-// #endif
-// #ifdef HAS_LARGE_PAGES
-//     std::cout << "HAS_LARGE_PAGES" << std::endl;
-// #endif
-// #ifdef HAS_WORD_64
-//     std::cout << "HAS_WORD_64" << std::endl;
-// #endif
-// #ifdef HAS_WORD_128
-//     std::cout << "HAS_WORD_128" << std::endl;
-// #endif
-// #ifdef HAS_WORD_256
-//     std::cout << "HAS_WORD_256" << std::endl;
-// #endif
-// #ifdef HAS_WORD_512
-//     std::cout << "HAS_WORD_512" << std::endl;
-// #endif
-//     std::cout << std::endl;
-//     std::cout << "This binary was built with the following compile-time options:" << std::endl;
-// #ifdef NDEBUG
-//     std::cout << "NDEBUG" << std::endl;
-// #endif
-// #ifdef USE_OS_TIMER
-//     std::cout << "USE_OS_TIMER" << std::endl;
-// #endif
-// #ifdef USE_HW_TIMER
-//     std::cout << "USE_HW_TIMER" << std::endl;
-// #endif
-// #ifdef USE_QPC_TIMER
-//     std::cout << "USE_QPC_TIMER" << std::endl;
-// #endif
-// #ifdef USE_POSIX_TIMER
-//     std::cout << "USE_POSIX_TIMER" << std::endl;
-// #endif
-// #ifdef USE_TSC_TIMER
-//     std::cout << "USE_TSC_TIMER" << std::endl;
-// #endif
-//     //TODO: ARM timer
-// #ifdef BENCHMARK_DURATION_SEC
-//     std::cout << "BENCHMARK_DURATION_SEC = " << BENCHMARK_DURATION_SEC << std::endl; //This must be defined
-// #endif
-// #ifdef THROUGHPUT_BENCHMARK_BYTES_PER_PASS
-//     std::cout << "THROUGHPUT_BENCHMARK_BYTES_PER_PASS == " << THROUGHPUT_BENCHMARK_BYTES_PER_PASS << std::endl;
-// #endif
-// #ifdef POWER_SAMPLING_PERIOD_SEC
-//     std::cout << "POWER_SAMPLING_PERIOD_MS == " << POWER_SAMPLING_PERIOD_MS << std::endl;
-// #endif
-// #ifdef EXT_DELAY_INJECTED_LOADED_LATENCY_BENCHMARK
-//     std::cout << "EXT_DELAY_INJECTED_LOADED_LATENCY_BENCHMARK" << std::endl;
-// #endif
-// #ifdef EXT_STREAM_BENCHMARK
-//     std::cout << "EXT_STREAM_BENCHMARK" << std::endl;
-// #endif
-//     std::cout << std::endl;
-// }
 
 void setup_timer() {
     if (g_verbose)
@@ -219,35 +89,9 @@ void setup_timer() {
 //     }
 // }
 
-// bool xmem::lock_thread_to_numa_node(uint32_t numa_node) {
-//     std::vector<uint32_t> cpus_in_node;
-//     for (uint32_t c = 0; c < g_num_logical_cpus; c++) {
-//         int32_t cpu = cpu_id_in_numa_node(numa_node, c);
-//         if (cpu >= 0) //valid
-//             cpus_in_node.push_back(static_cast<uint32_t>(cpu));
-//     }
-
 //     if (cpus_in_node.size() < 1) //Check to see that there was something to lock to
 //         return false;
 
-// #ifdef _WIN32
-//     HANDLE tid = GetCurrentThread();
-//     if (tid == 0)
-//         return false;
-//     else {
-//         //Set thread affinity mask to include all CPUs in the NUMA node of interest
-//         DWORD_PTR threadAffinityMask = 0;
-//         for (auto it = cpus_in_node.cbegin(); it != cpus_in_node.cend(); it++)
-//             threadAffinityMask |= static_cast<DWORD_PTR>((1 << *it));
-
-//         DWORD_PTR prev_mask = SetThreadAffinityMask(tid, threadAffinityMask); //enable the CPUs
-//         if (prev_mask == 0)
-//             return false;
-//     }
-//     return true;
-// #endif
-
-// #ifdef __gnu_linux__
 //     cpu_set_t cpus;
 //     CPU_ZERO(&cpus);
 //     for (auto it = cpus_in_node.cbegin(); it != cpus_in_node.cend(); it++)
@@ -255,12 +99,7 @@ void setup_timer() {
 
 //     pthread_t tid = pthread_self();
 //     return (!pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpus));
-// #endif
 // }
-
-bool unlock_thread_to_numa_node() {
-    return unlock_thread_to_cpu();
-}
 
 bool lock_thread_to_cpu(uint32_t cpu_id) {
     cpu_set_t cpus;
@@ -286,72 +125,10 @@ bool unlock_thread_to_cpu() {
     return (!pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpus));
 }
 
-// int32_t xmem::cpu_id_in_numa_node(uint32_t numa_node, uint32_t cpu_in_node) {
-// #ifndef HAS_NUMA
-//     if (numa_node != 0) {
-//         std::cerr << "WARNING: NUMA is not supported on this X-Mem build." << std::endl;
-//         return -1;
-//     }
-
-//     return cpu_in_node;
-// #endif
-
-// #ifdef HAS_NUMA
-//     int32_t cpu_id = -1;
-//     uint32_t rank_in_node = 0;
-// #ifdef _WIN32
-//     ULONGLONG processorMask = 0;
-//     GetNumaNodeProcessorMask(numa_node, &processorMask);
-//     //Select Nth CPU in the node
-//     uint32_t shifts = 0;
-//     ULONGLONG shiftmask = processorMask;
-//     bool done = false;
-//     while (!done && shifts < sizeof(shiftmask)*8) {
-//         if ((shiftmask & 0x1) == 0x1) { //current CPU is in the NUMA node
-//             if (cpu_in_node == rank_in_node) { //found the CPU of interest in the NUMA node
-//                 cpu_id = static_cast<int32_t>(shifts);
-//                 done = true;
-//             }
-//             rank_in_node++;
-//         }
-//         shiftmask = shiftmask >> 1; //shift right by one to examine next CPU
-//         shifts++;
-//     }
-// #endif
-// #ifdef __gnu_linux__
-//     struct bitmask *bm_ptr = numa_allocate_cpumask();
-//     if (!bm_ptr) {
-//         std::cerr << "WARNING: Failed to allocate a bitmask for loading NUMA information." << std::endl;
-//         return -1;
-//     }
-//     if (numa_node_to_cpus(static_cast<int32_t>(numa_node), bm_ptr)) //error
-//         return -1;
-
-//     //Select Nth CPU in the node
-//     for (uint32_t i = 0; i < bm_ptr->size; i++) {
-//         if (numa_bitmask_isbitset(bm_ptr, i) == 1) {
-//             if (cpu_in_node == rank_in_node) { //found the CPU of interest in the NUMA node
-//                 cpu_id = i;
-//                 if (bm_ptr)
-//                     free(bm_ptr);
-//                 return cpu_id;
-//             }
-//             rank_in_node++;
-//         }
-//     }
-
-//     if (bm_ptr)
-//         free(bm_ptr);
-// #endif
-//     return cpu_id;
-// #endif
-// }
-
 void init_globals() {
     //Initialize global variables to defaults.
     g_verbose = false;
     g_log_extended = false;
-    g_num_numa_nodes = DEFAULT_NUM_NODES;
     g_num_physical_packages = DEFAULT_NUM_PHYSICAL_PACKAGES;
     g_physical_package_of_cpu = DEFAULT_PHYSICAL_PACKAGE_OF_CPU;
     g_num_physical_cpus = DEFAULT_NUM_PHYSICAL_CPUS;
@@ -373,21 +150,6 @@ int32_t query_sys_info() {
     char *line = (char *) malloc(line_size * sizeof(double));
     char *line_str;
     uint32_t id = 0;
-
-
-    //Get NUMA info
-#ifdef HAS_NUMA
-    if (numa_available() == -1) { //Check that NUMA is available.
-        fprintf(stderr, "WARNING: NUMA API is not available on this system.\n");
-        return -1;
-    }
-
-    //Get number of nodes. This is easy.
-    g_num_numa_nodes = numa_max_node() + 1;
-#endif
-#ifndef HAS_NUMA //special case
-    g_num_numa_nodes = 1;
-#endif
 
     //Get number of physical packages. This is somewhat convoluted, but not sure of a better way on Linux. Technically there could be on-chip NUMA, so...
     uint32_t phys_package_ids[MAX_PHYS_PACKAGE_IDS];
@@ -527,10 +289,6 @@ int32_t query_sys_info() {
 }
 
 // void xmem::report_sys_info() {
-//     std::cout << std::endl;
-//     std::cout << "Number of NUMA nodes: " << g_num_numa_nodes;
-//     if (g_num_numa_nodes == DEFAULT_NUM_NODES)
-//         std::cout << "?";
 //     std::cout << std::endl;
 //     std::cout << "Number of physical processor packages: " << g_num_physical_packages;
 //     if (g_num_physical_packages == DEFAULT_NUM_PHYSICAL_PACKAGES)

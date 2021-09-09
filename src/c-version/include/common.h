@@ -44,7 +44,6 @@
 #define ARCH_INTEL
 #define ARCH_INTEL_X86_64
 #define ARCH_64BIT
-// #define HAS_NUMA
 // #define HAS_LARGE_PAGES
 #endif
 
@@ -150,7 +149,6 @@
 #define DEFAULT_LARGE_PAGE_SIZE 2*MB /**< Default platform large page size in bytes. This generally should not be relied on, but is a failsafe. */
 #define DEFAULT_WORKING_SET_SIZE_PER_THREAD DEFAULT_PAGE_SIZE /**< Default working set size in bytes. */
 #define DEFAULT_NUM_WORKER_THREADS 1 /**< Default number of worker threads to use. */
-#define DEFAULT_NUM_NODES 0 /**< Default number of NUMA nodes. */
 #define DEFAULT_NUM_PHYSICAL_PACKAGES 0 /**< Default number of physical packages. */
 #define DEFAULT_PHYSICAL_PACKAGE_OF_CPU NULL /**< Default mapping of physical CPU cores in the system to the according physical package. */
 #define DEFAULT_NUM_PHYSICAL_CPUS 0 /**< Default number of physical CPU cores. */
@@ -261,7 +259,6 @@ extern bool g_verbose;
 extern bool g_log_extended;
 extern size_t g_page_size;
 extern size_t g_large_page_size;
-extern uint32_t g_num_numa_nodes;
 extern uint32_t g_num_logical_cpus;
 extern uint32_t g_num_physical_packages;
 extern uint32_t *g_physical_package_of_cpu;
@@ -376,19 +373,6 @@ void setup_timer();
 //  */
 // void test_thread_affinities();
 
-// /**
-//  * @brief Sets the affinity of the calling thread to any of the CPUs in the NUMA node.
-//  * @param numa_node The NUMA node number.
-//  * @returns True on success.
-//  */
-// bool lock_thread_to_numa_node(uint32_t numa_node);
-
-/**
- * @brief Clears the affinity of the calling thread to any given NUMA node.
- * @returns True on success.
- */
-bool unlock_thread_to_numa_node();
-
 /**
  * @brief Sets the affinity of the calling thread to a given logical CPU.
  * @param cpu_id The logical CPU identifier to lock the thread to.
@@ -401,15 +385,6 @@ bool lock_thread_to_cpu(uint32_t cpu_id);
  * @returns True on success.
  */
 bool unlock_thread_to_cpu();
-
-// /**
-//  * @brief Gets the CPU ID for a logical CPU of interest in a particular NUMA node.
-//  * For example, if numa_node is 1 and cpu_in_node is 2, and there are 4 logical CPUs per node, then this will give the answer 6 (6th CPU), assuming CPU IDs start at 0.
-//  * @param numa_node The NUMA node of interest.
-//  * @param cpu_in_node The Nth logical CPU in the node.
-//  * @returns The Nth logical CPU ID in the specified NUMA node. If none is found, returns -1.
-//  */
-// int32_t cpu_id_in_numa_node(uint32_t numa_node, uint32_t cpu_in_node);
 
 // /**
 //  * @brief Computes the number of passes to use for a given working set size in KB, when size-based benchmarking mode is enabled at compile-time.

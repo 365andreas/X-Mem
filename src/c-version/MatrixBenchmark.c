@@ -20,9 +20,9 @@
 #include <util.h>
 
 MatrixBenchmark *newMatrixBenchmark(void* mem_array, size_t mem_array_len, uint32_t iters, uint32_t num_worker_threads,
-                                    uint32_t mem_node, uint32_t mem_region, uint32_t cpu, pattern_mode_t pattern_mode,
-                                    rw_mode_t rw_mode, chunk_size_t chunk_size, int32_t stride_size,
-                                    char *benchmark_name, char *metric_units) {
+                                    uint32_t mem_region, uint32_t cpu, pattern_mode_t pattern_mode, rw_mode_t rw_mode,
+                                    chunk_size_t chunk_size, int32_t stride_size, char *benchmark_name,
+                                    char *metric_units) {
 
     MatrixBenchmark *mat_bench = (MatrixBenchmark *) malloc(sizeof(MatrixBenchmark));
 
@@ -30,7 +30,6 @@ MatrixBenchmark *newMatrixBenchmark(void* mem_array, size_t mem_array_len, uint3
     mat_bench->len                = mem_array_len;
     mat_bench->iterations         = iters;
     mat_bench->num_worker_threads = num_worker_threads;
-    mat_bench->mem_node           = mem_node;
     mat_bench->mem_region         = mem_region;
     mat_bench->cpu                = cpu;
     mat_bench->pattern_mode       = pattern_mode;
