@@ -339,6 +339,14 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
     bench_mgr->thr_mat_benchmarks_size_ = num_processor_units * numberOfMemoryRegionsPhysAddresses(cfg);
     bench_mgr->thr_mat_benchmarks_ = (ThroughputMatrixBenchmark **) malloc(bench_mgr->thr_mat_benchmarks_size_ * sizeof(ThroughputMatrixBenchmark *));
     l = 0;
+    chunk_size_t chunk = CHUNK_64b;
+    int32_t stride = 1;
+    rw_mode_t rw_mode;
+    if (useWrites(cfg)) {
+        rw_mode = WRITE;
+    } else {
+        rw_mode = READ;
+    }
 
     //Build throughput matrix benchmarks
     for (int pu = 0; pu != num_processor_units; pu++) {
@@ -349,8 +357,6 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
             size_t mem_array_len = bench_mgr->mem_array_lens_[region_id];
             uint32_t mem_region = region_id;
 
-            chunk_size_t chunk = CHUNK_64b;
-            int32_t stride = 1;
 
             // Throughput benchmark from every core to every memory region
             sprintf(benchmark_name, "Test #%d TM (ThroughputMatrix)", g_test_index);
@@ -362,7 +368,7 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
                                                                               mem_region,
                                                                               cpu,
                                                                               SEQUENTIAL,
-                                                                              READ,
+                                                                              rw_mode,
                                                                               chunk,
                                                                               stride,
                                                                               benchmark_name);

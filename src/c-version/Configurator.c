@@ -33,13 +33,14 @@ void printHelpText() {
                 " -w working set size, pass working set size per thread in KB\n"
                 " -x, extended benchmarking mode (running all the iterations)\n"
                 " -C, define the core that will be used for the benchmarks (zero-indexed)\n"
-                "     if -a is also specified then this option is overided and not used:\n";
+                "     if -a is also specified then this option is overided and not used.\n"
+                " -W, use writes instead of reads for the trhoughput benchmarks\n";
     printf("%s", msg);
 }
 
 void printUsageText(char *name){
 
-    fprintf(stderr, "Usage: %s [-a] [-lt] [-dsvx] -r region_address [-n iterations_num] [-c num_cores] [-C core_id]\n", name);
+    fprintf(stderr, "Usage: %s [-a] [-lt] [-dsvx] [-W] -r region_address [-n iterations_num] [-c num_cores] [-C core_id]\n", name);
 }
 
 int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
@@ -68,7 +69,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
     }
 
     regions = 0;
-    while ((opt = getopt(argc, argv, "ac:d:lvtn:r:sw:xC:")) != -1) {
+    while ((opt = getopt(argc, argv, "ac:d:lvtn:r:sw:xC:W")) != -1) {
         switch (opt) {
             case 'a': conf->run_all_cores_ = true; break;
             case 'c':
@@ -108,6 +109,7 @@ int32_t configureFromInput(Configurator *conf, int argc, char* argv[]) {
                     return EXIT_FAILURE;
                 }
                 break;
+            case 'W': conf->use_writes_ = true; break;
             default:
                 printUsageText(argv[0]);
                 printHelpText();
@@ -161,3 +163,5 @@ char *getDecNetFilename(Configurator *conf) { return conf->dec_net_filename_; }
 bool useDecNetFile(Configurator *conf) { return conf->use_dec_net_file_; }
 
 void setUseDecNetFile(Configurator *conf, bool use) { conf->use_dec_net_file_ = use; }
+
+bool useWrites(Configurator *conf) { return conf->use_writes_; }

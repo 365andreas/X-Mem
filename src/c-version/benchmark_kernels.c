@@ -1972,15 +1972,15 @@ int32_t forwSequentialWrite_Word32(void* start_address, void* end_address) {
     return 0;
 }
 
-// #ifdef HAS_WORD_64
-// int32_t xmem::forwSequentialWrite_Word64(void* start_address, void* end_address) {
-//     register Word64_t val = 0xFFFFFFFFFFFFFFFF;
-//     for (volatile Word64_t* wordptr = static_cast<Word64_t*>(start_address), *endptr = static_cast<Word64_t*>(end_address); wordptr < endptr;) {
-//         UNROLL512(*wordptr++ = val;)
-//     }
-//     return 0;
-// }
-// #endif
+#ifdef HAS_WORD_64
+int32_t forwSequentialWrite_Word64(void* start_address, void* end_address) {
+    register Word64_t val = 0xFFFFFFFFFFFFFFFF;
+    for (volatile Word64_t* wordptr = (Word64_t *) start_address, *endptr = (Word64_t *) end_address; wordptr < endptr;) {
+        UNROLL512(*wordptr++ = val;)
+    }
+    return 0;
+}
+#endif
 
 // #ifdef HAS_WORD_128
 // int32_t xmem::forwSequentialWrite_Word128(void* start_address, void* end_address) {

@@ -38,7 +38,12 @@ bool runThroughputCore(ThroughputMatrixBenchmark *thr_mat_bench) {
     RandomFunction kernel_fptr_ran = NULL;
     RandomFunction kernel_dummy_fptr_ran = NULL;
 
-    if (thr_mat_bench->mat_bench->pattern_mode == SEQUENTIAL) {
+    if (   (thr_mat_bench->mat_bench->pattern_mode == SEQUENTIAL)
+        && (thr_mat_bench->mat_bench->rw_mode == WRITE)) {
+        kernel_fptr_seq = &forwSequentialWrite_Word64;
+        kernel_dummy_fptr_seq = &dummy_forwSequentialLoop_Word64;
+    } else if (   (thr_mat_bench->mat_bench->pattern_mode == SEQUENTIAL)
+               && (thr_mat_bench->mat_bench->rw_mode == READ)) {
         kernel_fptr_seq = &forwSequentialRead_Word64;
         kernel_dummy_fptr_seq = &dummy_forwSequentialLoop_Word64;
     } else if (thr_mat_bench->mat_bench->pattern_mode == RANDOM) {

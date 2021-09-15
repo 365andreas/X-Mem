@@ -206,15 +206,15 @@ int32_t forwSequentialRead_Word64(void* start_address, void* end_address);
  */
 int32_t forwSequentialWrite_Word32(void* start_address, void* end_address);
 
-// #ifdef HAS_WORD_64
-// /**
-//  * @brief Walks over the allocated memory forward sequentially, writing in 64-bit chunks.
-//  * @param start_address The beginning of the memory region of interest.
-//  * @param end_address The end of the memory region of interest.
-//  * @returns Undefined.
-//  */
-// int32_t forwSequentialWrite_Word64(void* start_address, void* end_address);
-// #endif
+#ifdef HAS_WORD_64
+/**
+ * @brief Walks over the allocated memory forward sequentially, writing in 64-bit chunks.
+ * @param start_address The beginning of the memory region of interest.
+ * @param end_address The end of the memory region of interest.
+ * @returns Undefined.
+ */
+int32_t forwSequentialWrite_Word64(void* start_address, void* end_address);
+#endif
 
 #ifdef HAS_WORD_512
     /**

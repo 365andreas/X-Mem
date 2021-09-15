@@ -32,11 +32,10 @@ typedef struct {
     bool sync_mem_; /**< True if accesses to memory should happen synchronously. If true every access will be uncached. */
     bool use_dec_net_file_; /**< If true, generate a decoding net friendly output file for results. */
     char *dec_net_filename_; /**< The decoding network compatible output filename if applicable. */
+    bool use_writes_; /**< If true, throughput benchmarks should use writes. */
 
     // bool use_random_access_pattern_; /**< If true, run throughput benchmarks with random access pattern. */
     // bool use_sequential_access_pattern_; /**< If true, run throughput benchmarks with sequential access pattern. */
-    // bool use_reads_; /**< If true, throughput benchmarks should use reads. */
-    // bool use_writes_; /**< If true, throughput benchmarks should use writes. */
 
 } Configurator;
 
@@ -148,15 +147,15 @@ bool useDecNetFile(Configurator *conf);
  */
 void setUseDecNetFile(Configurator *conf, bool use);
 
-//         /**
-//          * @brief Determines whether reads should be used in throughput benchmarks.
-//          * @returns True if reads should be used.
-//          */
-//         bool useReads() const { return use_reads_; }
+// /**
+//  * @brief Determines whether reads should be used in throughput benchmarks.
+//  * @returns True if reads should be used.
+//  */
+// bool useReads() const { return use_reads_; }
 
-//         /**
-//          * @brief Determines whether writes should be used in throughput benchmarks.
-//          * @returns True if writes should be used.
-//          */
-//         bool useWrites() const { return use_writes_; }
+/**
+ * @brief Determines whether writes should be used in throughput benchmarks.
+ * @returns True if writes should be used.
+ */
+bool useWrites(Configurator *conf);
 #endif
