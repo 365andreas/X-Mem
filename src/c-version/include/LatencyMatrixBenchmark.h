@@ -25,6 +25,7 @@ typedef struct {
 LatencyMatrixBenchmark *initLatencyMatrixBenchmark(void *mem_array,
                                                    size_t mem_array_len,
                                                    uint32_t iters,
+                                                   bool assume_existing_pointers,
                                                    uint32_t num_worker_threads,
                                                    uint32_t mem_region,
                                                    uint32_t cpu,

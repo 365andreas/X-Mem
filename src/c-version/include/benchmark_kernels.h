@@ -42,9 +42,10 @@ bool determine_random_kernel(rw_mode_t rw_mode, chunk_size_t chunk_size, RandomF
  * @param start_address Beginning address of the memory region.
  * @param end_address End address of the memory region.
  * @param chunk_size Granularity of words to read, dereference, and jump by. This must be at least the minimum pointer size on the system (typically 32 or 64-bit). If the chunk size is more than 64 bits, when chasing pointers, only the first pointer-sized bits of the referenced word are used to make the next hop.
+ * @param only_offset Stores only the offset of the pointers from the start_address.
  * @returns True on success.
  */
-bool build_random_pointer_permutation(void* start_address, void* end_address, chunk_size_t chunk_size);
+bool build_random_pointer_permutation(void* start_address, void* end_address, chunk_size_t chunk_size, bool only_offset);
 
 /***********************************************************************
  ***********************************************************************

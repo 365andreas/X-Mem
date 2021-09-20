@@ -318,6 +318,7 @@ bool buildBenchmarks(BenchmarkManager *bench_mgr) {
             bench_mgr->lat_mat_benchmarks_[l] = initLatencyMatrixBenchmark(mem_array,
                                                                            mem_array_len,
                                                                            getIterationsPerTest(cfg),
+                                                                           cfg->assume_existing_pointers_,
                                                                            DEFAULT_NUM_WORKER_THREADS,
                                                                            mem_region,
                                                                            cpu,

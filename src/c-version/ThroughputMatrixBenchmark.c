@@ -22,9 +22,9 @@ ThroughputMatrixBenchmark *initThroughputMatrixBenchmark(void *mem_array, size_t
 
     ThroughputMatrixBenchmark *thr_mat_bench = (ThroughputMatrixBenchmark *) malloc(sizeof(ThroughputMatrixBenchmark));
 
-    thr_mat_bench->mat_bench = newMatrixBenchmark(mem_array, mem_array_len, iters, num_worker_threads, mem_region, cpu,
-                                                  pattern_mode, rw_mode, chunk_size, stride_size, benchmark_name,
-                                                  "MB/s");
+    thr_mat_bench->mat_bench = newMatrixBenchmark(mem_array, mem_array_len, iters, false, num_worker_threads,
+                                                  mem_region, cpu, pattern_mode, rw_mode, chunk_size, stride_size,
+                                                  benchmark_name, "MB/s");
 
     return thr_mat_bench;
 }
@@ -54,7 +54,8 @@ bool runThroughputCore(ThroughputMatrixBenchmark *thr_mat_bench) {
         for (uint32_t i = 0; i < thr_mat_bench->mat_bench->num_worker_threads; i++) {
             if (!build_random_pointer_permutation((void *) ((uint8_t *) (thr_mat_bench->mat_bench->mem_array) + i * len_per_thread), //static casts to silence compiler warnings
                                                   (void *) ((uint8_t *)(thr_mat_bench->mat_bench->mem_array) + (i + 1) * len_per_thread), //static casts to silence compiler warnings
-                                                  CHUNK_64b)) {
+                                                  CHUNK_64b,
+                                                  false)) {
                 fprintf(stderr, "ERROR: Failed to build a random pointer permutation for the latency measurement thread!\n");
                 return false;
             }

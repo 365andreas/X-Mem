@@ -33,6 +33,9 @@ typedef struct {
     bool use_dec_net_file_; /**< If true, generate a decoding net friendly output file for results. */
     char *dec_net_filename_; /**< The decoding network compatible output filename if applicable. */
     bool use_writes_; /**< If true, throughput benchmarks should use writes. */
+    bool assume_existing_pointers_; /**< If true, latency benchmarks will not create random pointers that are essential
+                                         for the benchmarks. It will be assumed that memory laready contains the
+                                         necessary pointers. */
 
     // bool use_random_access_pattern_; /**< If true, run throughput benchmarks with random access pattern. */
     // bool use_sequential_access_pattern_; /**< If true, run throughput benchmarks with sequential access pattern. */

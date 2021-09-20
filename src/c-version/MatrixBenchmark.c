@@ -19,23 +19,25 @@
 // #include <time.h>
 #include <util.h>
 
-MatrixBenchmark *newMatrixBenchmark(void* mem_array, size_t mem_array_len, uint32_t iters, uint32_t num_worker_threads,
+MatrixBenchmark *newMatrixBenchmark(void* mem_array, size_t mem_array_len, uint32_t iters,
+                                    bool assume_existing_pointers, uint32_t num_worker_threads,
                                     uint32_t mem_region, uint32_t cpu, pattern_mode_t pattern_mode, rw_mode_t rw_mode,
                                     chunk_size_t chunk_size, int32_t stride_size, char *benchmark_name,
                                     char *metric_units) {
 
     MatrixBenchmark *mat_bench = (MatrixBenchmark *) malloc(sizeof(MatrixBenchmark));
 
-    mat_bench->mem_array          = mem_array;
-    mat_bench->len                = mem_array_len;
-    mat_bench->iterations         = iters;
-    mat_bench->num_worker_threads = num_worker_threads;
-    mat_bench->mem_region         = mem_region;
-    mat_bench->cpu                = cpu;
-    mat_bench->pattern_mode       = pattern_mode;
-    mat_bench->rw_mode            = rw_mode;
-    mat_bench->chunk_size         = chunk_size;
-    mat_bench->stride_size        = stride_size;
+    mat_bench->mem_array                = mem_array;
+    mat_bench->len                      = mem_array_len;
+    mat_bench->iterations               = iters;
+    mat_bench->assume_existing_pointers = assume_existing_pointers;
+    mat_bench->num_worker_threads       = num_worker_threads;
+    mat_bench->mem_region               = mem_region;
+    mat_bench->cpu                      = cpu;
+    mat_bench->pattern_mode             = pattern_mode;
+    mat_bench->rw_mode                  = rw_mode;
+    mat_bench->chunk_size               = chunk_size;
+    mat_bench->stride_size              = stride_size;
     strcpy(mat_bench->metric_units, metric_units);
     strcpy(mat_bench->name, benchmark_name);
 

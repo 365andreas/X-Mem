@@ -17,13 +17,14 @@
 
 
 LatencyMatrixBenchmark *initLatencyMatrixBenchmark(void *mem_array, size_t mem_array_len, uint32_t iters,
-                                                   uint32_t num_worker_threads, uint32_t mem_region, uint32_t cpu,
-                                                   pattern_mode_t pattern_mode, rw_mode_t rw_mode,
-                                                   chunk_size_t chunk_size, int32_t stride_size, char *benchmark_name) {
+                                                   bool assume_existing_pointers, uint32_t num_worker_threads,
+                                                   uint32_t mem_region, uint32_t cpu, pattern_mode_t pattern_mode,
+                                                   rw_mode_t rw_mode, chunk_size_t chunk_size, int32_t stride_size,
+                                                   char *benchmark_name) {
 
     LatencyMatrixBenchmark *lat_mat_bench = (LatencyMatrixBenchmark *) malloc(sizeof(LatencyMatrixBenchmark));
 
-    lat_mat_bench->mat_bench = newMatrixBenchmark(mem_array, mem_array_len, iters, num_worker_threads, mem_region, cpu,
+    lat_mat_bench->mat_bench = newMatrixBenchmark(mem_array, mem_array_len, iters, assume_existing_pointers, num_worker_threads, mem_region, cpu,
                                                   pattern_mode, rw_mode, chunk_size, stride_size, benchmark_name,
                                                   "ns/access");
 
@@ -37,23 +38,26 @@ bool runLatencyCore(LatencyMatrixBenchmark *lat_mat_bench) {
     RandomFunction lat_kernel_fptr = &chasePointers;
     RandomFunction lat_kernel_dummy_fptr = &dummy_chasePointers;
 
-    //Initialize memory regions for all threads by writing to them, causing the memory to be physically resident.
-    forwSequentialWrite_Word32(lat_mat_bench->mat_bench->mem_array,
-                               (void *) ((uint8_t *) (lat_mat_bench->mat_bench->mem_array) + lat_mat_bench->mat_bench->len)); //static casts to silence compiler warnings
-
     //Build pointer indices for random-access latency thread. We assume that latency thread is the first one, so we use beginning of memory region.
-    if (! build_random_pointer_permutation(lat_mat_bench->mat_bench->mem_array,
-                                           (void *) ((uint8_t *) (lat_mat_bench->mat_bench->mem_array) + len_per_thread), //static casts to silence compiler warnings
-                                           CHUNK_64b)) {
-        fprintf(stderr, "ERROR: Failed to build a random pointer permutation for the latency measurement thread!\n");
-        return false;
+    if (! lat_mat_bench->mat_bench->assume_existing_pointers) {
+        //Initialize memory regions for all threads by writing to them, causing the memory to be physically resident.
+        forwSequentialWrite_Word32(lat_mat_bench->mat_bench->mem_array,
+                                (void *) ((uint8_t *) (lat_mat_bench->mat_bench->mem_array) + lat_mat_bench->mat_bench->len)); //static casts to silence compiler warnings
+
+        if (! build_random_pointer_permutation(lat_mat_bench->mat_bench->mem_array,
+                                               (void *) ((uint8_t *) (lat_mat_bench->mat_bench->mem_array) + len_per_thread), //static casts to silence compiler warnings
+                                               CHUNK_64b,
+                                               true)) {
+            fprintf(stderr, "ERROR: Failed to build a random pointer permutation for the latency measurement thread!\n");
+            return false;
+        }
     }
 
-    //Set up load generation kernel function pointers
-    SequentialFunction load_kernel_fptr_seq = NULL;
-    SequentialFunction load_kernel_dummy_fptr_seq = NULL;
-    RandomFunction load_kernel_fptr_ran = NULL;
-    RandomFunction load_kernel_dummy_fptr_ran = NULL;
+    // //Set up load generation kernel function pointers
+    // SequentialFunction load_kernel_fptr_seq = NULL;
+    // SequentialFunction load_kernel_dummy_fptr_seq = NULL;
+    // RandomFunction load_kernel_fptr_ran = NULL;
+    // RandomFunction load_kernel_dummy_fptr_ran = NULL;
 
     uint32_t iterations         = lat_mat_bench->mat_bench->iterations;
     uint32_t num_worker_threads = lat_mat_bench->mat_bench->num_worker_threads;
@@ -195,8 +199,8 @@ bool runLatency(LatencyMatrixBenchmark *lat_mat_bench) {
 
     //Write to all of the memory region of interest to make sure
     //pages are resident in physical memory and are not shared
-    forwSequentialWrite_Word32(lat_mat_bench->mat_bench->mem_array,
-                               (void *) ((uint8_t *) (lat_mat_bench->mat_bench->mem_array) + lat_mat_bench->mat_bench->len));
+    // forwSequentialWrite_Word32(lat_mat_bench->mat_bench->mem_array,
+    //                            (void *) ((uint8_t *) (lat_mat_bench->mat_bench->mem_array) + lat_mat_bench->mat_bench->len));
 
     bool success = runLatencyCore(lat_mat_bench);
     if (success) {

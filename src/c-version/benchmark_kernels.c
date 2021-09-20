@@ -805,7 +805,7 @@ void shuffle(Word64_t *first, Word64_t *last) {
     }
 }
 
-bool build_random_pointer_permutation(void* start_address, void* end_address, chunk_size_t chunk_size) {
+bool build_random_pointer_permutation(void* start_address, void* end_address, chunk_size_t chunk_size, bool only_offset) {
     if (g_verbose)
         printf("Preparing a memory region under test. This might take a while...");
 
@@ -832,7 +832,11 @@ bool build_random_pointer_permutation(void* start_address, void* end_address, ch
     switch (chunk_size) {
         case CHUNK_64b:
             for (size_t i = 0; i < num_pointers; i++) { //Initialize pointers to point at themselves (identity mapping)
-                mem_region_base[i] = (Word64_t) (mem_region_base + i);
+                if (only_offset) {
+                    mem_region_base[i] = (Word64_t) i;
+                } else {
+                    mem_region_base[i] = (Word64_t) (mem_region_base + i);
+                }
             }
             shuffle(mem_region_base, mem_region_base + num_pointers);
             break;
@@ -856,17 +860,17 @@ bool build_random_pointer_permutation(void* start_address, void* end_address, ch
 
 /* --------------------- DUMMY BENCHMARK ROUTINES --------------------------- */
 
-int32_t dummy_chasePointers(uintptr_t *first_address, uintptr_t **last_touched_address, size_t len) {
+int32_t dummy_chasePointers(uintptr_t *base_address, uintptr_t **last_touched_offset, size_t len) {
     volatile uintptr_t placeholder = 0; //Try to defeat compiler optimizations removing this method
     return 0;
 }
 
 /* -------------------- CORE BENCHMARK ROUTINES -------------------------- */
 
-int32_t chasePointers(uintptr_t *first_address, uintptr_t **last_touched_address, size_t len) {
-    volatile uintptr_t *p = first_address;
-    UNROLL512(p = (uintptr_t *) (*p);)
-    *last_touched_address = (uintptr_t *) (p);
+int32_t chasePointers(uintptr_t *base_address, uintptr_t **last_touched_offset, size_t len) {
+    volatile uintptr_t *p = (uintptr_t *) ((uint64_t) *last_touched_offset + base_address);
+    UNROLL512(p = (uintptr_t *) (*p + base_address);)
+    *last_touched_offset = (uintptr_t *) (p - base_address);
     return 0;
 }
 

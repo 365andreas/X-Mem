@@ -36,7 +36,8 @@ void runLatWorker(LatencyWorker *lat_worker) {
     int32_t cpu_affinity = 0;
     RandomFunction kernel_fptr = NULL;
     RandomFunction kernel_dummy_fptr = NULL;
-    uintptr_t* next_address = NULL;
+    uintptr_t* base_address = NULL;
+    uintptr_t* next_offset  = NULL;
     uint32_t bytes_per_pass = 0;
     uint32_t passes = 0;
     uint32_t p = 0;
@@ -85,20 +86,22 @@ void runLatWorker(LatencyWorker *lat_worker) {
 
     //Run benchmark
     //Run actual version of function and loop overhead
-    next_address = (uintptr_t *) mem_array;
+    base_address = (uintptr_t *) mem_array;
+    next_offset  = (uintptr_t *) 0;
     while (elapsed_ticks < target_ticks) {
         start_tick = start_timer();
-        UNROLL256((*kernel_fptr)(next_address, &next_address, 0);)
+        UNROLL256((*kernel_fptr)(base_address, &next_offset, 0);)
         stop_tick = stop_timer();
         elapsed_ticks += (stop_tick - start_tick);
         passes+=256;
     }
 
     //Run dummy version of function and loop overhead
-    next_address = (uintptr_t *) mem_array;
+    base_address = (uintptr_t *) mem_array;
+    next_offset  = (uintptr_t *) 0;
     while (p < passes) {
         start_tick = start_timer();
-        UNROLL256((*kernel_dummy_fptr)(next_address, &next_address, 0);)
+        UNROLL256((*kernel_dummy_fptr)(base_address, &next_offset, 0);)
         stop_tick = stop_timer();
         elapsed_dummy_ticks += (stop_tick - start_tick);
         p+=256;
