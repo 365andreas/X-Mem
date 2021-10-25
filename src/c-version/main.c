@@ -28,6 +28,13 @@ int main(int argc, char* argv[]) {
     if (config_success) {
 
         printf("\n");
+
+        bool locked = lock_thread_to_cpu(config.core_id_);
+        if (! locked)
+            fprintf(stderr, "WARNING: Failed to lock thread to logical CPU %d! Results may not be correct.\n", config.core_id_);
+        else if (g_verbose)
+            fprintf(stderr, "Locked main thread to logical CPU %d.\n", config.core_id_);
+
         setup_timer();
 
         BenchmarkManager *benchmgr = initBenchMgr(&config);
