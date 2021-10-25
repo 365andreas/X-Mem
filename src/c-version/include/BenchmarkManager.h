@@ -38,9 +38,6 @@ typedef struct {
     uint32_t thr_mat_benchmarks_size_; /**< Size of throughput matrix benchmarks. */
     FILE *dec_net_results_file_; /**< The results file for use by a decoding network. */
 
-    // std::fstream results_file_; /**< The results CSV file. */
-    // std::ofstream lat_mat_logfile_; /**< Logfile for latency matrix measurements. */
-    // std::ofstream thr_mat_logfile_; /**< Logfile for throughput matrix measurements. */
     bool built_benchmarks_; /**< If true, finished building all benchmarks. */
 } BenchmarkManager;
 

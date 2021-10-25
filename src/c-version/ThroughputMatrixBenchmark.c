@@ -205,12 +205,6 @@ bool runThroughputCore(ThroughputMatrixBenchmark *thr_mat_bench) {
 
 bool runThroughput(ThroughputMatrixBenchmark *thr_mat_bench) {
 
-    // if (thr_mat_bench->mat_bench->has_run_) //A benchmark should only be run once per object
-    //     return false;
-
-    // printBenchmarkHeader(thr_mat_bench->mat_bench);
-    // reportBenchmarkInfo(thr_mat_bench->mat_bench);
-
     //Write to all of the memory region of interest to make sure
     //pages are resident in physical memory and are not shared
     forwSequentialWrite_Word32(thr_mat_bench->mat_bench->mem_array,

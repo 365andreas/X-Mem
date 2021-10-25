@@ -55,52 +55,6 @@ bool create_and_start(Thread *t, void *(*runLaunchpad)(void *));
  */
 bool join(Thread *t);
 
-// /**
-//  * Cancels the worker thread immediately. This should only be done in emergencies, as it is effectively killed and undefined behavior might occur.
-//  * @returns true if the worker thread was successfully killed.
-//  */
-// bool cancel();
-
-// /**
-//  * @returns the exit code of the worker thread if it completed. If it did not complete or has not started, returns 0.
-//  */
-// int32_t getExitCode();
-
-// /**
-//  * @returns true if the thread has been started, regardless if has completed or not.
-//  */
-// bool started();
-
-// /**
-//  * @returns true if the thread completed, regardless of the manner in which it terminated. Returns false if it has not been started.
-//  */
-// bool completed();
-
-// /**
-//  * @returns true if the Runnable target is valid.
-//  */
-// bool validTarget();
-
-// /**
-//  * @returns true if the thread has been created successfully.
-//  */
-// bool created();
-
-// /**
-//  * @returns true if the thread is suspended. Returns false if the thread has not been created.
-//  */
-// bool isThreadSuspended();
-
-// /**
-//  * @returns true if the thread is running. Returns false if the thread has not been created.
-//  */
-// bool isThreadRunning();
-
-// /**
-//  * @returns a pointer to the target Runnable object
-//  */
-// Runnable* getTarget();
-
 /**
  * Invokes the runLatWorker() method on the target LatencyWorker object.
  * @param target_lat_worker_object pointer to the target LatencyWorker object. This needs to be a generic pointer to keep APIs happy.

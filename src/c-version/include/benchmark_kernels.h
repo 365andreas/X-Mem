@@ -187,16 +187,6 @@ int32_t forwSequentialRead_Word32(void* start_address, void* end_address);
 int32_t forwSequentialRead_Word64(void* start_address, void* end_address);
 #endif
 
-#ifdef HAS_WORD_512
-    /**
-     * @brief Walks over the allocated memory forward sequentially, reading in 512-bit chunks.
-     * @param start_address The beginning of the memory region of interest.
-     * @param end_address The end of the memory region of interest.
-     * @returns Undefined.
-     */
-    int32_t forwSequentialRead_Word512(void* start_address, void* end_address);
-#endif
-
 /* ------------ SEQUENTIAL WRITE --------------*/
 
 /**
@@ -227,40 +217,8 @@ int32_t forwSequentialWrite_Word64(void* start_address, void* end_address);
     int32_t forwSequentialWrite_Word512(void* start_address, void* end_address);
 #endif
 
-// /* ------------ STRIDE 8 READ --------------*/
-
-// /**
-//  * @brief Walks over the allocated memory in forward strides of size 8, reading in 32-bit chunks.
-//  * @param start_address The beginning of the memory region of interest.
-//  * @param end_address The end of the memory region of interest.
-//  * @returns Undefined.
-//  */
-// int32_t forwStride8Read_Word32(void* start_address, void* end_address);
-
-// #ifdef HAS_WORD_64
-// /**
-//  * @brief Walks over the allocated memory in forward strides of size 8, reading in 64-bit chunks.
-//  * @param start_address The beginning of the memory region of interest.
-//  * @param end_address The end of the memory region of interest.
-//  * @returns Undefined.
-//  */
-// int32_t forwStride8Read_Word64(void* start_address, void* end_address);
-// #endif
-
 /* ------------ RANDOM READ --------------*/
 
-#ifndef HAS_WORD_64
-/**
- * @brief Walks over the allocated memory in random order by chasing 64-bit pointers.
- * @param first_address Starting address to deference.
- * @param last_touched_address The last visited address.
- * @param len The number of pointers to deference in a chain-like fashion.
- * @returns Undefined.
- */
-int32_t randomRead_Word32(uintptr_t* first_address, uintptr_t** last_touched_address, size_t len);
-#endif
-
-//32-bit systems only.
 #ifdef HAS_WORD_64
 /**
  * @brief Walks over the allocated memory in random order by chasing 32-bit pointers.
@@ -273,18 +231,6 @@ int32_t randomRead_Word64(uintptr_t* first_address, uintptr_t** last_touched_add
 #endif
 
 /* ------------ RANDOM WRITE --------------*/
-
-//32-bit machines only
-#ifndef HAS_WORD_64
-/**
- * @brief Walks over the allocated memory in random order by chasing 32-bit pointers. A pointer is read and written back with the same value before chasing to the next pointer. Thus, each memory address is a read followed by immediate write operation.
- * @param first_address Starting address to deference.
- * @param last_touched_address The last visited address.
- * @param len The number of pointers to deference in a chain-like fashion.
- * @returns Undefined.
- */
-int32_t randomWrite_Word32(uintptr_t* first_address, uintptr_t** last_touched_address, size_t len);
-#endif
 
 #ifdef HAS_WORD_64
 /**

@@ -1,7 +1,7 @@
 /* The MIT License (MIT)
  *
  * Copyright (c) 2014 Microsoft
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -25,7 +25,7 @@
 
 /**
  * @file
- * 
+ *
  * @brief Header file for the Runnable class.
  */
 
@@ -66,27 +66,27 @@ namespace xmem {
             virtual void run() = 0;
 
         protected:
-            /** 
+            /**
              * @brief Acquires the object lock to access all object state in thread-safe manner.
              * @param timeout timeout in milliseconds to acquire the lock. If 0, does not wait at all. If negative, waits indefinitely.
              * @returns true on success. If not successful, the lock was not acquired, possibly due to a timeout, or the lock might already be held.
              */
             bool acquireLock(int32_t timeout);
 
-            /** 
+            /**
              * @brief Releases the object lock to access all object state in thread-safe manner.
              * @returns true on success. If not successful, the lock is either still held or the call was illegal (e.g., releasing a lock that was never acquired).
              */
             bool releaseLock();
-            
+
             /** A handle to the OS native Windows mutex, i.e., the locking mechanism. Outside the constructor, this should only be accessed via _acquireLock() and _releaseLock(). */
 #ifdef _WIN32
-            HANDLE mutex_; 
+            HANDLE mutex_;
 #endif
 
 #ifdef __gnu_linux__
             /** A handle to the OS pthreads mutex, i.e., the locking mechanism. Outside the constructor, this should only be accessed via _acquireLock() and _releaseLock(). */
-            pthread_mutex_t mutex_; 
+            pthread_mutex_t mutex_;
 #endif
     };
 };

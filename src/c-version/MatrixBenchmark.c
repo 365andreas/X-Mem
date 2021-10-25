@@ -135,28 +135,6 @@ void computeMetrics(MatrixBenchmark *bench) {
             bench->mean_metric_ += bench->metric_on_iter_[i];
         bench->mean_metric_ /= bench->iterations;
 
-        //Build sorted array of metrics from each iteration
-        // std::vector<double> sortedMetrics = metric_on_iter_;
-        // std::sort(sortedMetrics.begin(), sortedMetrics.end());
-
-        // //Compute percentiles
-        // min_metric_ = sortedMetrics.front();
-        // percentile_25_metric_ = sortedMetrics[sortedMetrics.size()/4];
-        // percentile_75_metric_ = sortedMetrics[sortedMetrics.size()*3/4];
         bench->median_metric_ = compute_median(bench->metric_on_iter_, bench->iterations);
-        // percentile_95_metric_ = sortedMetrics[sortedMetrics.size()*95/100];
-        // percentile_99_metric_ = sortedMetrics[sortedMetrics.size()*99/100];
-        // max_metric_ = sortedMetrics.back();
-
-        // //Compute mode
-        // std::map<double,uint32_t> metricCounts;
-        // for (uint32_t i = 0; i < iterations_; i++)
-        //     metricCounts[metric_on_iter_[i]]++;
-        // mode_metric_ = 0;
-        // uint32_t greatest_count = 0;
-        // for (auto it = metricCounts.cbegin(); it != metricCounts.cend(); it++) {
-        //     if (it->second > greatest_count)
-        //         mode_metric_ = it->first;
-        // }
     }
 }

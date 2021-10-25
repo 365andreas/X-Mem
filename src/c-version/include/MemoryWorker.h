@@ -46,17 +46,6 @@ MemoryWorker *newMemoryWorker(void* mem_array, size_t len, int32_t cpu_affinity)
  */
 void deleteMemoryWorker(MemoryWorker *mem_worker);
 
-// /**
-//  * @brief Thread-safe worker method.
-//  */
-// virtual void run() = 0;
-
-// /**
-//  * @brief Gets the length of the memory region used by this worker.
-//  * @returns Length of memory region in bytes.
-//  */
-// size_t getLen();
-
 /**
  * @brief Gets the number of bytes used in each pass of the benchmark by this worker.
  * @returns Number of bytes in each pass.

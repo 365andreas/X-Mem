@@ -120,18 +120,6 @@ uint64_t *getMemoryRegionsPhysAddresses(Configurator *conf);
  */
 uint32_t getIterationsPerTest(Configurator *conf);
 
-//         /**
-//          * @brief Determines if throughput benchmarks should use a random access pattern.
-//          * @returns True if random access should be used.
-//          */
-//         bool useRandomAccessPattern() const { return use_random_access_pattern_; }
-
-//         /**
-//          * @brief Determines if throughput benchmarks should use a sequential access pattern.
-//          * @returns True if sequential access should be used.
-//          */
-//         bool useSequentialAccessPattern() const { return use_sequential_access_pattern_; }
-
 /**
  * @brief Gets the output filename suitable for decoding network to use, if applicable.
  * @returns The output filename to use if useDecNetFile() returns true. Otherwise return value is "".
@@ -149,12 +137,6 @@ bool useDecNetFile(Configurator *conf);
  * @param use If true, then use the output file.
  */
 void setUseDecNetFile(Configurator *conf, bool use);
-
-// /**
-//  * @brief Determines whether reads should be used in throughput benchmarks.
-//  * @returns True if reads should be used.
-//  */
-// bool useReads() const { return use_reads_; }
 
 /**
  * @brief Determines whether writes should be used in throughput benchmarks.

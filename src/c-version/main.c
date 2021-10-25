@@ -28,17 +28,7 @@ int main(int argc, char* argv[]) {
     if (config_success) {
 
         printf("\n");
-
-        // if (g_verbose) {
-        //     print_compile_time_options();
-        //     print_types_report();
-        //     report_sys_info();
-        //     test_thread_affinities();
-        // }
-
         setup_timer();
-        // if (g_verbose)
-        //     report_timer();
 
         BenchmarkManager *benchmgr = initBenchMgr(&config);
 

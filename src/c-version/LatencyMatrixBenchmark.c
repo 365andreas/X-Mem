@@ -53,12 +53,6 @@ bool runLatencyCore(LatencyMatrixBenchmark *lat_mat_bench) {
         }
     }
 
-    // //Set up load generation kernel function pointers
-    // SequentialFunction load_kernel_fptr_seq = NULL;
-    // SequentialFunction load_kernel_dummy_fptr_seq = NULL;
-    // RandomFunction load_kernel_fptr_ran = NULL;
-    // RandomFunction load_kernel_dummy_fptr_ran = NULL;
-
     uint32_t iterations         = lat_mat_bench->mat_bench->iterations;
     uint32_t num_worker_threads = lat_mat_bench->mat_bench->num_worker_threads;
 

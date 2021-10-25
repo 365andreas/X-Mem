@@ -35,16 +35,6 @@ void deleteMemoryWorker(MemoryWorker *mem_worker) {
     free(mem_worker);
 }
 
-// size_t MemoryWorker::getLen() {
-//     size_t retval = 0;
-//     if (acquireLock(-1)) {
-//         retval = len_;
-//         releaseLock();
-//     }
-
-//     return retval;
-// }
-
 uint32_t getBytesPerPass(MemoryWorker *mem_worker) {
     uint32_t retval = 0;
     if (acquireLock(mem_worker->runnable, -1)) {

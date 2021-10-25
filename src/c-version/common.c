@@ -69,38 +69,6 @@ void setup_timer() {
     free(timer);
 }
 
-// void xmem::report_timer() {
-//     std::cout << "Calculated timer frequency: " << g_ticks_per_ms * 1000 << " Hz == " << (double)(g_ticks_per_ms*1000) / (1e6) << " MHz" << std::endl;
-//     std::cout << "Derived timer ns per tick: " << g_ns_per_tick << std::endl;
-//     std::cout << std::endl;
-// }
-
-// void xmem::test_thread_affinities() {
-//     std::cout << std::endl << "Testing thread affinities..." << std::endl;
-//     bool success = false;
-//     for (uint32_t cpu = 0; cpu < g_num_logical_cpus; cpu++) {
-//         std::cout << "Locking to logical CPU " << cpu << "...";
-//         success = lock_thread_to_cpu(cpu);
-//         std::cout << (success ? "Pass" : "FAIL");
-//         std::cout << "      Unlocking" << "...";
-//         success = unlock_thread_to_cpu();
-//         std::cout << (success ? "Pass" : "FAIL");
-//         std::cout << std::endl;
-//     }
-// }
-
-//     if (cpus_in_node.size() < 1) //Check to see that there was something to lock to
-//         return false;
-
-//     cpu_set_t cpus;
-//     CPU_ZERO(&cpus);
-//     for (auto it = cpus_in_node.cbegin(); it != cpus_in_node.cend(); it++)
-//         CPU_SET(static_cast<int32_t>(*it), &cpus);
-
-//     pthread_t tid = pthread_self();
-//     return (!pthread_setaffinity_np(tid, sizeof(cpu_set_t), &cpus));
-// }
-
 bool lock_thread_to_cpu(uint32_t cpu_id) {
     cpu_set_t cpus;
     CPU_ZERO(&cpus);
@@ -287,30 +255,6 @@ int32_t query_sys_info() {
 
     return 0;
 }
-
-// void xmem::report_sys_info() {
-//     std::cout << std::endl;
-//     std::cout << "Number of physical processor packages: " << g_num_physical_packages;
-//     if (g_num_physical_packages == DEFAULT_NUM_PHYSICAL_PACKAGES)
-//         std::cout << "?";
-//     std::cout << std::endl;
-//     if (g_physical_package_of_cpu.empty())
-//         std::cout << "Mapping of physical core to packages is empty?";
-//     std::cout << std::endl;
-//     std::cout << "Number of physical processor cores: " << g_num_physical_cpus;
-//     if (g_num_physical_cpus == DEFAULT_NUM_PHYSICAL_CPUS)
-//         std::cout << "?";
-//     std::cout << std::endl;
-//     std::cout << "Number of logical processor cores: " << g_num_logical_cpus;
-//     if (g_num_logical_cpus == DEFAULT_NUM_LOGICAL_CPUS)
-//         std::cout << "?";
-//     std::cout << std::endl;
-//     std::cout << std::endl;
-//     std::cout << "Regular page size: " << g_page_size << " B" << std::endl;
-// #ifdef HAS_LARGE_PAGES
-//     std::cout << "Large page size: " << g_large_page_size << " B" << std::endl;
-// #endif
-// }
 
 tick_t start_timer() {
 #ifdef USE_TSC_TIMER

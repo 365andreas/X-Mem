@@ -26,13 +26,6 @@ int comparatorDoubleAsc (const void * a, const void * b);
  */
 double compute_median(double *values, uint32_t n);
 
-// /**
-//  * @brief Computes the confidence interval (CI) of the median of the first `n` elements of the vector.
-//  * @returns The 95% CI of the median of the first `n` elements of the vector.
-//  */
-// double compute_95_CI(std::vector<double> metrics, uint32_t n);
-
-
 /**
  * @brief Computes the square root of the given number. It is essential since sqrt() insert fucomi instruction
  * which is not supported by k1om.

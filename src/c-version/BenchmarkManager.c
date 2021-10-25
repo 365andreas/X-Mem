@@ -60,53 +60,6 @@ BenchmarkManager *initBenchMgr(Configurator *config) {
     return bench_mgr;
 }
 
-// BenchmarkManager::~BenchmarkManager() {
-//     //Free throughput benchmarks
-//     for (uint32_t i = 0; i < tp_benchmarks_.size(); i++)
-//         delete tp_benchmarks_[i];
-//     //Free latency benchmarks
-//     for (uint32_t i = 0; i < lat_benchmarks_.size(); i++)
-//         delete lat_benchmarks_[i];
-//     //Free latency matrix benchmarks
-//     for (uint32_t i = 0; i < lat_mat_benchmarks_.size(); i++)
-//         delete lat_mat_benchmarks_[i];
-//     //Free throughput matrix benchmarks
-//     for (uint32_t i = 0; i < thr_mat_benchmarks_.size(); i++)
-//         delete thr_mat_benchmarks_[i];
-//     //Free memory arrays
-//     for (uint32_t i = 0; i < mem_arrays_.size(); i++)
-//         if (mem_arrays_[i] != nullptr) {
-// #ifdef __gnu_linux__
-// #ifdef HAS_LARGE_PAGES
-//             if (config_.useLargePages()) {
-//                 free_huge_pages(mem_arrays_[i]);
-//             } else {
-// #endif
-//                 if (! config_.memoryRegionsInPhysAddr()) {
-//                     free(orig_malloc_addr_); //this is somewhat of a band-aid
-//                 } else {
-//                     if (munmap(mem_arrays_[i], mem_array_lens_[i]) < 0) {
-//                         perror("Failed to munmap() memory regions:");
-//                     }
-//                 }
-// #ifdef HAS_LARGE_PAGES
-//             }
-// #endif
-// #endif
-//         }
-//     //Close results file
-//     if (results_file_.is_open())
-//         results_file_.close();
-
-//     //Close latency matrix extended measurements logfile
-//     if (lat_mat_logfile_.is_open())
-//         lat_mat_logfile_.close();
-
-//     //Close throughput matrix extended measurements logfile
-//     if (thr_mat_logfile_.is_open())
-//         thr_mat_logfile_.close();
-// }
-
 void printMatrix(BenchmarkManager *bench_mgr, MatrixBenchmark **mat_benchmarks, uint32_t mat_benchmarks_size, char *what) {
 
     Configurator *cfg = bench_mgr->config_;

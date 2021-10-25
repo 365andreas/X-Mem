@@ -24,25 +24,6 @@ Runnable *newRunnable() {
     return runnable;
 }
 
-// Runnable::~Runnable() {
-// #ifdef _WIN32
-//     if (mutex_ != NULL)
-//         ReleaseMutex(mutex_); //Don't need to check return code. If it fails, the lock might not have been held anyway.
-// #endif
-
-// #ifdef __gnu_linux__
-//     int32_t retval = pthread_mutex_destroy(&mutex_);
-//     if (retval) {
-//         if (retval == EBUSY)
-//             std::cerr << "WARNING: Failed to destroy a mutex, as it was busy!" << std::endl;
-//         else if (retval == EINVAL)
-//             std::cerr << "WARNING: Failed to destroy a mutex, as it was invalid!" << std::endl;
-//         else
-//             std::cerr << "WARNING: Failed to destroy a mutex for an unknown reason, error number " << retval << "!" << std::endl;
-//     }
-// #endif
-// }
-
 bool acquireLock(Runnable *runnable, int32_t timeout) {
     int32_t reason;
 
