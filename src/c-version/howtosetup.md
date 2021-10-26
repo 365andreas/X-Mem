@@ -167,3 +167,10 @@ Or for the c version:
 1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# make clean`
 1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# make`
 1. `(babybel3):~/2021-msc-atriantaf-code/sockeye-compiler# make ECLIPSE=./eclipseclp test_perf`
+
+
+## Program SMPT registers
+
+1. Find the BAR for configuration via `lspci -vvv`
+1. `(babybel3):~# ./program_smpt -r 0xd1400000`
+1. `(babybel3):~# ./program_smpt -w 0xd140007c 0x380400000000`
